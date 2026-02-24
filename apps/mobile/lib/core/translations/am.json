@@ -1,0 +1,19 @@
+{
+	"welcome": "እንኳን ደህና መጡ",
+	"login": "ግባ",
+	"logout": "ውጣ",
+	"register": "ይመዝገቡ",
+	"username": "የተጠቃሚ ስም",
+	"password": "የይለፍ ቃል",
+	"email": "ኢሜይል",
+	"submit": "አስገባ",
+	"cancel": "ይቅር",
+	"home": "መነሻ ገፅ",
+	"profile": "መገለጫ",
+	"settings": "ቅንብሮች",
+	"language": "ቋንቋ",
+	"search": "ፈልግ",
+	"notifications": "ማሳወቂያዎች",
+	"error": "ስህተት ተፈጥሯል",
+	"success": "ተሳክቷል"
+}

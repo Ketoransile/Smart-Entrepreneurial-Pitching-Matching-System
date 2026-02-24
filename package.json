@@ -1,0 +1,36 @@
+{
+	"name": "sepms",
+	"private": true,
+	"version": "1.0.0",
+	"packageManager": "pnpm@9.15.3",
+	"workspaces": [
+		"apps/*",
+		"packages/*"
+	],
+	"scripts": {
+		"dev": "concurrently \"pnpm --filter api dev\" \"pnpm --filter web dev\"",
+		"dev:ai": "pnpm --filter ai dev",
+		"dev:mobile": "pnpm --filter mobile dev",
+		"dev:all": "concurrently \"pnpm dev:web\" \"pnpm dev:api\" \"pnpm dev:ai\" \"pnpm dev:mobile\"",
+		"dev:web": "pnpm --filter web dev",
+		"dev:api": "pnpm --filter api dev",
+		"build": "pnpm -r build",
+		"test": "pnpm -r test",
+		"lint": "biome check .",
+		"lint:fix": "biome check --write .",
+		"format": "biome format --write .",
+		"prepare": "husky"
+	},
+	"lint-staged": {
+		"*.{js,ts,tsx,json,md}": [
+			"biome check --write --no-errors-on-unmatched"
+		]
+	},
+	"devDependencies": {
+		"@biomejs/biome": "^2.4.4",
+		"concurrently": "^9.2.1",
+		"husky": "^9.1.7",
+		"lint-staged": "^16.2.7",
+		"typescript": "^5.9.3"
+	}
+}

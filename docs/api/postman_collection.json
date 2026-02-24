@@ -1,0 +1,64 @@
+{
+	"info": {
+		"name": "Smart Entrepreneurial Pitching Matching System API",
+		"description": "Postman collection for testing the SPEMS API endpoints.",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"version": "1.0.0"
+	},
+	"item": [
+		{
+			"name": "Get All Pitches",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:8000/api/pitches",
+					"protocol": "http",
+					"host": ["localhost"],
+					"port": "8000",
+					"path": ["api", "pitches"]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Create New Pitch",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"title\": \"Sample Pitch\",\n  \"description\": \"This is a sample pitch description.\",\n  \"entrepreneur_id\": 1\n}"
+				},
+				"url": {
+					"raw": "http://localhost:8000/api/pitches",
+					"protocol": "http",
+					"host": ["localhost"],
+					"port": "8000",
+					"path": ["api", "pitches"]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get All Investors",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:8000/api/investors",
+					"protocol": "http",
+					"host": ["localhost"],
+					"port": "8000",
+					"path": ["api", "investors"]
+				}
+			},
+			"response": []
+		}
+	]
+}

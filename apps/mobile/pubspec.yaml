@@ -1,0 +1,58 @@
+name: sepms_mobile
+description: SEPMS Mobile Application
+version: 1.0.0+1
+
+environment:
+  sdk: ">=3.0.0 <4.0.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  # UI
+  cupertino_icons: ^1.0.6
+  google_fonts: ^6.1.0
+
+  # State Management
+  provider: ^6.1.1
+  riverpod: ^2.4.9
+
+  # Networking
+  dio: ^5.4.0
+  socket_io_client: ^2.0.3+1
+
+  # Authentication
+  firebase_core: ^2.24.2
+  firebase_auth: ^4.16.0
+  google_sign_in: ^6.1.5
+
+  # Storage
+  shared_preferences: ^2.2.2
+
+  # File handling
+  image_picker: ^1.0.5
+  file_picker: ^6.1.1
+
+  # Localization
+  flutter_localizations:
+    sdk: flutter
+  intl: ^0.18.1
+
+  # Voice
+  flutter_tts: ^3.8.3
+
+  # Utilities
+  url_launcher: ^6.2.1
+  path_provider: ^2.1.1
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^3.0.1
+
+flutter:
+  uses-material-design: true
+
+  assets:
+    - assets/images/
+    - assets/translations/
