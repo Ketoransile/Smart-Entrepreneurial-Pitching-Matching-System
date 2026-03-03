@@ -4,6 +4,6 @@
 		"outDir": "./dist",
 		"noEmit": false
 	},
-	"include": ["src/**/*", "server.ts"],
+	"include": ["src/**/*", "server.ts", "src/**/*.d.ts"],
 	"exclude": ["node_modules", "dist"]
 }
