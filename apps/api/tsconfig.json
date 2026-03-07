@@ -2,8 +2,29 @@
 	"extends": "../../tsconfig.base.json",
 	"compilerOptions": {
 		"outDir": "./dist",
-		"noEmit": false
+		"noEmit": false,
+		"baseUrl": ".",
+		"paths": {
+			"@/*": [
+				"./src/*"
+			]
+		},
+		"types": [
+			"node",
+			"express",
+			"cors",
+			"multer",
+			"nodemailer",
+			"jest",
+			"supertest"
+		]
 	},
-	"include": ["src/**/*", "server.ts", "src/**/*.d.ts"],
-	"exclude": ["node_modules", "dist"]
+	"include": [
+		"src/**/*",
+		"src/**/*.d.ts"
+	],
+	"exclude": [
+		"node_modules",
+		"dist"
+	]
 }

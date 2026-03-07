@@ -5,11 +5,12 @@ export type UserRole = "entrepreneur" | "investor" | "admin";
 export interface IUser extends Document {
 	firebaseUid: string;
 	email: string;
-	displayName: string;
-	avatarUrl?: string;
+	fullName: string;
+	photoURL?: string;
 	role: UserRole;
+	status: "unverified" | "pending" | "verified" | "suspended";
 	isActive: boolean;
-	isEmailVerified: boolean;
+	emailVerified: boolean;
 	lastLoginAt?: Date;
 	createdAt: Date;
 	updatedAt: Date;
@@ -30,12 +31,12 @@ const UserSchema = new Schema<IUser>(
 			lowercase: true,
 			trim: true,
 		},
-		displayName: {
+		fullName: {
 			type: String,
 			required: true,
 			trim: true,
 		},
-		avatarUrl: {
+		photoURL: {
 			type: String,
 			default: null,
 		},
@@ -44,11 +45,16 @@ const UserSchema = new Schema<IUser>(
 			enum: ["entrepreneur", "investor", "admin"] satisfies UserRole[],
 			required: true,
 		},
+		status: {
+			type: String,
+			enum: ["unverified", "pending", "verified", "suspended"],
+			default: "unverified",
+		},
 		isActive: {
 			type: Boolean,
 			default: true,
 		},
-		isEmailVerified: {
+		emailVerified: {
 			type: Boolean,
 			default: false,
 		},
