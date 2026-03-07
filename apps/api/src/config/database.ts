@@ -19,10 +19,6 @@ export async function connectDB(): Promise<void> {
 	try {
 		await mongoose.connect(MONGODB_URI as string, {
 			dbName: process.env.MONGODB_DB_NAME ?? "spems",
-			// Connection pool — tuned for a typical API server
-			maxPoolSize: 10,
-			serverSelectionTimeoutMS: 5000,
-			socketTimeoutMS: 45000,
 		});
 
 		isConnected = true;
@@ -39,8 +35,8 @@ export async function connectDB(): Promise<void> {
 		});
 	} catch (err) {
 		console.error("❌  Failed to connect to MongoDB:", err);
-		// Let the process die; the supervisor will restart it
-		process.exit(1);
+		// Let requests fail gracefully rather than crashing the Vercel serverless function
+		isConnected = false;
 	}
 }
 

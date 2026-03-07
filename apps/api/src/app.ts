@@ -8,6 +8,10 @@ import mongoSanitize from "express-mongo-sanitize";
 import rateLimit from "express-rate-limit";
 import helmet from "helmet";
 
+import authRoutes from "./routes/auth.routes";
+import submissionRoutes from "./routes/submission.routes";
+import uploadRoutes from "./routes/upload.routes";
+
 const app = express();
 
 app.use(helmet());
@@ -25,6 +29,11 @@ app.use(express.urlencoded({ extended: true }));
 app.get("/health", (_req: Request, res: Response) => {
 	res.status(200).json({ status: "ok" });
 });
+
+// Mount route modules
+app.use("/api/auth", authRoutes);
+app.use("/api/submissions", submissionRoutes);
+app.use("/api/upload", uploadRoutes);
 
 app.use((_req: Request, res: Response) => {
 	res.status(404).json({ message: "Not found" });

@@ -5,18 +5,53 @@ export type SubmissionStatus =
 	| "draft"
 	| "submitted"
 	| "under_review"
-	| "matched"
+	| "approved"
 	| "rejected"
+	| "matched"
 	| "closed";
+
+export interface ISubmissionDocument {
+	name: string;
+	url: string;
+	type: "pitch_deck" | "business_plan" | "financial_statement" | "legal_doc" | "video" | "other";
+	cloudinaryId?: string;
+	size?: number;
+	uploadedAt: Date;
+}
 
 export interface ISubmission extends Document {
 	entrepreneurId: Types.ObjectId;
 	title: string;
 	summary: string;
-	industry: string;
+	sector: string;
 	stage: StartupStage;
-	fundingGoal?: number;
+	targetAmount?: number;
 	currency: string;
+	problem: {
+		statement: string;
+		targetMarket: string;
+		marketSize: string;
+	};
+	solution: {
+		description: string;
+		uniqueValue: string;
+		competitiveAdvantage: string;
+	};
+	businessModel: {
+		revenueStreams: string;
+		pricingStrategy: string;
+		customerAcquisition: string;
+	};
+	financials: {
+		currentRevenue: string;
+		projectedRevenue: string;
+		burnRate: string;
+		runway: string;
+	};
+	documents: ISubmissionDocument[];
+	aiScore?: number;
+	aiAnalysis?: Record<string, unknown>;
+	currentStep: number;
 	status: SubmissionStatus;
 	reviewNotes?: string;
 	submittedAt?: Date;
@@ -24,6 +59,19 @@ export interface ISubmission extends Document {
 	createdAt: Date;
 	updatedAt: Date;
 }
+
+const documentSchema = new Schema<ISubmissionDocument>({
+	name: { type: String, required: true },
+	url: { type: String, required: true },
+	type: {
+		type: String,
+		enum: ["pitch_deck", "business_plan", "financial_statement", "legal_doc", "video", "other"],
+		default: "other",
+	},
+	cloudinaryId: { type: String },
+	size: { type: Number },
+	uploadedAt: { type: Date, default: Date.now },
+});
 
 const SubmissionSchema = new Schema<ISubmission>(
 	{
@@ -43,21 +91,49 @@ const SubmissionSchema = new Schema<ISubmission>(
 			required: true,
 			maxlength: 3000,
 		},
-		industry: {
+		sector: {
 			type: String,
-			required: true,
-			trim: true,
+			enum: [
+				"technology", "healthcare", "fintech", "education", "agriculture",
+				"energy", "real_estate", "manufacturing", "retail", "other",
+			],
+			default: "other",
 		},
 		stage: {
 			type: String,
 			enum: ["idea", "mvp", "growth", "scaling"] satisfies StartupStage[],
 			required: true,
 		},
-		fundingGoal: {
+		targetAmount: {
 			type: Number,
 			min: 0,
 			default: null,
 		},
+		problem: {
+			statement: { type: String, default: "" },
+			targetMarket: { type: String, default: "" },
+			marketSize: { type: String, default: "" },
+		},
+		solution: {
+			description: { type: String, default: "" },
+			uniqueValue: { type: String, default: "" },
+			competitiveAdvantage: { type: String, default: "" },
+		},
+		businessModel: {
+			revenueStreams: { type: String, default: "" },
+			pricingStrategy: { type: String, default: "" },
+			customerAcquisition: { type: String, default: "" },
+		},
+		financials: {
+			currentRevenue: { type: String, default: "" },
+			projectedRevenue: { type: String, default: "" },
+			burnRate: { type: String, default: "" },
+			runway: { type: String, default: "" },
+		},
+		documents: [documentSchema],
+		aiScore: { type: Number, min: 0, max: 100 },
+		aiAnalysis: { type: Schema.Types.Mixed },
+		currentStep: { type: Number, default: 1, min: 1, max: 5 },
 		currency: {
 			type: String,
 			default: "USD",
@@ -70,8 +146,9 @@ const SubmissionSchema = new Schema<ISubmission>(
 				"draft",
 				"submitted",
 				"under_review",
-				"matched",
+				"approved",
 				"rejected",
+				"matched",
 				"closed",
 			] satisfies SubmissionStatus[],
 			default: "draft",
@@ -92,7 +169,7 @@ const SubmissionSchema = new Schema<ISubmission>(
 	{ timestamps: true },
 );
 
-SubmissionSchema.index({ status: 1, industry: 1 });
+SubmissionSchema.index({ status: 1, sector: 1 });
 SubmissionSchema.index({ entrepreneurId: 1, status: 1 });
 
 export const Submission = model<ISubmission>("Submission", SubmissionSchema);
