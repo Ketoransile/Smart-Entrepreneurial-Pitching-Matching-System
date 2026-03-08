@@ -1,6 +1,0 @@
-﻿error TS2688: Cannot find type definition file for 'glob'.
-  The file is in the program because:
-    Entry point for implicit type library 'glob'
-undefined
-C:\Users\abdis\Desktop\finalproject\Smart-Entrepreneurial-Pitching-Matching-System\apps\api:
-ΓÇëERR_PNPM_RECURSIVE_EXEC_FIRST_FAILΓÇë Command failed with exit code 1: tsc --noEmit

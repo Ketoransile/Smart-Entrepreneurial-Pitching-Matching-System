@@ -15,7 +15,31 @@ import uploadRoutes from "./routes/upload.routes";
 const app = express();
 
 app.use(helmet());
-app.use(cors());
+
+const allowedOrigins = [
+	process.env.CLIENT_URL,
+	"https://sepms.vercel.app",
+	"https://smart-entrepreneurial-pitching-matc-alpha.vercel.app",
+	"http://localhost:3000",
+].filter(Boolean) as string[];
+
+app.use(
+	cors({
+		origin: (origin, callback) => {
+			// Allow requests with no origin (mobile apps, curl, etc.)
+			if (!origin) return callback(null, true);
+			// Allow requests from any vercel.app frontend (preview URLs included)
+			if (origin.endsWith(".vercel.app")) {
+				return callback(null, true);
+			}
+			if (allowedOrigins.some((allowed) => origin.startsWith(allowed))) {
+				return callback(null, true);
+			}
+			callback(new Error("Not allowed by CORS"));
+		},
+		credentials: true,
+	}),
+);
 app.use(
 	rateLimit({
 		windowMs: 15 * 60 * 1000,
