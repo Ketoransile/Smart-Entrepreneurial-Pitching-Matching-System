@@ -202,7 +202,7 @@ export default function Home() {
 	const glowOpacity = useTransform(scrollYProgress, [0, 1], [0, 1]);
 
 	const getDashboardRoute = () => {
-		if (user && userProfile?.role) {
+		if (userProfile?.role) {
 			const redirects: Record<string, string> = {
 				admin: "/admin/oversight",
 				entrepreneur: "/entrepreneur/dashboard",
@@ -210,7 +210,8 @@ export default function Home() {
 			};
 			return redirects[userProfile.role] || "/entrepreneur/dashboard";
 		}
-		return "/sign-in";
+		// User is logged in but profile hasn't loaded yet — go to a safe default
+		return "/entrepreneur/dashboard";
 	};
 
 	return (
@@ -736,7 +737,7 @@ export default function Home() {
 					<Accordion type="single" collapsible className="w-full space-y-3">
 						{FAQ.map((item, i) => (
 							<AccordionItem
-								key={i}
+								key={item.q}
 								value={`item-${i}`}
 								className="border-border/50 border rounded-lg px-5 bg-background"
 							>

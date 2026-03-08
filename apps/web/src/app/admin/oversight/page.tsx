@@ -103,7 +103,9 @@ export default function AdminOversight() {
 		try {
 			const token = await user.getIdToken();
 			const headers = { Authorization: `Bearer ${token}` };
-			const api = process.env.NEXT_PUBLIC_API_URL;
+			const api = (
+				process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api"
+			).replace(/\/+$/, "");
 
 			const [usersRes, subsRes] = await Promise.all([
 				fetch(`${api}/auth/admin/users?role=${roleFilter}`, { headers }),
@@ -139,7 +141,7 @@ export default function AdminOversight() {
 		try {
 			const token = await user.getIdToken();
 			await fetch(
-				`${process.env.NEXT_PUBLIC_API_URL}/auth/admin/users/${actionUser._id}/status`,
+				`${(process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api").replace(/\/+$/, "")}/auth/admin/users/${actionUser._id}/status`,
 				{
 					method: "PATCH",
 					headers: {
@@ -351,7 +353,8 @@ export default function AdminOversight() {
 													{s.title}
 												</TableCell>
 												<TableCell className="text-sm text-muted-foreground">
-													{(s.entrepreneurId as { fullName?: string })?.fullName || "—"}
+													{(s.entrepreneurId as { fullName?: string })
+														?.fullName || "—"}
 												</TableCell>
 												<TableCell className="text-sm capitalize">
 													{s.sector?.replace("_", " ")}

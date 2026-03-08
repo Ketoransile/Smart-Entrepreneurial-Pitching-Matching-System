@@ -48,7 +48,9 @@ function ReviewPitchPageInner() {
 	const [submitting, setSubmitting] = useState(false);
 	const [error, setError] = useState("");
 
-	const API_URL = process.env.NEXT_PUBLIC_API_URL;
+	const API_URL = (
+		process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api"
+	).replace(/\/+$/, "");
 
 	const loadSubmission = useCallback(async () => {
 		if (!id || !user) return;

@@ -92,7 +92,7 @@ export default function InvestorFeed() {
 			if (sector !== "all") params.set("sector", sector);
 
 			const res = await fetch(
-				`${process.env.NEXT_PUBLIC_API_URL}/submissions/feed/browse?${params}`,
+				`${(process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api").replace(/\/+$/, "")}/submissions/feed/browse?${params}`,
 				{ headers: { Authorization: `Bearer ${token}` } },
 			);
 			const data = await res.json();

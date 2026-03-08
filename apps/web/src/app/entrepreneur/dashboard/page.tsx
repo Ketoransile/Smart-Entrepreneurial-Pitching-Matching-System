@@ -58,7 +58,7 @@ function EntrepreneurDashboardInner() {
 		try {
 			const token = await user.getIdToken();
 			const res = await fetch(
-				`${process.env.NEXT_PUBLIC_API_URL}/submissions`,
+				`${(process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api").replace(/\/+$/, "")}/submissions`,
 				{
 					headers: { Authorization: `Bearer ${token}` },
 				},

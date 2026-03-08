@@ -58,7 +58,9 @@ function NewPitchPageInner() {
 	const [saving, setSaving] = useState(false);
 	const [saveMessage, setSaveMessage] = useState("");
 
-	const API_URL = process.env.NEXT_PUBLIC_API_URL;
+	const API_URL = (
+		process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api"
+	).replace(/\/+$/, "");
 
 	// Form instances per step
 	const metadataForm = useForm<MetadataData>({

@@ -29,10 +29,9 @@ export default function ProtectedRoute({
 			return;
 		}
 
-		// Logged in via Firebase but no backend profile (could be fetching)
+		// Logged in via Firebase but no backend profile yet — wait for it,
+		// don't redirect (that would cause infinite loops when the API is down)
 		if (!userProfile) {
-			// Give it a moment or redirect to a default dashboard if they somehow bypassed it
-			router.push("/entrepreneur/dashboard");
 			return;
 		}
 
@@ -72,8 +71,8 @@ export default function ProtectedRoute({
 		requireEmailVerified,
 	]);
 
-	// Show loading spinner
-	if (loading) {
+	// Show loading spinner while auth state or profile is loading
+	if (loading || (user && !userProfile)) {
 		return (
 			<div className="flex min-h-screen items-center justify-center bg-background">
 				<div className="flex flex-col items-center gap-4">

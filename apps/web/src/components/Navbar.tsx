@@ -14,7 +14,7 @@ export default function Navbar() {
 	const lastScrollY = useRef(0);
 
 	const getDashboardRoute = () => {
-		if (user && userProfile?.role) {
+		if (userProfile?.role) {
 			const redirects: Record<string, string> = {
 				admin: "/admin/oversight",
 				entrepreneur: "/entrepreneur/dashboard",
@@ -22,7 +22,8 @@ export default function Navbar() {
 			};
 			return redirects[userProfile.role] || "/entrepreneur/dashboard";
 		}
-		return "/sign-in";
+		// User is logged in but profile hasn't loaded yet — go to a safe default
+		return "/entrepreneur/dashboard";
 	};
 
 	useEffect(() => {
