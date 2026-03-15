@@ -1,5 +1,6 @@
 "use client";
 
+import { CheckCircle2, ClipboardList, DollarSign, LayoutDashboard, Rocket, Send, Settings, Users } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import DashboardLayout from "@/components/DashboardLayout";
 import ProtectedRoute from "@/components/ProtectedRoute";
@@ -57,10 +58,10 @@ interface Stats {
 }
 
 const ADMIN_NAV = [
-	{ label: "Overview", href: "/admin/oversight", icon: "📊" },
-	{ label: "Users", href: "/admin/users", icon: "👥" },
-	{ label: "Submissions", href: "/admin/submissions", icon: "📋" },
-	{ label: "Settings", href: "/admin/settings", icon: "⚙️" },
+	{ label: "Overview", href: "/admin/oversight", icon: <LayoutDashboard className="h-4 w-4" /> },
+	{ label: "Users", href: "/admin/users", icon: <Users className="h-4 w-4" /> },
+	{ label: "Submissions", href: "/admin/submissions", icon: <ClipboardList className="h-4 w-4" /> },
+	{ label: "Settings", href: "/admin/settings", icon: <Settings className="h-4 w-4" /> },
 ];
 
 function roleBadge(role: string) {
@@ -174,20 +175,20 @@ export default function AdminOversight() {
 				{/* Stats */}
 				<div className="grid gap-4 grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 mb-8">
 					{[
-						{ label: "Total Users", value: userStats.total, icon: "👥" },
+						{ label: "Total Users", value: userStats.total, icon: <Users className="h-4 w-4" /> },
 						{
 							label: "Entrepreneurs",
 							value: userStats.entrepreneurs || 0,
-							icon: "🚀",
+							icon: <Rocket className="h-4 w-4" />,
 						},
-						{ label: "Investors", value: userStats.investors || 0, icon: "💰" },
-						{ label: "Total Pitches", value: subStats.total, icon: "📋" },
-						{ label: "Submitted", value: subStats.submitted || 0, icon: "📨" },
-						{ label: "Approved", value: subStats.approved || 0, icon: "✅" },
+						{ label: "Investors", value: userStats.investors || 0, icon: <DollarSign className="h-4 w-4" /> },
+						{ label: "Total Pitches", value: subStats.total, icon: <ClipboardList className="h-4 w-4" /> },
+						{ label: "Submitted", value: subStats.submitted || 0, icon: <Send className="h-4 w-4" /> },
+						{ label: "Approved", value: subStats.approved || 0, icon: <CheckCircle2 className="h-4 w-4" /> },
 					].map((stat) => (
 						<Card key={stat.label}>
 							<CardContent className="p-4">
-								<p className="text-xs text-muted-foreground">
+								<p className="text-xs text-muted-foreground flex items-center gap-1.5">
 									{stat.icon} {stat.label}
 								</p>
 								<p className="text-2xl font-bold mt-1">{stat.value}</p>

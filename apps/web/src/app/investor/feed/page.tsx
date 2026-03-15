@@ -1,5 +1,6 @@
 "use client";
 
+import { Briefcase, Compass, MessageSquare, Star, User } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 import DashboardLayout from "@/components/DashboardLayout";
@@ -35,10 +36,10 @@ interface Submission {
 }
 
 const INVESTOR_NAV = [
-	{ label: "Discovery Feed", href: "/investor/feed", icon: "🔍" },
-	{ label: "Saved Pitches", href: "/investor/saved", icon: "⭐" },
-	{ label: "Messages", href: "/investor/messages", icon: "💬" },
-	{ label: "My Profile", href: "/investor/profile", icon: "👤" },
+	{ label: "Discovery Feed", href: "/investor/feed", icon: <Compass className="h-4 w-4" /> },
+	{ label: "Saved Pitches", href: "/investor/saved", icon: <Star className="h-4 w-4" /> },
+	{ label: "Messages", href: "/investor/messages", icon: <MessageSquare className="h-4 w-4" /> },
+	{ label: "My Profile", href: "/investor/profile", icon: <User className="h-4 w-4" /> },
 ];
 
 const SECTORS = [
@@ -186,7 +187,7 @@ export default function InvestorFeed() {
 				) : submissions.length === 0 ? (
 					<Card className="border-dashed">
 						<CardContent className="flex flex-col items-center justify-center py-16">
-							<p className="text-4xl mb-4">💼</p>
+							<Briefcase className="h-10 w-10 text-muted-foreground mb-4" />
 							<h3 className="text-lg font-semibold mb-2">No pitches found</h3>
 							<p className="text-muted-foreground text-center max-w-md text-sm">
 								{sector !== "all"

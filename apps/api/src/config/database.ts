@@ -17,12 +17,22 @@ export async function connectDB(): Promise<void> {
 	}
 
 	try {
-		await mongoose.connect(MONGODB_URI as string, {
-			dbName: process.env.MONGODB_DB_NAME ?? "spems",
-		});
+		const dbName = process.env.MONGODB_DB_NAME ?? "spems";
+
+		// Mask credentials in the URI for safe logging
+		const maskedUri = (MONGODB_URI as string).replace(
+			/\/\/([^:]+):([^@]+)@/,
+			"//***:***@",
+		);
+		console.log(`🔗  Connecting to MongoDB: ${maskedUri}`);
+		console.log(`📂  Database name: ${dbName}`);
+
+		await mongoose.connect(MONGODB_URI as string, { dbName });
 
 		isConnected = true;
 		console.log("✅  MongoDB connected successfully.");
+		console.log(`📍  Connected host: ${mongoose.connection.host}`);
+		console.log(`📂  Connected DB:   ${mongoose.connection.name}`);
 
 		mongoose.connection.on("disconnected", () => {
 			console.warn("⚠️  MongoDB disconnected.");

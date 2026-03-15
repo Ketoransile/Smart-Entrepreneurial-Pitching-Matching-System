@@ -224,9 +224,9 @@ export default function Home() {
 
 				{/* Centered Ambient Lighting (Responsive for Light/Dark Mode) */}
 				<motion.div
-					className="pointer-events-none absolute top-[120px] left-1/2 -translate-x-1/2 w-[350px] sm:w-[800px] h-[300px] sm:h-[400px] bg-indigo-500/20 dark:bg-indigo-500/30 blur-[75px] sm:blur-[130px] rounded-[100%]"
+					className="pointer-events-none absolute top-[120px] left-1/2 -translate-x-1/2 w-[350px] sm:w-[800px] h-[300px] sm:h-[400px] bg-indigo-500/15 dark:bg-indigo-500/20 blur-[75px] sm:blur-[130px] rounded-full"
 					animate={{
-						opacity: [0.5, 0.9, 0.5],
+						opacity: [0.3, 0.6, 0.3],
 						scale: [1, 1.05, 1],
 					}}
 					transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
@@ -464,10 +464,10 @@ export default function Home() {
 					className="relative mx-auto max-w-6xl px-4 sm:px-8 pb-32 pt-10"
 					style={{ perspective: "2000px" }}
 				>
-					{/* Intense Ambient Glow Behind Dashboard */}
+					{/* Elegant Aurora Glow Behind Dashboard */}
 					<motion.div
 						style={{ opacity: glowOpacity, scale }}
-						className="absolute left-1/2 top-1/4 -translate-x-1/2 w-[90%] sm:w-[80%] h-[60%] bg-primary/40 dark:bg-primary/50 blur-[60px] sm:blur-[120px] rounded-[100%] pointer-events-none"
+						className="absolute left-1/2 top-1/3 -translate-x-1/2 w-[90%] sm:w-[70%] h-[40%] sm:h-[50%] bg-gradient-to-r from-blue-500/20 via-indigo-500/20 to-purple-500/20 dark:from-blue-500/30 dark:via-indigo-500/30 dark:to-purple-500/30 blur-[60px] sm:blur-[100px] rounded-full pointer-events-none"
 					/>
 
 					<motion.div

@@ -44,13 +44,13 @@ interface AuthContextType {
 		password: string,
 		fullName: string,
 		additionalData?: { role: string; companyName?: string; fundName?: string },
-	) => Promise<void>;
-	signIn: (email: string, password: string) => Promise<void>;
+	) => Promise<UserProfile>;
+	signIn: (email: string, password: string) => Promise<UserProfile>;
 	signInWithGoogle: (additionalData?: {
 		role: string;
 		companyName?: string;
 		fundName?: string;
-	}) => Promise<void>;
+	}) => Promise<UserProfile>;
 	signOut: () => Promise<void>;
 	resendVerificationEmail: () => Promise<void>;
 	refreshUserProfile: () => Promise<void>;
@@ -132,6 +132,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 	// Listen for Firebase auth state changes
 	useEffect(() => {
 		if (!auth) {
+			// eslint-disable-next-line react-hooks/set-state-in-effect
 			setLoading(false);
 			return;
 		}
@@ -160,7 +161,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 		password: string,
 		fullName: string,
 		additionalData?: { role: string; companyName?: string; fundName?: string },
-	) => {
+	): Promise<UserProfile> => {
 		if (!auth) throw new Error("Firebase not initialized");
 		const credential = await createUserWithEmailAndPassword(
 			auth,
@@ -178,21 +179,29 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 			true,
 			additionalData,
 		);
+		
+		if (!profile) throw new Error("Failed to create profile in backend");
+		
 		setUserProfile(profile);
+		return profile;
 	};
 
-	const signIn = async (email: string, password: string) => {
+	const signIn = async (email: string, password: string): Promise<UserProfile> => {
 		if (!auth) throw new Error("Firebase not initialized");
 		const credential = await signInWithEmailAndPassword(auth, email, password);
 		const profile = await fetchUserProfile(credential.user);
+		
+		if (!profile) throw new Error("Failed to fetch user profile");
+		
 		setUserProfile(profile);
+		return profile;
 	};
 
 	const signInWithGoogle = async (additionalData?: {
 		role: string;
 		companyName?: string;
 		fundName?: string;
-	}) => {
+	}): Promise<UserProfile> => {
 		if (!auth || !googleProvider) throw new Error("Firebase not initialized");
 		const credential = await signInWithPopup(auth, googleProvider);
 
@@ -206,7 +215,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 			);
 		}
 
+		if (!profile) throw new Error("Failed to authenticate with backend");
+
+		console.log("🔑 signInWithGoogle — profile:", { role: profile.role, email: profile.email, uid: profile.uid });
+
 		setUserProfile(profile);
+		return profile;
 	};
 
 	const signOut = async () => {

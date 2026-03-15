@@ -37,8 +37,22 @@ export const authenticate = async (
         const decodedToken = await firebaseAuth().verifyIdToken(token);
         req.firebaseUser = decodedToken;
 
-        // Find user and auto-sync emailVerified from Firebase
-        const user = await User.findOne({ firebaseUid: decodedToken.uid });
+        // Find user by Firebase UID first, then fall back to email
+        let user = await User.findOne({ firebaseUid: decodedToken.uid });
+
+        // If no user found by UID, try by email (handles provider linking:
+        // e.g., admin created via email/password now signing in with Google)
+        if (!user && decodedToken.email) {
+            user = await User.findOne({ email: decodedToken.email });
+            if (user) {
+                // Link the new Firebase UID to the existing account
+                user.firebaseUid = decodedToken.uid;
+                if (decodedToken.picture && !user.photoURL) {
+                    user.photoURL = decodedToken.picture;
+                }
+                await user.save();
+            }
+        }
 
         if (user && decodedToken.email_verified && !user.emailVerified) {
             user.emailVerified = true;

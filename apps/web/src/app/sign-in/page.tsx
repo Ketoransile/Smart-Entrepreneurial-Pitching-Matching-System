@@ -17,13 +17,13 @@ export default function SignInPage() {
 	const { signIn, signInWithGoogle, userProfile } = useAuth();
 	const router = useRouter();
 
-	const getRedirect = () => {
+	const getRedirect = (role?: string) => {
 		const redirects: Record<string, string> = {
 			admin: "/admin/oversight",
 			entrepreneur: "/entrepreneur/dashboard",
 			investor: "/investor/feed",
 		};
-		return redirects[userProfile?.role || ""] || "/entrepreneur/dashboard";
+		return redirects[role || ""] || "/";
 	};
 
 	const handleSubmit = async (e: React.FormEvent) => {
@@ -31,8 +31,8 @@ export default function SignInPage() {
 		setLoading(true);
 
 		try {
-			await signIn(email, password);
-			router.push(getRedirect());
+			const profile = await signIn(email, password);
+			router.push(getRedirect(profile.role || ""));
 		} catch (err: unknown) {
 			const message = err instanceof Error ? err.message : "Failed to sign in";
 			toast.error(message);
@@ -45,8 +45,8 @@ export default function SignInPage() {
 		setLoading(true);
 
 		try {
-			await signInWithGoogle();
-			router.push(getRedirect());
+			const profile = await signInWithGoogle();
+			router.push(getRedirect(profile.role || ""));
 		} catch (err: unknown) {
 			const message =
 				err instanceof Error ? err.message : "Failed to sign in with Google";
