@@ -62,14 +62,14 @@ function SignUpForm() {
 		setLoading(true);
 
 		try {
-			await signInWithGoogle({ role, companyName, fundName });
+			const profile = await signInWithGoogle({ role, companyName, fundName });
 
 			const redirects: Record<string, string> = {
 				admin: "/admin/oversight",
 				entrepreneur: "/entrepreneur/dashboard",
 				investor: "/investor/feed",
 			};
-			router.push(redirects[role] || "/");
+			router.push(redirects[profile.role || ""] || "/");
 		} catch (err: unknown) {
 			const message =
 				err instanceof Error ? err.message : "Failed to sign up with Google";
@@ -124,20 +124,22 @@ function SignUpForm() {
 
 					{/* Role Selection Toggle */}
 					<div className="flex rounded-lg border border-border/50 bg-muted/30 p-1">
-						<button
+						<Button
 							type="button"
+							variant="ghost"
 							onClick={() => setRole("entrepreneur")}
-							className={`flex flex-1 items-center justify-center rounded-md py-2.5 text-sm font-medium transition-all ${role === "entrepreneur" ? "bg-background text-foreground shadow-sm border border-border/50" : "text-muted-foreground hover:text-foreground"}`}
+							className={`flex flex-1 items-center justify-center rounded-md py-2.5 text-sm font-medium transition-all h-auto ${role === "entrepreneur" ? "bg-background text-foreground shadow-sm border border-border/50 hover:bg-background" : "text-muted-foreground hover:text-foreground hover:bg-transparent"}`}
 						>
 							Entrepreneur
-						</button>
-						<button
+						</Button>
+						<Button
 							type="button"
+							variant="ghost"
 							onClick={() => setRole("investor")}
-							className={`flex flex-1 items-center justify-center rounded-md py-2.5 text-sm font-medium transition-all ${role === "investor" ? "bg-background text-foreground shadow-sm border border-border/50" : "text-muted-foreground hover:text-foreground"}`}
+							className={`flex flex-1 items-center justify-center rounded-md py-2.5 text-sm font-medium transition-all h-auto ${role === "investor" ? "bg-background text-foreground shadow-sm border border-border/50 hover:bg-background" : "text-muted-foreground hover:text-foreground hover:bg-transparent"}`}
 						>
 							Investor
-						</button>
+						</Button>
 					</div>
 
 					<div className="space-y-4">

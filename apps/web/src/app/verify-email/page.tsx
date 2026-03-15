@@ -248,12 +248,13 @@ export default function VerifyEmailPage() {
 					<div className="flex flex-col items-center gap-2 pt-4">
 						<p className="text-sm text-muted-foreground">
 							Wrong email?{" "}
-							<button
+							<Button
+								variant="link"
 								onClick={handleSignOut}
-								className="font-semibold text-primary hover:underline"
+								className="p-0 h-auto font-semibold text-primary"
 							>
 								Sign out and try again
-							</button>
+							</Button>
 						</p>
 					</div>
 				</div>

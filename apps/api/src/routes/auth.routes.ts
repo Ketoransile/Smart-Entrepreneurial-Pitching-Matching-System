@@ -9,25 +9,66 @@ const router = Router();
  */
 router.post("/register", authenticate, async (req: Request, res: Response): Promise<void> => {
     try {
-        const existingUser = await User.findOne({ firebaseUid: req.firebaseUser!.uid });
+        console.log("📋 POST /register — firebaseUid:", req.firebaseUser!.uid);
+        console.log("📋 POST /register — email:", req.firebaseUser!.email);
+        console.log("📋 POST /register — body.role:", req.body.role);
 
-        if (existingUser) {
+        // 1. Check for existing user by Firebase UID
+        const existingByUid = await User.findOne({ firebaseUid: req.firebaseUser!.uid });
+
+        if (existingByUid) {
             res.status(200).json({
                 status: "success",
                 message: "User already registered",
                 user: {
-                    uid: existingUser.firebaseUid,
-                    email: existingUser.email,
-                    displayName: existingUser.fullName,
-                    role: existingUser.role,
-                    status: existingUser.status,
-                    photoURL: existingUser.photoURL,
-                    emailVerified: existingUser.emailVerified,
+                    uid: existingByUid.firebaseUid,
+                    email: existingByUid.email,
+                    displayName: existingByUid.fullName,
+                    role: existingByUid.role,
+                    status: existingByUid.status,
+                    photoURL: existingByUid.photoURL,
+                    emailVerified: existingByUid.emailVerified,
                 },
             });
             return;
         }
 
+        // 2. Check for existing user by email (handles Google sign-in for users
+        //    originally created with email/password — different Firebase UID, same email)
+        const email = req.firebaseUser!.email;
+        if (email) {
+            const existingByEmail = await User.findOne({ email });
+
+            if (existingByEmail) {
+                // Link the new Firebase UID to the existing account so future
+                // lookups by UID succeed immediately
+                existingByEmail.firebaseUid = req.firebaseUser!.uid;
+                if (req.firebaseUser!.picture && !existingByEmail.photoURL) {
+                    existingByEmail.photoURL = req.firebaseUser!.picture;
+                }
+                if (req.firebaseUser!.email_verified) {
+                    existingByEmail.emailVerified = true;
+                }
+                await existingByEmail.save();
+
+                res.status(200).json({
+                    status: "success",
+                    message: "Existing account linked to Google sign-in",
+                    user: {
+                        uid: existingByEmail.firebaseUid,
+                        email: existingByEmail.email,
+                        displayName: existingByEmail.fullName,
+                        role: existingByEmail.role,
+                        status: existingByEmail.status,
+                        photoURL: existingByEmail.photoURL,
+                        emailVerified: existingByEmail.emailVerified,
+                    },
+                });
+                return;
+            }
+        }
+
+        // 3. Brand-new user — create with the requested role
         const requestedRole = req.body.role as "entrepreneur" | "investor" | undefined;
         const assignedRole = (requestedRole && ["entrepreneur", "investor"].includes(requestedRole)) ? requestedRole : "entrepreneur";
         const initialStatus = requestedRole ? "pending" : "unverified";
@@ -66,6 +107,15 @@ router.post("/register", authenticate, async (req: Request, res: Response): Prom
  */
 router.get("/me", authenticate, async (req: Request, res: Response): Promise<void> => {
     try {
+        console.log("📋 GET /auth/me — firebaseUid:", req.firebaseUser?.uid);
+        console.log("📋 GET /auth/me — req.user:", req.user ? { email: req.user.email, role: req.user.role, firebaseUid: req.user.firebaseUid } : "null");
+
+        // DEBUG: find ALL documents with this email to detect duplicates
+        if (req.firebaseUser?.email) {
+            const allByEmail = await User.find({ email: req.firebaseUser.email }).select("firebaseUid email role status");
+            console.log("📋 DEBUG — all docs for this email:", JSON.stringify(allByEmail, null, 2));
+        }
+
         if (!req.user) {
             res.status(404).json({
                 status: "error",

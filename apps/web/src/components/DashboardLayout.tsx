@@ -1,7 +1,7 @@
 "use client";
 
+import { ChevronsUpDown, Layers, LogOut, Settings, User } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
-import { useState } from "react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import {
@@ -12,13 +12,29 @@ import {
 	DropdownMenuSeparator,
 	DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { useAuth } from "@/context/AuthContext";
+import {
+	Sidebar,
+	SidebarContent,
+	SidebarFooter,
+	SidebarHeader,
+	SidebarMenu,
+	SidebarMenuItem,
+	SidebarMenuButton,
+	SidebarProvider,
+	SidebarInset,
+	SidebarTrigger,
+	SidebarRail,
+	SidebarGroup,
+	SidebarGroupContent,
+	SidebarGroupLabel,
+} from "@/components/ui/sidebar";
+import { Separator } from "@/components/ui/separator";
 
 interface NavItem {
 	label: string;
 	href: string;
-	icon: string;
+	icon: string | React.ReactNode;
 }
 
 interface DashboardLayoutProps {
@@ -35,7 +51,6 @@ export default function DashboardLayout({
 	const { userProfile, signOut } = useAuth();
 	const router = useRouter();
 	const pathname = usePathname();
-	const [mobileOpen, setMobileOpen] = useState(false);
 
 	const initials =
 		userProfile?.displayName
@@ -45,133 +60,173 @@ export default function DashboardLayout({
 			.toUpperCase()
 			.slice(0, 2) || "U";
 
-	const SidebarContent = () => (
-		<nav className="flex flex-col gap-1 px-3 py-4">
-			{navItems.map((item) => {
-				const isActive =
-					pathname === item.href || pathname.startsWith(`${item.href}/`);
-				return (
-					<Button
-						key={item.href}
-						variant={isActive ? "secondary" : "ghost"}
-						className={`justify-start gap-3 h-10 px-3 text-sm font-medium ${
-							isActive
-								? "bg-primary/10 text-primary hover:bg-primary/15"
-								: "text-muted-foreground hover:text-foreground"
-						}`}
-						onClick={() => {
-							router.push(item.href);
-							setMobileOpen(false);
-						}}
-					>
-						<span className="text-base">{item.icon}</span>
-						{item.label}
-					</Button>
-				);
-			})}
-		</nav>
-	);
-
 	return (
-		<div className="min-h-screen bg-background">
-			{/* Desktop sidebar */}
-			<aside className="fixed inset-y-0 left-0 z-30 hidden w-64 border-r border-border/40 bg-card lg:block">
-				{/* Logo */}
-				<div className="flex h-16 items-center gap-3 border-b border-border/40 px-6">
-					<div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground font-bold text-sm">
-						S
-					</div>
-					<span className="font-semibold text-lg">{title}</span>
-				</div>
-
-				<SidebarContent />
-
-				{/* User section at bottom */}
-				<div className="absolute bottom-0 left-0 right-0 border-t border-border/40 p-4">
-					<div className="flex items-center gap-3">
-						<Avatar className="h-8 w-8">
-							<AvatarFallback className="bg-primary/10 text-primary text-xs font-semibold">
-								{initials}
-							</AvatarFallback>
-						</Avatar>
-						<div className="flex-1 min-w-0">
-							<p className="text-sm font-medium truncate">
-								{userProfile?.displayName}
-							</p>
-							<p className="text-xs text-muted-foreground truncate">
-								{userProfile?.email}
-							</p>
-						</div>
-					</div>
-				</div>
-			</aside>
-
-			{/* Main content */}
-			<div className="lg:pl-64">
-				{/* Top header */}
-				<header className="sticky top-0 z-20 flex h-16 items-center gap-4 border-b border-border/40 bg-card/80 backdrop-blur-sm px-4 sm:px-6">
-					{/* Mobile menu */}
-					<Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
-						<SheetTrigger asChild>
-							<Button variant="ghost" size="sm" className="lg:hidden">
-								<span className="text-xl">☰</span>
-							</Button>
-						</SheetTrigger>
-						<SheetContent side="left" className="w-64 p-0">
-							<div className="flex h-16 items-center gap-3 border-b border-border/40 px-6">
-								<div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground font-bold text-sm">
-									S
+		<SidebarProvider>
+			<Sidebar collapsible="icon">
+				<SidebarHeader className="h-16 border-b flex items-center justify-center group-data-[collapsible=icon]:px-0">
+					<SidebarMenu className="group-data-[collapsible=icon]:items-center">
+						<SidebarMenuItem>
+							<SidebarMenuButton size="lg" className="pointer-events-none group-data-[collapsible=icon]:!justify-center group-data-[collapsible=icon]:!bg-transparent group-data-[collapsible=icon]:!p-0">
+								<div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-primary text-primary-foreground shadow-sm group-data-[collapsible=icon]:size-10 group-data-[collapsible=icon]:rounded-xl transition-all">
+									<Layers className="size-5" />
 								</div>
-								<span className="font-semibold text-lg">{title}</span>
-							</div>
-							<SidebarContent />
-						</SheetContent>
-					</Sheet>
+								<div className="grid flex-1 text-left leading-tight group-data-[collapsible=icon]:hidden">
+									<span className="truncate font-bold tracking-tight text-lg">
+										{title}
+									</span>
+								</div>
+							</SidebarMenuButton>
+						</SidebarMenuItem>
+					</SidebarMenu>
+				</SidebarHeader>
 
-					<div className="flex-1" />
+				<SidebarContent className="px-3 py-4 group-data-[collapsible=icon]:px-0 group-data-[collapsible=icon]:items-center">
+					<SidebarGroup className="group-data-[collapsible=icon]:p-0 group-data-[collapsible=icon]:items-center">
+						<SidebarGroupLabel className="mb-2 px-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground/70 group-data-[collapsible=icon]:hidden">
+							Overview
+						</SidebarGroupLabel>
+						<SidebarGroupContent className="group-data-[collapsible=icon]:flex group-data-[collapsible=icon]:flex-col group-data-[collapsible=icon]:items-center">
+							<SidebarMenu className="gap-1.5 group-data-[collapsible=icon]:items-center">
+								{navItems.map((item) => {
+									const isActive =
+										pathname === item.href ||
+										pathname.startsWith(`${item.href}/`);
+									return (
+										<SidebarMenuItem key={item.href}>
+											<SidebarMenuButton
+												isActive={isActive}
+												onClick={() => router.push(item.href)}
+												tooltip={item.label}
+												className="cursor-pointer rounded-md transition-all h-9 group-data-[collapsible=icon]:!justify-center group-data-[collapsible=icon]:!p-0"
+											>
+												{item.icon}
+												<span className="font-medium group-data-[collapsible=icon]:hidden">{item.label}</span>
+											</SidebarMenuButton>
+										</SidebarMenuItem>
+									);
+								})}
+							</SidebarMenu>
+						</SidebarGroupContent>
+					</SidebarGroup>
+				</SidebarContent>
 
-					{/* User dropdown */}
-					<DropdownMenu>
-						<DropdownMenuTrigger asChild>
-							<Button variant="ghost" className="gap-2 px-2">
-								<Avatar className="h-8 w-8">
-									<AvatarFallback className="bg-primary/10 text-primary text-xs font-semibold">
-										{initials}
-									</AvatarFallback>
-								</Avatar>
-								<span className="hidden sm:block text-sm font-medium">
-									{userProfile?.displayName}
-								</span>
-							</Button>
-						</DropdownMenuTrigger>
-						<DropdownMenuContent align="end" className="w-56">
-							<DropdownMenuLabel>
-								<p className="font-medium">{userProfile?.displayName}</p>
-								<p className="text-xs text-muted-foreground">
-									{userProfile?.email}
-								</p>
-							</DropdownMenuLabel>
-							<DropdownMenuSeparator />
-							<DropdownMenuItem className="text-muted-foreground">
-								<span className="mr-2">👤</span> Profile
-							</DropdownMenuItem>
-							<DropdownMenuItem className="text-muted-foreground">
-								<span className="mr-2">⚙️</span> Settings
-							</DropdownMenuItem>
-							<DropdownMenuSeparator />
-							<DropdownMenuItem
-								onClick={signOut}
-								className="text-destructive focus:text-destructive"
-							>
-								<span className="mr-2">🚪</span> Sign Out
-							</DropdownMenuItem>
-						</DropdownMenuContent>
-					</DropdownMenu>
+				<SidebarFooter className="px-3 pb-4 pt-2 group-data-[collapsible=icon]:px-0 group-data-[collapsible=icon]:items-center">
+					<SidebarMenu className="group-data-[collapsible=icon]:items-center">
+						<SidebarMenuItem>
+							<DropdownMenu>
+								<DropdownMenuTrigger asChild>
+									<SidebarMenuButton
+										size="lg"
+										className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground cursor-pointer group-data-[collapsible=icon]:!justify-center group-data-[collapsible=icon]:!p-0 group-data-[collapsible=icon]:!size-10 group-data-[collapsible=icon]:rounded-xl transition-all"
+									>
+										<Avatar className="h-8 w-8 rounded-lg group-data-[collapsible=icon]:size-10 group-data-[collapsible=icon]:rounded-xl transition-all">
+											<AvatarFallback className="rounded-lg bg-primary/10 text-xs font-semibold text-primary">
+												{initials}
+											</AvatarFallback>
+										</Avatar>
+										<div className="grid flex-1 text-left text-sm leading-tight group-data-[collapsible=icon]:hidden">
+											<span className="truncate font-semibold">
+												{userProfile?.displayName || "User"}
+											</span>
+											<span className="truncate text-xs">
+												{userProfile?.email || ""}
+											</span>
+										</div>
+										<ChevronsUpDown className="ml-auto h-4 w-4 group-data-[collapsible=icon]:hidden" />
+									</SidebarMenuButton>
+								</DropdownMenuTrigger>
+								<DropdownMenuContent
+									className="w-[--radix-dropdown-menu-trigger-width] min-w-56 rounded-lg"
+									side="bottom"
+									align="end"
+									sideOffset={4}
+								>
+									<DropdownMenuLabel className="p-0 font-normal">
+										<div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
+											<Avatar className="h-8 w-8 rounded-lg">
+												<AvatarFallback className="rounded-lg bg-primary/10 text-primary">
+													{initials}
+												</AvatarFallback>
+											</Avatar>
+											<div className="grid flex-1 text-left text-sm leading-tight">
+												<span className="truncate font-semibold">
+													{userProfile?.displayName}
+												</span>
+												<span className="truncate text-xs">
+													{userProfile?.email}
+												</span>
+											</div>
+										</div>
+									</DropdownMenuLabel>
+									<DropdownMenuSeparator />
+									<DropdownMenuItem className="cursor-pointer">
+										<User className="mr-2 h-4 w-4" /> Profile
+									</DropdownMenuItem>
+									<DropdownMenuItem className="cursor-pointer">
+										<Settings className="mr-2 h-4 w-4" /> Settings
+									</DropdownMenuItem>
+									<DropdownMenuSeparator />
+									<DropdownMenuItem
+										onClick={signOut}
+										className="cursor-pointer text-destructive focus:text-destructive"
+									>
+										<LogOut className="mr-2 h-4 w-4" /> Sign Out
+									</DropdownMenuItem>
+								</DropdownMenuContent>
+							</DropdownMenu>
+						</SidebarMenuItem>
+					</SidebarMenu>
+				</SidebarFooter>
+				<SidebarRail />
+			</Sidebar>
+
+			<SidebarInset>
+				<header className="sticky top-0 z-20 flex h-16 shrink-0 items-center justify-between gap-2 border-b bg-background px-4">
+					<div className="flex items-center gap-2">
+						<SidebarTrigger className="-ml-1" />
+						<Separator orientation="vertical" className="mr-2 h-4" />
+						<h1 className="text-sm font-semibold">{title}</h1>
+					</div>
+
+					<div className="flex items-center gap-2">
+						<DropdownMenu>
+							<DropdownMenuTrigger asChild>
+								<Button
+									variant="ghost"
+									className="relative h-8 w-8 rounded-full"
+								>
+									<Avatar className="h-8 w-8">
+										<AvatarFallback className="bg-primary/10 text-primary text-xs">
+											{initials}
+										</AvatarFallback>
+									</Avatar>
+								</Button>
+							</DropdownMenuTrigger>
+							<DropdownMenuContent className="w-56" align="end" forceMount>
+								<DropdownMenuLabel className="font-normal">
+									<div className="flex flex-col space-y-1">
+										<p className="text-sm font-medium leading-none">
+											{userProfile?.displayName}
+										</p>
+										<p className="text-xs leading-none text-muted-foreground">
+											{userProfile?.email}
+										</p>
+									</div>
+								</DropdownMenuLabel>
+								<DropdownMenuSeparator />
+								<DropdownMenuItem className="cursor-pointer" onClick={signOut}>
+									<LogOut className="mr-2 h-4 w-4" /> Sign Out
+								</DropdownMenuItem>
+							</DropdownMenuContent>
+						</DropdownMenu>
+					</div>
 				</header>
 
-				{/* Page content */}
-				<main className="p-4 sm:p-6 lg:p-8">{children}</main>
-			</div>
-		</div>
+				<main className="flex-1 overflow-auto p-4 sm:p-6 lg:p-8">
+					{children}
+				</main>
+			</SidebarInset>
+		</SidebarProvider>
 	);
 }
+

@@ -1,5 +1,6 @@
 "use client";
 
+import { BarChart3, FileText, Handshake, MessageSquare, PenLine, Rocket, Send, User } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useCallback, useEffect, useState } from "react";
 import DashboardLayout from "@/components/DashboardLayout";
@@ -22,10 +23,10 @@ interface Submission {
 }
 
 const ENTREPRENEUR_NAV = [
-	{ label: "Dashboard", href: "/entrepreneur/dashboard", icon: "📊" },
-	{ label: "New Pitch", href: "/entrepreneur/pitch/new", icon: "✏️" },
-	{ label: "Messages", href: "/entrepreneur/messages", icon: "💬" },
-	{ label: "Profile", href: "/entrepreneur/profile", icon: "👤" },
+	{ label: "Dashboard", href: "/entrepreneur/dashboard", icon: <BarChart3 className="h-4 w-4" /> },
+	{ label: "New Pitch", href: "/entrepreneur/pitch/new", icon: <PenLine className="h-4 w-4" /> },
+	{ label: "Messages", href: "/entrepreneur/messages", icon: <MessageSquare className="h-4 w-4" /> },
+	{ label: "Profile", href: "/entrepreneur/profile", icon: <User className="h-4 w-4" /> },
 ];
 
 function statusVariant(
@@ -114,7 +115,7 @@ function EntrepreneurDashboardInner() {
 				<div className="grid gap-4 sm:grid-cols-3 mb-8">
 					<Card>
 						<CardContent className="p-5">
-							<p className="text-sm text-muted-foreground">📝 Total Pitches</p>
+							<p className="text-sm text-muted-foreground flex items-center gap-1.5"><FileText className="h-3.5 w-3.5" /> Total Pitches</p>
 							<p className="text-2xl font-bold mt-1">{submissions.length}</p>
 							<p className="text-xs text-muted-foreground mt-0.5">
 								{drafts.length} draft{drafts.length !== 1 ? "s" : ""}
@@ -123,7 +124,7 @@ function EntrepreneurDashboardInner() {
 					</Card>
 					<Card>
 						<CardContent className="p-5">
-							<p className="text-sm text-muted-foreground">📤 Submitted</p>
+							<p className="text-sm text-muted-foreground flex items-center gap-1.5"><Send className="h-3.5 w-3.5" /> Submitted</p>
 							<p className="text-2xl font-bold mt-1">{submitted.length}</p>
 							<p className="text-xs text-muted-foreground mt-0.5">
 								Awaiting review
@@ -132,7 +133,7 @@ function EntrepreneurDashboardInner() {
 					</Card>
 					<Card>
 						<CardContent className="p-5">
-							<p className="text-sm text-muted-foreground">🤝 Matches</p>
+							<p className="text-sm text-muted-foreground flex items-center gap-1.5"><Handshake className="h-3.5 w-3.5" /> Matches</p>
 							<p className="text-2xl font-bold mt-1">0</p>
 							<p className="text-xs text-muted-foreground mt-0.5">
 								Active investor matches
@@ -151,7 +152,7 @@ function EntrepreneurDashboardInner() {
 				) : submissions.length === 0 ? (
 					<Card className="border-dashed">
 						<CardContent className="flex flex-col items-center justify-center py-16">
-							<p className="text-4xl mb-4">🚀</p>
+							<Rocket className="h-10 w-10 text-muted-foreground mb-4" />
 							<h3 className="text-lg font-semibold mb-2">
 								Submit Your First Pitch
 							</h3>
