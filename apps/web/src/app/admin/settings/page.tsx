@@ -13,15 +13,33 @@ import {
 	Settings,
 	Shield,
 	Trash2,
-	UserX,
 	Users,
+	UserX,
 } from "lucide-react";
 import { useEffect, useState } from "react";
+import { toast } from "sonner";
 import DashboardLayout from "@/components/DashboardLayout";
+import ProfilePictureUpload from "@/components/ProfilePictureUpload";
 import ProtectedRoute from "@/components/ProtectedRoute";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+	Card,
+	CardContent,
+	CardDescription,
+	CardFooter,
+	CardHeader,
+	CardTitle,
+} from "@/components/ui/card";
+import {
+	Dialog,
+	DialogContent,
+	DialogDescription,
+	DialogFooter,
+	DialogHeader,
+	DialogTitle,
+} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -34,28 +52,33 @@ import {
 import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuth } from "@/context/AuthContext";
-import { toast } from "sonner";
-import {
-	Dialog,
-	DialogContent,
-	DialogDescription,
-	DialogFooter,
-	DialogHeader,
-	DialogTitle,
-} from "@/components/ui/dialog";
 
 const ADMIN_NAV = [
-	{ label: "Overview", href: "/admin/oversight", icon: <LayoutDashboard className="h-4 w-4" /> },
+	{
+		label: "Overview",
+		href: "/admin/oversight",
+		icon: <LayoutDashboard className="h-4 w-4" />,
+	},
 	{ label: "Users", href: "/admin/users", icon: <Users className="h-4 w-4" /> },
-	{ label: "Submissions", href: "/admin/submissions", icon: <ClipboardList className="h-4 w-4" /> },
-	{ label: "Settings", href: "/admin/settings", icon: <Settings className="h-4 w-4" /> },
+	{
+		label: "Submissions",
+		href: "/admin/submissions",
+		icon: <ClipboardList className="h-4 w-4" />,
+	},
+	{
+		label: "Settings",
+		href: "/admin/settings",
+		icon: <Settings className="h-4 w-4" />,
+	},
 ];
 
 export default function AdminSettingsPage() {
 	const { user, userProfile, refreshUserProfile, signOut } = useAuth();
 	const isSuperAdmin = userProfile?.adminLevel === "super_admin";
 
-	const API_URL = (process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api").replace(/\/+$/, "");
+	const API_URL = (
+		process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api"
+	).replace(/\/+$/, "");
 
 	// Account editing
 	const [editName, setEditName] = useState(userProfile?.displayName || "");
@@ -113,7 +136,10 @@ export default function AdminSettingsPage() {
 			const token = await user.getIdToken();
 			const res = await fetch(`${API_URL}/users/me`, {
 				method: "PATCH",
-				headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+				headers: {
+					Authorization: `Bearer ${token}`,
+					"Content-Type": "application/json",
+				},
 				body: JSON.stringify({ fullName: editName.trim() }),
 			});
 			if (!res.ok) throw new Error("Failed to update profile");
@@ -135,9 +161,12 @@ export default function AdminSettingsPage() {
 
 			if (action === "reset-kyc") {
 				// Reset all non-admin users to unverified
-				const res = await fetch(`${API_URL}/auth/admin/users?role=entrepreneur&status=verified&limit=100`, {
-					headers: { Authorization: `Bearer ${token}` },
-				});
+				const res = await fetch(
+					`${API_URL}/auth/admin/users?role=entrepreneur&status=verified&limit=100`,
+					{
+						headers: { Authorization: `Bearer ${token}` },
+					},
+				);
 				const data = await res.json();
 				if (data.status === "success") {
 					let resetCount = 0;
@@ -145,35 +174,57 @@ export default function AdminSettingsPage() {
 						try {
 							await fetch(`${API_URL}/auth/admin/users/${u._id}/status`, {
 								method: "PATCH",
-								headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
-								body: JSON.stringify({ status: "unverified", reason: "Bulk KYC reset by admin" }),
+								headers: {
+									Authorization: `Bearer ${token}`,
+									"Content-Type": "application/json",
+								},
+								body: JSON.stringify({
+									status: "unverified",
+									reason: "Bulk KYC reset by admin",
+								}),
 							});
 							resetCount++;
-						} catch { /* skip failed ones */ }
+						} catch {
+							/* skip failed ones */
+						}
 					}
 					// Also reset investors
-					const invRes = await fetch(`${API_URL}/auth/admin/users?role=investor&status=verified&limit=100`, {
-						headers: { Authorization: `Bearer ${token}` },
-					});
+					const invRes = await fetch(
+						`${API_URL}/auth/admin/users?role=investor&status=verified&limit=100`,
+						{
+							headers: { Authorization: `Bearer ${token}` },
+						},
+					);
 					const invData = await invRes.json();
 					if (invData.status === "success") {
 						for (const u of invData.users) {
 							try {
 								await fetch(`${API_URL}/auth/admin/users/${u._id}/status`, {
 									method: "PATCH",
-									headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
-									body: JSON.stringify({ status: "unverified", reason: "Bulk KYC reset by admin" }),
+									headers: {
+										Authorization: `Bearer ${token}`,
+										"Content-Type": "application/json",
+									},
+									body: JSON.stringify({
+										status: "unverified",
+										reason: "Bulk KYC reset by admin",
+									}),
 								});
 								resetCount++;
-							} catch { /* skip */ }
+							} catch {
+								/* skip */
+							}
 						}
 					}
 					toast.success(`Reset KYC for ${resetCount} users`);
 				}
 			} else if (action === "suspend-unverified") {
-				const res = await fetch(`${API_URL}/auth/admin/users?status=unverified&limit=100`, {
-					headers: { Authorization: `Bearer ${token}` },
-				});
+				const res = await fetch(
+					`${API_URL}/auth/admin/users?status=unverified&limit=100`,
+					{
+						headers: { Authorization: `Bearer ${token}` },
+					},
+				);
 				const data = await res.json();
 				if (data.status === "success") {
 					let suspendedCount = 0;
@@ -182,11 +233,16 @@ export default function AdminSettingsPage() {
 						try {
 							await fetch(`${API_URL}/auth/admin/users/${u._id}/status`, {
 								method: "PATCH",
-								headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+								headers: {
+									Authorization: `Bearer ${token}`,
+									"Content-Type": "application/json",
+								},
 								body: JSON.stringify({ status: "suspended" }),
 							});
 							suspendedCount++;
-						} catch { /* skip */ }
+						} catch {
+							/* skip */
+						}
 					}
 					toast.success(`Suspended ${suspendedCount} unverified accounts`);
 				}
@@ -207,7 +263,9 @@ export default function AdminSettingsPage() {
 		<ProtectedRoute allowedRoles={["admin"]}>
 			<DashboardLayout navItems={ADMIN_NAV} title="SEPMS Admin">
 				<div className="mb-8">
-					<h1 className="text-2xl font-bold tracking-tight sm:text-3xl">Settings</h1>
+					<h1 className="text-2xl font-bold tracking-tight sm:text-3xl">
+						Settings
+					</h1>
 					<p className="mt-1 text-muted-foreground">
 						Manage your account and platform configuration
 					</p>
@@ -242,41 +300,72 @@ export default function AdminSettingsPage() {
 									Update your personal information.
 								</CardDescription>
 							</CardHeader>
-							<CardContent className="space-y-4">
-								<div className="grid gap-4 sm:grid-cols-2">
-									<div className="space-y-2">
-										<Label htmlFor="admin-edit-name" className="text-sm">Full Name</Label>
-										<Input
-											id="admin-edit-name"
-											value={editName}
-											onChange={(e) => setEditName(e.target.value)}
-											placeholder="Your full name"
-										/>
+							<CardContent className="space-y-6">
+								<div className="flex flex-col sm:flex-row items-start gap-6 pb-2">
+									<div className="shrink-0">
+										<Label className="text-sm text-muted-foreground block mb-3">
+											Profile Picture
+										</Label>
+										<ProfilePictureUpload size="h-20 w-20" />
 									</div>
-									<div className="space-y-2">
-										<Label className="text-sm text-muted-foreground">Email Address</Label>
-										<div className="flex items-center gap-1.5 pt-2">
-											<p className="text-sm font-medium">{email}</p>
-											{userProfile?.emailVerified && (
-												<CheckCircle2 className="h-3.5 w-3.5 text-green-500" />
-											)}
+									<Separator
+										orientation="vertical"
+										className="hidden sm:block h-28"
+									/>
+									<Separator className="sm:hidden" />
+									<div className="flex-1 grid gap-4 sm:grid-cols-2 w-full">
+										<div className="space-y-2">
+											<Label htmlFor="admin-edit-name" className="text-sm">
+												Full Name
+											</Label>
+											<Input
+												id="admin-edit-name"
+												value={editName}
+												onChange={(e) => setEditName(e.target.value)}
+												placeholder="Your full name"
+											/>
 										</div>
-										<p className="text-xs text-muted-foreground">Email is managed by Google</p>
-									</div>
-									<div className="space-y-2">
-										<Label className="text-sm text-muted-foreground">Role</Label>
-										<div className="flex items-center gap-2 pt-2">
-											<Badge variant="destructive" className="text-xs capitalize">
-												{adminLevel === "super_admin" ? "Super Admin" : "Admin"}
-											</Badge>
+										<div className="space-y-2">
+											<Label className="text-sm text-muted-foreground">
+												Email Address
+											</Label>
+											<div className="flex items-center gap-1.5 pt-2">
+												<p className="text-sm font-medium">{email}</p>
+												{userProfile?.emailVerified && (
+													<CheckCircle2 className="h-3.5 w-3.5 text-green-500" />
+												)}
+											</div>
+											<p className="text-xs text-muted-foreground">
+												Email is managed by Google
+											</p>
 										</div>
-									</div>
-									<div className="space-y-2">
-										<Label className="text-sm text-muted-foreground">Account Status</Label>
-										<div className="pt-2">
-											<Badge variant="default" className="text-xs capitalize bg-green-500/10 text-green-600 border-green-500/20">
-												{userProfile?.status}
-											</Badge>
+										<div className="space-y-2">
+											<Label className="text-sm text-muted-foreground">
+												Role
+											</Label>
+											<div className="flex items-center gap-2 pt-2">
+												<Badge
+													variant="destructive"
+													className="text-xs capitalize"
+												>
+													{adminLevel === "super_admin"
+														? "Super Admin"
+														: "Admin"}
+												</Badge>
+											</div>
+										</div>
+										<div className="space-y-2">
+											<Label className="text-sm text-muted-foreground">
+												Account Status
+											</Label>
+											<div className="pt-2">
+												<Badge
+													variant="default"
+													className="text-xs capitalize bg-green-500/10 text-green-600 border-green-500/20"
+												>
+													{userProfile?.status}
+												</Badge>
+											</div>
 										</div>
 									</div>
 								</div>
@@ -284,13 +373,20 @@ export default function AdminSettingsPage() {
 							<CardFooter className="flex justify-end border-t pt-4">
 								<Button
 									onClick={handleUpdateProfile}
-									disabled={savingProfile || editName.trim() === (userProfile?.displayName || "")}
+									disabled={
+										savingProfile ||
+										editName.trim() === (userProfile?.displayName || "")
+									}
 									className="gap-2"
 								>
 									{savingProfile ? (
-										<><Loader2 className="h-4 w-4 animate-spin" /> Saving...</>
+										<>
+											<Loader2 className="h-4 w-4 animate-spin" /> Saving...
+										</>
 									) : (
-										<><Save className="h-4 w-4" /> Save Changes</>
+										<>
+											<Save className="h-4 w-4" /> Save Changes
+										</>
 									)}
 								</Button>
 							</CardFooter>
@@ -307,16 +403,26 @@ export default function AdminSettingsPage() {
 							<CardContent className="space-y-3">
 								<div className="grid gap-3 sm:grid-cols-2">
 									<div className="rounded-lg border p-3">
-										<p className="text-xs text-muted-foreground">Firebase UID</p>
-										<p className="text-xs font-mono mt-1 truncate">{user?.uid || "—"}</p>
+										<p className="text-xs text-muted-foreground">
+											Firebase UID
+										</p>
+										<p className="text-xs font-mono mt-1 truncate">
+											{user?.uid || "—"}
+										</p>
 									</div>
 									<div className="rounded-lg border p-3">
 										<p className="text-xs text-muted-foreground">Provider</p>
-										<p className="text-xs font-medium mt-1">Google Authentication</p>
+										<p className="text-xs font-medium mt-1">
+											Google Authentication
+										</p>
 									</div>
 								</div>
 								<Separator />
-								<Button variant="outline" onClick={signOut} className="gap-2 text-destructive hover:text-destructive">
+								<Button
+									variant="outline"
+									onClick={signOut}
+									className="gap-2 text-destructive hover:text-destructive"
+								>
 									Sign Out of Account
 								</Button>
 							</CardContent>
@@ -340,31 +446,51 @@ export default function AdminSettingsPage() {
 								{loadingStats ? (
 									<div className="flex items-center gap-2 py-4">
 										<Loader2 className="h-4 w-4 animate-spin text-primary" />
-										<p className="text-sm text-muted-foreground">Loading stats...</p>
+										<p className="text-sm text-muted-foreground">
+											Loading stats...
+										</p>
 									</div>
 								) : platformStats ? (
 									<div className="grid gap-4 sm:grid-cols-4">
 										<div className="rounded-lg border p-4 text-center">
-											<p className="text-2xl font-bold">{platformStats.totalUsers}</p>
-											<p className="text-xs text-muted-foreground mt-1">Total Users</p>
+											<p className="text-2xl font-bold">
+												{platformStats.totalUsers}
+											</p>
+											<p className="text-xs text-muted-foreground mt-1">
+												Total Users
+											</p>
 										</div>
 										<div className="rounded-lg border p-4 text-center">
-											<p className="text-2xl font-bold text-amber-600">{platformStats.pendingKyc}</p>
-											<p className="text-xs text-muted-foreground mt-1">Pending KYC</p>
+											<p className="text-2xl font-bold text-amber-600">
+												{platformStats.pendingKyc}
+											</p>
+											<p className="text-xs text-muted-foreground mt-1">
+												Pending KYC
+											</p>
 										</div>
 										<div className="rounded-lg border p-4 text-center">
-											<p className="text-2xl font-bold text-primary">{platformStats.admins}</p>
-											<p className="text-xs text-muted-foreground mt-1">Admins</p>
+											<p className="text-2xl font-bold text-primary">
+												{platformStats.admins}
+											</p>
+											<p className="text-xs text-muted-foreground mt-1">
+												Admins
+											</p>
 										</div>
 										<div className="rounded-lg border p-4 text-center">
 											<p className="text-2xl font-bold text-green-600">
-												{platformStats.totalUsers - platformStats.pendingKyc - platformStats.admins}
+												{platformStats.totalUsers -
+													platformStats.pendingKyc -
+													platformStats.admins}
 											</p>
-											<p className="text-xs text-muted-foreground mt-1">Active Users</p>
+											<p className="text-xs text-muted-foreground mt-1">
+												Active Users
+											</p>
 										</div>
 									</div>
 								) : (
-									<p className="text-sm text-muted-foreground">Unable to load stats</p>
+									<p className="text-sm text-muted-foreground">
+										Unable to load stats
+									</p>
 								)}
 							</CardContent>
 						</Card>
@@ -380,7 +506,9 @@ export default function AdminSettingsPage() {
 							<CardContent>
 								<div className="grid gap-4 sm:grid-cols-2">
 									<div className="rounded-lg border p-3">
-										<p className="text-xs text-muted-foreground">Platform Name</p>
+										<p className="text-xs text-muted-foreground">
+											Platform Name
+										</p>
 										<p className="text-sm font-medium mt-1">SEPMS</p>
 									</div>
 									<div className="rounded-lg border p-3">
@@ -388,27 +516,39 @@ export default function AdminSettingsPage() {
 										<p className="text-sm font-medium mt-1">1.0.0</p>
 									</div>
 									<div className="rounded-lg border p-3">
-										<p className="text-xs text-muted-foreground">API Endpoint</p>
+										<p className="text-xs text-muted-foreground">
+											API Endpoint
+										</p>
 										<p className="text-xs font-mono mt-1 truncate">{API_URL}</p>
 									</div>
 									<div className="rounded-lg border p-3">
 										<p className="text-xs text-muted-foreground">Environment</p>
 										<p className="text-sm font-medium mt-1">
-											{API_URL.includes("localhost") ? "Development" : "Production"}
+											{API_URL.includes("localhost")
+												? "Development"
+												: "Production"}
 										</p>
 									</div>
 									<div className="rounded-lg border p-3">
-										<p className="text-xs text-muted-foreground">KYC Verification</p>
+										<p className="text-xs text-muted-foreground">
+											KYC Verification
+										</p>
 										<div className="flex items-center gap-1.5 mt-1">
 											<CheckCircle2 className="h-3.5 w-3.5 text-green-500" />
-											<span className="text-sm font-medium">Required — Manual review</span>
+											<span className="text-sm font-medium">
+												Required — Manual review
+											</span>
 										</div>
 									</div>
 									<div className="rounded-lg border p-3">
-										<p className="text-xs text-muted-foreground">Authentication</p>
+										<p className="text-xs text-muted-foreground">
+											Authentication
+										</p>
 										<div className="flex items-center gap-1.5 mt-1">
 											<Shield className="h-3.5 w-3.5 text-primary" />
-											<span className="text-sm font-medium">Firebase / Google</span>
+											<span className="text-sm font-medium">
+												Firebase / Google
+											</span>
 										</div>
 									</div>
 								</div>
@@ -422,7 +562,9 @@ export default function AdminSettingsPage() {
 									<ClipboardList className="h-4 w-4 text-primary" />
 									KYC Document Requirements
 								</CardTitle>
-								<CardDescription>Documents required for user verification.</CardDescription>
+								<CardDescription>
+									Documents required for user verification.
+								</CardDescription>
 							</CardHeader>
 							<CardContent>
 								<div className="space-y-3">
@@ -430,18 +572,26 @@ export default function AdminSettingsPage() {
 										<div className="flex items-center justify-between">
 											<div>
 												<p className="text-sm font-medium">Entrepreneurs</p>
-												<p className="text-xs text-muted-foreground mt-0.5">National ID + Business License + TIN Certificate</p>
+												<p className="text-xs text-muted-foreground mt-0.5">
+													National ID + Business License + TIN Certificate
+												</p>
 											</div>
-											<Badge variant="secondary" className="text-xs">3 documents</Badge>
+											<Badge variant="secondary" className="text-xs">
+												3 documents
+											</Badge>
 										</div>
 									</div>
 									<div className="rounded-lg border p-3">
 										<div className="flex items-center justify-between">
 											<div>
 												<p className="text-sm font-medium">Investors</p>
-												<p className="text-xs text-muted-foreground mt-0.5">National ID + Financial Accreditation Document</p>
+												<p className="text-xs text-muted-foreground mt-0.5">
+													National ID + Financial Accreditation Document
+												</p>
 											</div>
-											<Badge variant="secondary" className="text-xs">2 documents</Badge>
+											<Badge variant="secondary" className="text-xs">
+												2 documents
+											</Badge>
 										</div>
 									</div>
 									<div className="rounded-lg border p-3">
@@ -450,11 +600,19 @@ export default function AdminSettingsPage() {
 												<p className="text-sm font-medium">Accepted Formats</p>
 												<div className="flex flex-wrap gap-1.5 mt-1">
 													{["PDF", "JPG", "PNG", "WEBP"].map((fmt) => (
-														<Badge key={fmt} variant="outline" className="text-xs">{fmt}</Badge>
+														<Badge
+															key={fmt}
+															variant="outline"
+															className="text-xs"
+														>
+															{fmt}
+														</Badge>
 													))}
 												</div>
 											</div>
-											<Badge variant="secondary" className="text-xs">Max 10MB</Badge>
+											<Badge variant="secondary" className="text-xs">
+												Max 10MB
+											</Badge>
 										</div>
 									</div>
 								</div>
@@ -481,12 +639,17 @@ export default function AdminSettingsPage() {
 											<Shield className="h-5 w-5 text-primary" />
 										</div>
 										<div>
-											<p className="text-sm font-medium">Google Authentication</p>
+											<p className="text-sm font-medium">
+												Google Authentication
+											</p>
 											<p className="text-xs text-muted-foreground">
 												Your account uses Google Sign-In via Firebase.
 											</p>
 										</div>
-										<Badge variant="default" className="ml-auto text-xs bg-green-500/10 text-green-600 border-green-500/20">
+										<Badge
+											variant="default"
+											className="ml-auto text-xs bg-green-500/10 text-green-600 border-green-500/20"
+										>
 											Active
 										</Badge>
 									</div>
@@ -500,37 +663,72 @@ export default function AdminSettingsPage() {
 										<div className="flex items-center justify-between rounded-lg border p-3">
 											<div>
 												<p className="text-sm">Role-based access control</p>
-												<p className="text-xs text-muted-foreground">Admin, Entrepreneur, Investor</p>
+												<p className="text-xs text-muted-foreground">
+													Admin, Entrepreneur, Investor
+												</p>
 											</div>
-											<Badge variant="default" className="text-xs bg-green-500/10 text-green-600 border-green-500/20">Enabled</Badge>
+											<Badge
+												variant="default"
+												className="text-xs bg-green-500/10 text-green-600 border-green-500/20"
+											>
+												Enabled
+											</Badge>
 										</div>
 										<div className="flex items-center justify-between rounded-lg border p-3">
 											<div>
 												<p className="text-sm">Super Admin protection</p>
-												<p className="text-xs text-muted-foreground">Regular admins cannot modify super admin accounts</p>
+												<p className="text-xs text-muted-foreground">
+													Regular admins cannot modify super admin accounts
+												</p>
 											</div>
-											<Badge variant="default" className="text-xs bg-green-500/10 text-green-600 border-green-500/20">Enabled</Badge>
+											<Badge
+												variant="default"
+												className="text-xs bg-green-500/10 text-green-600 border-green-500/20"
+											>
+												Enabled
+											</Badge>
 										</div>
 										<div className="flex items-center justify-between rounded-lg border p-3">
 											<div>
 												<p className="text-sm">API Rate Limiting</p>
-												<p className="text-xs text-muted-foreground">500 requests per 15 minutes per IP</p>
+												<p className="text-xs text-muted-foreground">
+													500 requests per 15 minutes per IP
+												</p>
 											</div>
-											<Badge variant="default" className="text-xs bg-green-500/10 text-green-600 border-green-500/20">Enabled</Badge>
+											<Badge
+												variant="default"
+												className="text-xs bg-green-500/10 text-green-600 border-green-500/20"
+											>
+												Enabled
+											</Badge>
 										</div>
 										<div className="flex items-center justify-between rounded-lg border p-3">
 											<div>
 												<p className="text-sm">JWT Token Authentication</p>
-												<p className="text-xs text-muted-foreground">Firebase ID tokens verified on every API request</p>
+												<p className="text-xs text-muted-foreground">
+													Firebase ID tokens verified on every API request
+												</p>
 											</div>
-											<Badge variant="default" className="text-xs bg-green-500/10 text-green-600 border-green-500/20">Enabled</Badge>
+											<Badge
+												variant="default"
+												className="text-xs bg-green-500/10 text-green-600 border-green-500/20"
+											>
+												Enabled
+											</Badge>
 										</div>
 										<div className="flex items-center justify-between rounded-lg border p-3">
 											<div>
 												<p className="text-sm">MongoDB Injection Protection</p>
-												<p className="text-xs text-muted-foreground">express-mongo-sanitize active on all inputs</p>
+												<p className="text-xs text-muted-foreground">
+													express-mongo-sanitize active on all inputs
+												</p>
 											</div>
-											<Badge variant="default" className="text-xs bg-green-500/10 text-green-600 border-green-500/20">Enabled</Badge>
+											<Badge
+												variant="default"
+												className="text-xs bg-green-500/10 text-green-600 border-green-500/20"
+											>
+												Enabled
+											</Badge>
 										</div>
 									</div>
 								</div>
@@ -546,7 +744,8 @@ export default function AdminSettingsPage() {
 										Danger Zone
 									</CardTitle>
 									<CardDescription>
-										Bulk actions that affect multiple users. These cannot be undone easily.
+										Bulk actions that affect multiple users. These cannot be
+										undone easily.
 									</CardDescription>
 								</CardHeader>
 								<CardContent className="space-y-3">
@@ -554,7 +753,8 @@ export default function AdminSettingsPage() {
 										<div>
 											<p className="text-sm font-medium">Reset All User KYC</p>
 											<p className="text-xs text-muted-foreground">
-												Mark all verified entrepreneurs and investors as unverified. They'll need to re-submit documents.
+												Mark all verified entrepreneurs and investors as
+												unverified. They'll need to re-submit documents.
 											</p>
 										</div>
 										<Button
@@ -569,9 +769,12 @@ export default function AdminSettingsPage() {
 									</div>
 									<div className="flex items-center justify-between rounded-lg border border-destructive/20 p-4">
 										<div>
-											<p className="text-sm font-medium">Suspend Unverified Accounts</p>
+											<p className="text-sm font-medium">
+												Suspend Unverified Accounts
+											</p>
 											<p className="text-xs text-muted-foreground">
-												Suspend all non-admin accounts that haven't completed KYC verification.
+												Suspend all non-admin accounts that haven't completed
+												KYC verification.
 											</p>
 										</div>
 										<Button
@@ -591,10 +794,15 @@ export default function AdminSettingsPage() {
 				</Tabs>
 
 				{/* Confirmation Dialog */}
-				<Dialog open={!!confirmAction} onOpenChange={() => setConfirmAction(null)}>
+				<Dialog
+					open={!!confirmAction}
+					onOpenChange={() => setConfirmAction(null)}
+				>
 					<DialogContent className="sm:max-w-md">
 						<DialogHeader>
-							<DialogTitle className="text-destructive">Confirm Action</DialogTitle>
+							<DialogTitle className="text-destructive">
+								Confirm Action
+							</DialogTitle>
 							<DialogDescription>
 								{confirmAction === "reset-kyc"
 									? "This will mark ALL verified entrepreneurs and investors as unverified. They will need to re-upload their KYC documents."
@@ -612,7 +820,9 @@ export default function AdminSettingsPage() {
 								className="gap-2"
 							>
 								{actionLoading ? (
-									<><Loader2 className="h-4 w-4 animate-spin" /> Processing...</>
+									<>
+										<Loader2 className="h-4 w-4 animate-spin" /> Processing...
+									</>
 								) : (
 									"Confirm"
 								)}
