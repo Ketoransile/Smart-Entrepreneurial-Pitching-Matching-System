@@ -21,6 +21,7 @@ const allowedOrigins = [
 	process.env.CLIENT_URL,
 	"https://sepms.vercel.app",
 	"https://smart-entrepreneurial-pitching-matc-alpha.vercel.app",
+	"https://smart-entrepreneurial-pitching-matc-tau.vercel.app",
 	"http://localhost:3000",
 ].filter(Boolean) as string[];
 
