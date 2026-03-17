@@ -1,23 +1,30 @@
-import { type Document, model, Schema, type Types } from "mongoose";
-
-export type StartupStage = "idea" | "mvp" | "growth" | "scaling";
+import mongoose, { type Document, Schema } from "mongoose";
+import type { BusinessSector, BusinessStage } from "../types";
 
 export interface IEntrepreneurProfile extends Document {
-	userId: Types.ObjectId;
+	userId: mongoose.Types.ObjectId;
+	fullName: string;
+	profilePicture?: string;
 	companyName: string;
-	bio?: string;
-	industry: string;
-	stage: StartupStage;
-	fundingGoal?: number;
-	currency: string;
-	location?: string;
+	companyRegistrationNumber: string;
+	businessSector: BusinessSector;
+	businessStage: BusinessStage;
+	companyAddress?: string;
+	city?: string;
+	country?: string;
 	website?: string;
-	linkedinUrl?: string;
-	nationalIdUrl?: string;
-	pitchDeckUrl?: string;
-	businessLicenseUrl?: string;
-	tinNumber?: string;
-	isPublic: boolean;
+	businessPhone?: string;
+	documents: mongoose.Types.ObjectId[];
+	foundedYear?: number;
+	employeeCount?: number;
+	description?: string;
+	verificationStatus: "unverified" | "pending" | "verified" | "rejected";
+	verifiedAt?: Date;
+	verifiedBy?: mongoose.Types.ObjectId;
+	totalPitches: number;
+	activePitches: number;
+	interestedInvestors: number;
+	totalViews: number;
 	createdAt: Date;
 	updatedAt: Date;
 }
@@ -31,77 +38,72 @@ const EntrepreneurProfileSchema = new Schema<IEntrepreneurProfile>(
 			unique: true,
 			index: true,
 		},
-		companyName: {
+
+		fullName: { type: String, required: true },
+		profilePicture: String,
+
+		companyName: { type: String, required: true },
+		companyRegistrationNumber: { type: String, required: true },
+		businessSector: {
 			type: String,
+			enum: [
+				"technology",
+				"healthcare",
+				"agriculture",
+				"finance",
+				"education",
+				"retail",
+				"manufacturing",
+				"energy",
+				"transportation",
+				"other",
+			],
 			required: true,
-			trim: true,
 		},
-		bio: {
+		businessStage: {
 			type: String,
-			maxlength: 2000,
-			default: null,
-		},
-		industry: {
-			type: String,
-			required: true,
-			trim: true,
-		},
-		stage: {
-			type: String,
-			enum: ["idea", "mvp", "growth", "scaling"] satisfies StartupStage[],
+			enum: ["idea", "mvp", "early-revenue", "scaling"],
 			required: true,
 		},
-		fundingGoal: {
-			type: Number,
-			min: 0,
-			default: null,
-		},
-		currency: {
+
+		companyAddress: String,
+		city: String,
+		country: String,
+		website: String,
+		businessPhone: String,
+
+		documents: [{ type: Schema.Types.ObjectId, ref: "Document" }],
+
+		foundedYear: Number,
+		employeeCount: Number,
+		description: String,
+
+		verificationStatus: {
 			type: String,
-			default: "ETB",
-			uppercase: true,
-			trim: true,
+			enum: ["unverified", "pending", "verified", "rejected"],
+			default: "unverified",
 		},
-		location: {
-			type: String,
-			default: null,
-		},
-		website: {
-			type: String,
-			default: null,
-		},
-		linkedinUrl: {
-			type: String,
-			default: null,
-		},
-		nationalIdUrl: {
-			type: String,
-			default: null,
-		},
-		pitchDeckUrl: {
-			type: String,
-			default: null,
-		},
-		businessLicenseUrl: {
-			type: String,
-			default: null,
-		},
-		tinNumber: {
-			type: String,
-			trim: true,
-			default: null,
-		},
-		isPublic: {
-			type: Boolean,
-			default: true,
-		},
+		verifiedAt: Date,
+		verifiedBy: { type: Schema.Types.ObjectId, ref: "User" },
+
+		totalPitches: { type: Number, default: 0 },
+		activePitches: { type: Number, default: 0 },
+		interestedInvestors: { type: Number, default: 0 },
+		totalViews: { type: Number, default: 0 },
 	},
-	{ timestamps: true },
+	{
+		timestamps: true,
+	},
 );
 
-EntrepreneurProfileSchema.index({ industry: 1, stage: 1, isPublic: 1 });
+// Text index for search
+EntrepreneurProfileSchema.index({
+	companyName: "text",
+	description: "text",
+	fullName: "text",
+});
 
-export const EntrepreneurProfile = model<IEntrepreneurProfile>(
+export const EntrepreneurProfile = mongoose.model<IEntrepreneurProfile>(
 	"EntrepreneurProfile",
 	EntrepreneurProfileSchema,
 );
