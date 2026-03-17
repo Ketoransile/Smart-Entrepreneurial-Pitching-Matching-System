@@ -896,31 +896,31 @@ export default function AdminOversight() {
 						setRejectionReason("");
 					}}
 				>
-					<DialogContent className="sm:max-w-3xl lg:max-w-4xl p-0 gap-0 overflow-hidden">
-						<div className="max-h-[85vh] overflow-y-auto custom-scrollbar">
-							<div className="px-6 pt-6 pb-4">
-								<DialogHeader>
-									<DialogTitle className="flex items-center gap-2">
-										{actionUser?.status === "pending" ? (
-											<>
-												<ShieldCheck className="h-5 w-5 text-primary" />
-												KYC Review
-											</>
-										) : (
-											<>
-												<Users className="h-5 w-5" />
-												Manage User
-											</>
-										)}
-									</DialogTitle>
-									{actionUser?.status === "pending" && (
-										<DialogDescription>
-											Review the submitted KYC documents and approve or reject this
-											user.
-										</DialogDescription>
+					<DialogContent className="sm:max-w-3xl lg:max-w-4xl max-h-[90vh] flex flex-col p-0 gap-0">
+						<div className="px-6 pt-6 pb-4 shrink-0">
+							<DialogHeader>
+								<DialogTitle className="flex items-center gap-2">
+									{actionUser?.status === "pending" ? (
+										<>
+											<ShieldCheck className="h-5 w-5 text-primary" />
+											KYC Review
+										</>
+									) : (
+										<>
+											<Users className="h-5 w-5" />
+											Manage User
+										</>
 									)}
-								</DialogHeader>
-							</div>
+								</DialogTitle>
+								{actionUser?.status === "pending" && (
+									<DialogDescription>
+										Review the submitted KYC documents and approve or reject this
+										user.
+									</DialogDescription>
+								)}
+							</DialogHeader>
+						</div>
+						<div className="flex-1 overflow-y-auto override-scrollbar">
 							{actionUser && (
 								<div className="space-y-5 px-6 pb-2">
 									{/* User Info */}
@@ -1143,25 +1143,25 @@ export default function AdminOversight() {
 									)}
 								</div>
 							)}
-							<div className="px-6 py-4 border-t">
-								<DialogFooter>
-									<Button
-										variant="outline"
-										onClick={() => {
-											setActionUser(null);
-											setActionUserProfile(null);
-											setRejectionReason("");
-										}}
-									>
-										Cancel
+						</div>
+						<div className="px-6 py-4 border-t bg-background shrink-0 rounded-b-lg">
+							<DialogFooter>
+								<Button
+									variant="outline"
+									onClick={() => {
+										setActionUser(null);
+										setActionUserProfile(null);
+										setRejectionReason("");
+									}}
+								>
+									Cancel
+								</Button>
+								{actionUser?.status !== "pending" && (
+									<Button onClick={() => handleStatusUpdate()}>
+										Save Changes
 									</Button>
-									{actionUser?.status !== "pending" && (
-										<Button onClick={() => handleStatusUpdate()}>
-											Save Changes
-										</Button>
-									)}
-								</DialogFooter>
-							</div>
+								)}
+							</DialogFooter>
 						</div>
 					</DialogContent>
 				</Dialog>

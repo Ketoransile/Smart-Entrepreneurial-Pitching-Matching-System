@@ -15,6 +15,7 @@ import submissionRoutes from "./routes/submission.routes";
 import uploadRoutes from "./routes/upload.routes";
 import userRoutes from "./routes/user.routes";
 
+
 const app = express();
 
 app.use(helmet());
@@ -25,6 +26,7 @@ const allowedOrigins = [
 	"https://smart-entrepreneurial-pitching-matc-alpha.vercel.app",
 	"https://smart-entrepreneurial-pitching-matc-tau.vercel.app",
 	"http://localhost:3000",
+	"http://localhost:3001",
 ].filter(Boolean) as string[];
 
 app.use(
@@ -56,31 +58,6 @@ app.use(express.urlencoded({ extended: true }));
 
 app.get("/health", (_req: Request, res: Response) => {
 	res.status(200).json({ status: "ok" });
-});
-
-// Vercel Serverless: Guarantee connections before handling API requests
-app.use(async (_req, _res, next) => {
-	try {
-		await connectDB();
-
-		const projectId = process.env.FIREBASE_PROJECT_ID;
-		const clientEmail = process.env.FIREBASE_CLIENT_EMAIL;
-		const privateKey = process.env.FIREBASE_PRIVATE_KEY;
-
-		if (
-			projectId &&
-			clientEmail &&
-			privateKey &&
-			!projectId.startsWith("your-")
-		) {
-			initFirebase();
-		}
-
-		next();
-	} catch (error) {
-		console.error("Global init middleware error:", error);
-		next(error);
-	}
 });
 
 // Mount route modules

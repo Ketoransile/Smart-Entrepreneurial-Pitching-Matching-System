@@ -23,9 +23,10 @@ import {
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 import DashboardLayout from "@/components/DashboardLayout";
+import ProfilePictureUpload from "@/components/ProfilePictureUpload";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -44,27 +45,60 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuth } from "@/context/AuthContext";
 
 const INVESTOR_NAV = [
-	{ label: "Discovery Feed", href: "/investor/feed", icon: <Compass className="h-4 w-4" /> },
-	{ label: "Saved Pitches", href: "/investor/saved", icon: <Star className="h-4 w-4" /> },
-	{ label: "Messages", href: "/investor/messages", icon: <MessageSquare className="h-4 w-4" /> },
-	{ label: "My Profile", href: "/investor/profile", icon: <UserIcon className="h-4 w-4" /> },
+	{
+		label: "Discovery Feed",
+		href: "/investor/feed",
+		icon: <Compass className="h-4 w-4" />,
+	},
+	{
+		label: "Saved Pitches",
+		href: "/investor/saved",
+		icon: <Star className="h-4 w-4" />,
+	},
+	{
+		label: "Messages",
+		href: "/investor/messages",
+		icon: <MessageSquare className="h-4 w-4" />,
+	},
+	{
+		label: "My Profile",
+		href: "/investor/profile",
+		icon: <UserIcon className="h-4 w-4" />,
+	},
 ];
 
 // ─── File Upload Card ───
 function FileUploadCard({
-	id, label, description, file, existingUrl, onChange, onRemove, required,
+	id,
+	label,
+	description,
+	file,
+	existingUrl,
+	onChange,
+	onRemove,
+	required,
 }: {
-	id: string; label: string; description: string; file?: File; existingUrl?: string;
-	onChange: (e: React.ChangeEvent<HTMLInputElement>) => void; onRemove: () => void; required?: boolean;
+	id: string;
+	label: string;
+	description: string;
+	file?: File;
+	existingUrl?: string;
+	onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+	onRemove: () => void;
+	required?: boolean;
 }) {
 	const hasFile = !!file;
 	const hasExisting = !!existingUrl;
 	const isComplete = hasFile || hasExisting;
 
 	return (
-		<div className={`group relative rounded-xl border-2 border-dashed p-4 transition-all ${
-			isComplete ? "border-green-500/30 bg-green-500/5" : "border-border hover:border-primary/30 hover:bg-muted/20"
-		}`}>
+		<div
+			className={`group relative rounded-xl border-2 border-dashed p-4 transition-all ${
+				isComplete
+					? "border-green-500/30 bg-green-500/5"
+					: "border-border hover:border-primary/30 hover:bg-muted/20"
+			}`}
+		>
 			{hasFile ? (
 				<div className="flex items-center gap-3">
 					<div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-green-500/10 text-green-600 dark:text-green-400">
@@ -72,9 +106,17 @@ function FileUploadCard({
 					</div>
 					<div className="flex-1 min-w-0">
 						<p className="text-sm font-medium truncate">{file.name}</p>
-						<p className="text-xs text-muted-foreground">{(file.size / 1024 / 1024).toFixed(2)} MB — Ready to upload</p>
+						<p className="text-xs text-muted-foreground">
+							{(file.size / 1024 / 1024).toFixed(2)} MB — Ready to upload
+						</p>
 					</div>
-					<Button type="button" variant="ghost" size="sm" className="h-8 w-8 p-0 text-muted-foreground hover:text-destructive" onClick={onRemove}>
+					<Button
+						type="button"
+						variant="ghost"
+						size="sm"
+						className="h-8 w-8 p-0 text-muted-foreground hover:text-destructive"
+						onClick={onRemove}
+					>
 						<X className="h-4 w-4" />
 					</Button>
 				</div>
@@ -85,11 +127,24 @@ function FileUploadCard({
 					</div>
 					<div className="flex-1 min-w-0">
 						<p className="text-sm font-medium">{label}</p>
-						<p className="text-xs text-green-600 dark:text-green-400">Uploaded ✓</p>
+						<p className="text-xs text-green-600 dark:text-green-400">
+							Uploaded ✓
+						</p>
 					</div>
 					<Label htmlFor={id} className="cursor-pointer">
-						<Badge variant="outline" className="text-xs cursor-pointer hover:bg-muted">Replace</Badge>
-						<Input id={id} type="file" accept="application/pdf,image/*" onChange={onChange} className="hidden" />
+						<Badge
+							variant="outline"
+							className="text-xs cursor-pointer hover:bg-muted"
+						>
+							Replace
+						</Badge>
+						<Input
+							id={id}
+							type="file"
+							accept="application/pdf,image/*"
+							onChange={onChange}
+							className="hidden"
+						/>
 					</Label>
 				</div>
 			) : (
@@ -99,12 +154,21 @@ function FileUploadCard({
 							<Upload className="h-5 w-5" />
 						</div>
 						<div className="flex-1 min-w-0">
-							<p className="text-sm font-medium">{label}{required && <span className="text-destructive ml-1">*</span>}</p>
+							<p className="text-sm font-medium">
+								{label}
+								{required && <span className="text-destructive ml-1">*</span>}
+							</p>
 							<p className="text-xs text-muted-foreground">{description}</p>
 						</div>
 						<ArrowRight className="h-4 w-4 text-muted-foreground/30 group-hover:text-primary/50 transition-colors" />
 					</div>
-					<Input id={id} type="file" accept="application/pdf,image/*" onChange={onChange} className="hidden" />
+					<Input
+						id={id}
+						type="file"
+						accept="application/pdf,image/*"
+						onChange={onChange}
+						className="hidden"
+					/>
 				</Label>
 			)}
 		</div>
@@ -118,9 +182,14 @@ export default function InvestorProfilePage() {
 	const [saving, setSaving] = useState(false);
 	const [error, setError] = useState<string | null>(null);
 	const isVerified = userProfile?.status === "verified";
-	const [activeTab, setActiveTab] = useState(isVerified ? "personal" : "verification");
+	const [activeTab, setActiveTab] = useState(
+		isVerified ? "personal" : "verification",
+	);
 
-	const [files, setFiles] = useState<{ governmentId?: File; accreditation?: File }>({});
+	const [files, setFiles] = useState<{
+		governmentId?: File;
+		accreditation?: File;
+	}>({});
 
 	const [editName, setEditName] = useState(userProfile?.displayName || "");
 	const [savingProfile, setSavingProfile] = useState(false);
@@ -136,7 +205,10 @@ export default function InvestorProfilePage() {
 			const token = await user.getIdToken();
 			const res = await fetch(`${API_URL}/users/me`, {
 				method: "PATCH",
-				headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+				headers: {
+					Authorization: `Bearer ${token}`,
+					"Content-Type": "application/json",
+				},
 				body: JSON.stringify({ fullName: editName.trim() }),
 			});
 			if (!res.ok) throw new Error("Failed to update profile");
@@ -149,34 +221,52 @@ export default function InvestorProfilePage() {
 		}
 	};
 
-	const API_URL = (process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api").replace(/\/+$/, "");
+	const API_URL = (
+		process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api"
+	).replace(/\/+$/, "");
 
 	const fetchProfile = useCallback(async () => {
 		if (!user) return;
 		setLoading(true);
 		try {
 			const token = await user.getIdToken();
-			const res = await fetch(`${API_URL}/users/me/profile`, { headers: { Authorization: `Bearer ${token}` } });
+			const res = await fetch(`${API_URL}/users/me/profile`, {
+				headers: { Authorization: `Bearer ${token}` },
+			});
 			if (res.ok) {
 				const data = await res.json();
 				setProfileData(data.profile);
 			}
-		} catch (err) { console.error("Error fetching profile:", err); }
-		finally { setLoading(false); }
+		} catch (err) {
+			console.error("Error fetching profile:", err);
+		} finally {
+			setLoading(false);
+		}
 	}, [user, API_URL]);
 
-	useEffect(() => { fetchProfile(); }, [fetchProfile]);
+	useEffect(() => {
+		fetchProfile();
+	}, [fetchProfile]);
 
 	useEffect(() => {
-		if (userProfile && userProfile.status !== "verified") setActiveTab("verification");
+		if (userProfile && userProfile.status !== "verified")
+			setActiveTab("verification");
 		else if (userProfile?.status === "verified") setActiveTab("personal");
 	}, [userProfile]);
 
-	const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>, key: string) => {
-		if (e.target.files?.[0]) setFiles((prev) => ({ ...prev, [key]: e.target.files![0] }));
+	const handleFileChange = (
+		e: React.ChangeEvent<HTMLInputElement>,
+		key: string,
+	) => {
+		if (e.target.files?.[0])
+			setFiles((prev) => ({ ...prev, [key]: e.target.files![0] }));
 	};
 	const removeFile = (key: string) => {
-		setFiles((prev) => { const next = { ...prev }; delete (next as Record<string, File | undefined>)[key]; return next; });
+		setFiles((prev) => {
+			const next = { ...prev };
+			delete (next as Record<string, File | undefined>)[key];
+			return next;
+		});
 	};
 
 	const uploadDoc = async (file: File, typeName: string) => {
@@ -184,8 +274,15 @@ export default function InvestorProfilePage() {
 		formData.append("file", file);
 		formData.append("type", typeName);
 		const token = await user?.getIdToken();
-		const res = await fetch(`${API_URL}/upload`, { method: "POST", headers: { Authorization: `Bearer ${token}` }, body: formData });
-		if (!res.ok) { const data = await res.json(); throw new Error(data.message || `Failed to upload ${typeName}`); }
+		const res = await fetch(`${API_URL}/upload`, {
+			method: "POST",
+			headers: { Authorization: `Bearer ${token}` },
+			body: formData,
+		});
+		if (!res.ok) {
+			const data = await res.json();
+			throw new Error(data.message || `Failed to upload ${typeName}`);
+		}
 		return (await res.json()).file.url;
 	};
 
@@ -195,31 +292,57 @@ export default function InvestorProfilePage() {
 		try {
 			const payload: Record<string, string> = {};
 
-			if (files.governmentId) payload.nationalIdUrl = await uploadDoc(files.governmentId, "national_id");
-			else if (profileData?.nationalIdUrl) payload.nationalIdUrl = profileData.nationalIdUrl;
+			if (files.governmentId)
+				payload.nationalIdUrl = await uploadDoc(
+					files.governmentId,
+					"national_id",
+				);
+			else if (profileData?.nationalIdUrl)
+				payload.nationalIdUrl = profileData.nationalIdUrl;
 
-			if (files.accreditation) payload.accreditationDocumentUrl = await uploadDoc(files.accreditation, "legal");
-			else if (profileData?.accreditationDocumentUrl) payload.accreditationDocumentUrl = profileData.accreditationDocumentUrl;
+			if (files.accreditation)
+				payload.accreditationDocumentUrl = await uploadDoc(
+					files.accreditation,
+					"legal",
+				);
+			else if (profileData?.accreditationDocumentUrl)
+				payload.accreditationDocumentUrl = profileData.accreditationDocumentUrl;
 
 			const token = await user?.getIdToken();
 			const res = await fetch(`${API_URL}/users/me/profile`, {
 				method: "PUT",
-				headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+				headers: {
+					"Content-Type": "application/json",
+					Authorization: `Bearer ${token}`,
+				},
 				body: JSON.stringify(payload),
 			});
-			if (!res.ok) { const data = await res.json(); throw new Error(data.message || "Failed to save"); }
+			if (!res.ok) {
+				const data = await res.json();
+				throw new Error(data.message || "Failed to save");
+			}
 
 			setProfileData((prev: any) => ({ ...prev, ...payload }));
 			setFiles({});
 			await refreshUserProfile();
 			toast.success("Documents saved successfully!");
-		} catch (err: any) { setError(err.message); toast.error(err.message); }
-		finally { setSaving(false); }
+		} catch (err: any) {
+			setError(err.message);
+			toast.error(err.message);
+		} finally {
+			setSaving(false);
+		}
 	};
 
-	const initials = (userProfile?.displayName || "U").split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2);
+	const initials = (userProfile?.displayName || "U")
+		.split(" ")
+		.map((n) => n[0])
+		.join("")
+		.toUpperCase()
+		.slice(0, 2);
 	const hasGovId = !!files.governmentId || !!profileData?.nationalIdUrl;
-	const hasAccreditation = !!files.accreditation || !!profileData?.accreditationDocumentUrl;
+	const hasAccreditation =
+		!!files.accreditation || !!profileData?.accreditationDocumentUrl;
 
 	const steps = [
 		{ label: "Email Verified", done: !!userProfile?.emailVerified },
@@ -249,14 +372,29 @@ export default function InvestorProfilePage() {
 				<div className="mb-8">
 					<div className="flex items-center gap-4">
 						<Avatar className="h-16 w-16 border-2 border-primary/10">
-							<AvatarFallback className="bg-primary/10 text-primary text-lg font-bold">{initials}</AvatarFallback>
+							{userProfile?.photoURL && (
+								<AvatarImage
+									src={userProfile.photoURL}
+									alt={userProfile.displayName || ""}
+									className="object-cover"
+								/>
+							)}
+							<AvatarFallback className="bg-primary/10 text-primary text-lg font-bold">
+								{initials}
+							</AvatarFallback>
 						</Avatar>
 						<div>
-							<h1 className="text-2xl font-bold tracking-tight">{userProfile?.displayName}</h1>
+							<h1 className="text-2xl font-bold tracking-tight">
+								{userProfile?.displayName}
+							</h1>
 							<div className="flex items-center gap-2 mt-1">
 								<Mail className="h-3.5 w-3.5 text-muted-foreground" />
-								<span className="text-sm text-muted-foreground">{userProfile?.email}</span>
-								<Badge variant="outline" className="text-[10px] capitalize">{userProfile?.role}</Badge>
+								<span className="text-sm text-muted-foreground">
+									{userProfile?.email}
+								</span>
+								<Badge variant="outline" className="text-[10px] capitalize">
+									{userProfile?.role}
+								</Badge>
 							</div>
 						</div>
 					</div>
@@ -273,8 +411,12 @@ export default function InvestorProfilePage() {
 								<TabsTrigger value="verification" className="gap-1.5 text-xs">
 									<ShieldCheck className="h-3.5 w-3.5" />
 									Verification
-									{userProfile?.status !== "verified" && <span className="ml-1 h-2 w-2 rounded-full bg-amber-500 animate-pulse" />}
-									{userProfile?.status === "verified" && <CheckCircle2 className="ml-1 h-3 w-3 text-green-500" />}
+									{userProfile?.status !== "verified" && (
+										<span className="ml-1 h-2 w-2 rounded-full bg-amber-500 animate-pulse" />
+									)}
+									{userProfile?.status === "verified" && (
+										<CheckCircle2 className="ml-1 h-3 w-3 text-green-500" />
+									)}
 								</TabsTrigger>
 							</TabsList>
 
@@ -285,8 +427,13 @@ export default function InvestorProfilePage() {
 											<CheckCircle2 className="h-5 w-5 text-green-500" />
 										</div>
 										<div>
-											<p className="text-sm font-semibold text-green-700 dark:text-green-400">Verification Complete</p>
-											<p className="text-xs text-muted-foreground">Your identity and accreditation documents have been verified by an administrator.</p>
+											<p className="text-sm font-semibold text-green-700 dark:text-green-400">
+												Verification Complete
+											</p>
+											<p className="text-xs text-muted-foreground">
+												Your identity and accreditation documents have been
+												verified by an administrator.
+											</p>
 										</div>
 									</div>
 								)}
@@ -304,12 +451,22 @@ export default function InvestorProfilePage() {
 											<IdCard className="h-4 w-4 text-primary" />
 											Identity Verification
 										</CardTitle>
-										<CardDescription>Upload a valid government-issued ID (National ID or Driving License).</CardDescription>
+										<CardDescription>
+											Upload a valid government-issued ID (National ID or
+											Driving License).
+										</CardDescription>
 									</CardHeader>
 									<CardContent>
-										<FileUploadCard id="gov-id" label="Government-Issued ID" description="PDF or Image · Max 10MB"
-											file={files.governmentId} existingUrl={profileData?.nationalIdUrl}
-											onChange={(e) => handleFileChange(e, "governmentId")} onRemove={() => removeFile("governmentId")} required />
+										<FileUploadCard
+											id="gov-id"
+											label="Government-Issued ID"
+											description="PDF or Image · Max 10MB"
+											file={files.governmentId}
+											existingUrl={profileData?.nationalIdUrl}
+											onChange={(e) => handleFileChange(e, "governmentId")}
+											onRemove={() => removeFile("governmentId")}
+											required
+										/>
 									</CardContent>
 								</Card>
 
@@ -319,21 +476,45 @@ export default function InvestorProfilePage() {
 											<FileText className="h-4 w-4 text-primary" />
 											Financial Accreditation
 										</CardTitle>
-										<CardDescription>Upload your investment license or financial accreditation document.</CardDescription>
+										<CardDescription>
+											Upload your investment license or financial accreditation
+											document.
+										</CardDescription>
 									</CardHeader>
 									<CardContent>
-										<FileUploadCard id="accreditation" label="Accreditation / Investment License" description="PDF or Image · Max 10MB"
-											file={files.accreditation} existingUrl={profileData?.accreditationDocumentUrl}
-											onChange={(e) => handleFileChange(e, "accreditation")} onRemove={() => removeFile("accreditation")} required />
+										<FileUploadCard
+											id="accreditation"
+											label="Accreditation / Investment License"
+											description="PDF or Image · Max 10MB"
+											file={files.accreditation}
+											existingUrl={profileData?.accreditationDocumentUrl}
+											onChange={(e) => handleFileChange(e, "accreditation")}
+											onRemove={() => removeFile("accreditation")}
+											required
+										/>
 									</CardContent>
 									{!isVerified && (
-									<CardFooter className="flex justify-end border-t pt-4">
-										<Button onClick={handleSaveDocuments} disabled={saving} className="gap-2">
-											{saving ? (<><Loader2 className="h-4 w-4 animate-spin" />Saving...</>) : (
-												<><UploadCloud className="h-4 w-4" />{userProfile?.status === "unverified" ? "Save & Submit for Review" : "Save Changes"}</>
-											)}
-										</Button>
-									</CardFooter>
+										<CardFooter className="flex justify-end border-t pt-4">
+											<Button
+												onClick={handleSaveDocuments}
+												disabled={saving}
+												className="gap-2"
+											>
+												{saving ? (
+													<>
+														<Loader2 className="h-4 w-4 animate-spin" />
+														Saving...
+													</>
+												) : (
+													<>
+														<UploadCloud className="h-4 w-4" />
+														{userProfile?.status === "unverified"
+															? "Save & Submit for Review"
+															: "Save Changes"}
+													</>
+												)}
+											</Button>
+										</CardFooter>
 									)}
 								</Card>
 							</TabsContent>
@@ -341,33 +522,94 @@ export default function InvestorProfilePage() {
 							<TabsContent value="personal" className="space-y-6 mt-0">
 								<Card>
 									<CardHeader className="pb-3">
-										<CardTitle className="text-base">Personal Information</CardTitle>
-										<CardDescription>Update your account details below.</CardDescription>
+										<CardTitle className="text-base">
+											Personal Information
+										</CardTitle>
+										<CardDescription>
+											Update your account details below.
+										</CardDescription>
 									</CardHeader>
-									<CardContent className="space-y-4">
-										<div className="grid gap-4 sm:grid-cols-2">
-											<div className="space-y-2">
-												<Label htmlFor="inv-edit-name" className="text-sm">Full Name</Label>
-												<Input id="inv-edit-name" value={editName} onChange={(e) => setEditName(e.target.value)} placeholder="Your full name" />
+									<CardContent className="space-y-6">
+										<div className="flex flex-col sm:flex-row items-start gap-6 pb-2">
+											<div className="shrink-0">
+												<Label className="text-sm text-muted-foreground block mb-3">
+													Profile Picture
+												</Label>
+												<ProfilePictureUpload size="h-20 w-20" />
 											</div>
-											<div className="space-y-2">
-												<Label className="text-sm text-muted-foreground">Email Address</Label>
-												<p className="text-sm font-medium flex items-center gap-1.5 pt-2">{userProfile?.email}{userProfile?.emailVerified && <CheckCircle2 className="h-3.5 w-3.5 text-green-500" />}</p>
-												<p className="text-xs text-muted-foreground">Email cannot be changed</p>
-											</div>
-											<div className="space-y-2">
-												<Label className="text-sm text-muted-foreground">Role</Label>
-												<p className="text-sm font-medium capitalize pt-2">{userProfile?.role}</p>
-											</div>
-											<div className="space-y-2">
-												<Label className="text-sm text-muted-foreground">Account Status</Label>
-												<div className="pt-2"><Badge variant="outline" className={`capitalize text-xs ${userProfile?.status === "verified" ? "bg-green-500/10 text-green-600 border-green-500/20" : userProfile?.status === "pending" ? "bg-blue-500/10 text-blue-600 border-blue-500/20" : ""}`}>{userProfile?.status}</Badge></div>
+											<Separator
+												orientation="vertical"
+												className="hidden sm:block h-28"
+											/>
+											<Separator className="sm:hidden" />
+											<div className="flex-1 grid gap-4 sm:grid-cols-2 w-full">
+												<div className="space-y-2">
+													<Label htmlFor="inv-edit-name" className="text-sm">
+														Full Name
+													</Label>
+													<Input
+														id="inv-edit-name"
+														value={editName}
+														onChange={(e) => setEditName(e.target.value)}
+														placeholder="Your full name"
+													/>
+												</div>
+												<div className="space-y-2">
+													<Label className="text-sm text-muted-foreground">
+														Email Address
+													</Label>
+													<p className="text-sm font-medium flex items-center gap-1.5 pt-2">
+														{userProfile?.email}
+														{userProfile?.emailVerified && (
+															<CheckCircle2 className="h-3.5 w-3.5 text-green-500" />
+														)}
+													</p>
+													<p className="text-xs text-muted-foreground">
+														Email cannot be changed
+													</p>
+												</div>
+												<div className="space-y-2">
+													<Label className="text-sm text-muted-foreground">
+														Role
+													</Label>
+													<p className="text-sm font-medium capitalize pt-2">
+														{userProfile?.role}
+													</p>
+												</div>
+												<div className="space-y-2">
+													<Label className="text-sm text-muted-foreground">
+														Account Status
+													</Label>
+													<div className="pt-2">
+														<Badge
+															variant="outline"
+															className={`capitalize text-xs ${userProfile?.status === "verified" ? "bg-green-500/10 text-green-600 border-green-500/20" : userProfile?.status === "pending" ? "bg-blue-500/10 text-blue-600 border-blue-500/20" : ""}`}
+														>
+															{userProfile?.status}
+														</Badge>
+													</div>
+												</div>
 											</div>
 										</div>
 									</CardContent>
 									<CardFooter className="flex justify-end border-t pt-4">
-										<Button onClick={handleUpdateProfile} disabled={savingProfile || editName.trim() === (userProfile?.displayName || "")} className="gap-2">
-											{savingProfile ? (<><Loader2 className="h-4 w-4 animate-spin" /> Saving...</>) : (<><Save className="h-4 w-4" /> Save Changes</>)}
+										<Button
+											onClick={handleUpdateProfile}
+											disabled={
+												savingProfile ||
+												editName.trim() === (userProfile?.displayName || "")
+											}
+											className="gap-2"
+										>
+											{savingProfile ? (
+												<>
+													<Loader2 className="h-4 w-4 animate-spin" /> Saving...
+												</>
+											) : (
+												<>
+													<Save className="h-4 w-4" /> Save Changes
+												</>
+											)}
 										</Button>
 									</CardFooter>
 								</Card>
@@ -384,31 +626,60 @@ export default function InvestorProfilePage() {
 										<ShieldCheck className="h-4 w-4 text-primary" />
 										Verification
 									</CardTitle>
-									<Badge variant="outline" className={`capitalize text-xs ${
-										userProfile?.status === "verified" ? "bg-green-500/10 text-green-600 border-green-500/20"
-											: userProfile?.status === "pending" ? "bg-blue-500/10 text-blue-600 border-blue-500/20" : ""
-									}`}>{userProfile?.status === "verified" ? "✓ Verified" : userProfile?.status === "pending" ? "⏳ Under Review" : "Incomplete"}</Badge>
+									<Badge
+										variant="outline"
+										className={`capitalize text-xs ${
+											userProfile?.status === "verified"
+												? "bg-green-500/10 text-green-600 border-green-500/20"
+												: userProfile?.status === "pending"
+													? "bg-blue-500/10 text-blue-600 border-blue-500/20"
+													: ""
+										}`}
+									>
+										{userProfile?.status === "verified"
+											? "✓ Verified"
+											: userProfile?.status === "pending"
+												? "⏳ Under Review"
+												: "Incomplete"}
+									</Badge>
 								</div>
 							</CardHeader>
 							<CardContent className="space-y-4">
 								<div className="space-y-2">
-									<div className="flex justify-between text-xs text-muted-foreground"><span>Progress</span><span>{Math.round(progress)}%</span></div>
+									<div className="flex justify-between text-xs text-muted-foreground">
+										<span>Progress</span>
+										<span>{Math.round(progress)}%</span>
+									</div>
 									<Progress value={progress} className="h-2" />
 								</div>
 								<div className="space-y-2.5">
 									{steps.map((step) => (
 										<div key={step.label} className="flex items-center gap-2.5">
-											{step.done ? <CheckCircle2 className="h-4 w-4 text-green-500 shrink-0" />
-												: userProfile?.status === "pending" && step.label === "Admin Approved" ? <Clock className="h-4 w-4 text-blue-500 shrink-0 animate-pulse" />
-													: <div className="h-4 w-4 rounded-full border-2 border-muted-foreground/20 shrink-0" />}
-											<span className={`text-sm ${step.done ? "text-foreground" : "text-muted-foreground"}`}>{step.label}</span>
+											{step.done ? (
+												<CheckCircle2 className="h-4 w-4 text-green-500 shrink-0" />
+											) : userProfile?.status === "pending" &&
+												step.label === "Admin Approved" ? (
+												<Clock className="h-4 w-4 text-blue-500 shrink-0 animate-pulse" />
+											) : (
+												<div className="h-4 w-4 rounded-full border-2 border-muted-foreground/20 shrink-0" />
+											)}
+											<span
+												className={`text-sm ${step.done ? "text-foreground" : "text-muted-foreground"}`}
+											>
+												{step.label}
+											</span>
 										</div>
 									))}
 								</div>
 								{userProfile?.kycRejectionReason && (
-									<Alert variant="destructive" className="mt-3 border-destructive/30 bg-destructive/5">
+									<Alert
+										variant="destructive"
+										className="mt-3 border-destructive/30 bg-destructive/5"
+									>
 										<AlertCircle className="h-4 w-4" />
-										<AlertDescription className="text-xs">{userProfile.kycRejectionReason}</AlertDescription>
+										<AlertDescription className="text-xs">
+											{userProfile.kycRejectionReason}
+										</AlertDescription>
 									</Alert>
 								)}
 							</CardContent>

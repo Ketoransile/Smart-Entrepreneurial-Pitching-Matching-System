@@ -1,9 +1,9 @@
 "use client";
 
 import { ChevronsUpDown, Layers, LogOut, Settings, User } from "lucide-react";
-import ThemeToggle from "@/components/ThemeToggle";
 import { usePathname, useRouter } from "next/navigation";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import ThemeToggle from "@/components/ThemeToggle";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import {
 	DropdownMenu,
@@ -13,25 +13,25 @@ import {
 	DropdownMenuSeparator,
 	DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import VerificationGate from "@/components/VerificationGate";
-import { useAuth } from "@/context/AuthContext";
+import { Separator } from "@/components/ui/separator";
 import {
 	Sidebar,
 	SidebarContent,
 	SidebarFooter,
-	SidebarHeader,
-	SidebarMenu,
-	SidebarMenuItem,
-	SidebarMenuButton,
-	SidebarProvider,
-	SidebarInset,
-	SidebarTrigger,
-	SidebarRail,
 	SidebarGroup,
 	SidebarGroupContent,
 	SidebarGroupLabel,
+	SidebarHeader,
+	SidebarInset,
+	SidebarMenu,
+	SidebarMenuButton,
+	SidebarMenuItem,
+	SidebarProvider,
+	SidebarRail,
+	SidebarTrigger,
 } from "@/components/ui/sidebar";
-import { Separator } from "@/components/ui/separator";
+import VerificationGate from "@/components/VerificationGate";
+import { useAuth } from "@/context/AuthContext";
 
 interface NavItem {
 	label: string;
@@ -68,7 +68,10 @@ export default function DashboardLayout({
 				<SidebarHeader className="h-16 border-b flex items-center justify-center group-data-[collapsible=icon]:px-0">
 					<SidebarMenu className="group-data-[collapsible=icon]:items-center">
 						<SidebarMenuItem>
-							<SidebarMenuButton size="lg" className="pointer-events-none group-data-[collapsible=icon]:!justify-center group-data-[collapsible=icon]:!bg-transparent group-data-[collapsible=icon]:!p-0">
+							<SidebarMenuButton
+								size="lg"
+								className="pointer-events-none group-data-[collapsible=icon]:!justify-center group-data-[collapsible=icon]:!bg-transparent group-data-[collapsible=icon]:!p-0"
+							>
 								<div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-primary text-primary-foreground shadow-sm group-data-[collapsible=icon]:size-10 group-data-[collapsible=icon]:rounded-xl transition-all">
 									<Layers className="size-5" />
 								</div>
@@ -102,7 +105,9 @@ export default function DashboardLayout({
 												className="cursor-pointer rounded-md transition-all h-9 group-data-[collapsible=icon]:!justify-center group-data-[collapsible=icon]:!p-0"
 											>
 												{item.icon}
-												<span className="font-medium group-data-[collapsible=icon]:hidden">{item.label}</span>
+												<span className="font-medium group-data-[collapsible=icon]:hidden">
+													{item.label}
+												</span>
 											</SidebarMenuButton>
 										</SidebarMenuItem>
 									);
@@ -122,6 +127,13 @@ export default function DashboardLayout({
 										className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground cursor-pointer group-data-[collapsible=icon]:!justify-center group-data-[collapsible=icon]:!p-0 group-data-[collapsible=icon]:!size-10 group-data-[collapsible=icon]:rounded-xl transition-all"
 									>
 										<Avatar className="h-8 w-8 rounded-lg group-data-[collapsible=icon]:size-10 group-data-[collapsible=icon]:rounded-xl transition-all">
+											{userProfile?.photoURL && (
+												<AvatarImage
+													src={userProfile.photoURL}
+													alt={userProfile.displayName || ""}
+													className="object-cover rounded-lg"
+												/>
+											)}
 											<AvatarFallback className="rounded-lg bg-primary/10 text-xs font-semibold text-primary">
 												{initials}
 											</AvatarFallback>
@@ -146,6 +158,13 @@ export default function DashboardLayout({
 									<DropdownMenuLabel className="p-0 font-normal">
 										<div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
 											<Avatar className="h-8 w-8 rounded-lg">
+												{userProfile?.photoURL && (
+													<AvatarImage
+														src={userProfile.photoURL}
+														alt={userProfile.displayName || ""}
+														className="object-cover rounded-lg"
+													/>
+												)}
 												<AvatarFallback className="rounded-lg bg-primary/10 text-primary">
 													{initials}
 												</AvatarFallback>
@@ -199,6 +218,13 @@ export default function DashboardLayout({
 									className="relative h-8 w-8 rounded-full"
 								>
 									<Avatar className="h-8 w-8">
+										{userProfile?.photoURL && (
+											<AvatarImage
+												src={userProfile.photoURL}
+												alt={userProfile.displayName || ""}
+												className="object-cover"
+											/>
+										)}
 										<AvatarFallback className="bg-primary/10 text-primary text-xs">
 											{initials}
 										</AvatarFallback>
@@ -232,4 +258,3 @@ export default function DashboardLayout({
 		</SidebarProvider>
 	);
 }
-
