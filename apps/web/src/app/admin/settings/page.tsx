@@ -258,17 +258,34 @@ export default function AdminSettingsPage() {
 	const displayName = userProfile?.displayName || "Admin";
 	const email = userProfile?.email || "";
 	const adminLevel = userProfile?.adminLevel || "admin";
+	
+	const initials = displayName
+		.split(" ")
+		.map((n) => n[0])
+		.join("")
+		.toUpperCase()
+		.slice(0, 2);
 
 	return (
 		<ProtectedRoute allowedRoles={["admin"]}>
 			<DashboardLayout navItems={ADMIN_NAV} title="SEPMS Admin">
-				<div className="mb-8">
-					<h1 className="text-2xl font-bold tracking-tight sm:text-3xl">
-						Settings
-					</h1>
-					<p className="mt-1 text-muted-foreground">
-						Manage your account and platform configuration
-					</p>
+				<div className="mb-8 flex items-center gap-4">
+					<Avatar className="h-16 w-16 border-2 border-primary/10">
+						{userProfile?.photoURL && (
+							<AvatarImage src={userProfile.photoURL} alt={displayName} className="object-cover" />
+						)}
+						<AvatarFallback className="bg-primary/10 text-primary text-lg font-bold">
+							{initials}
+						</AvatarFallback>
+					</Avatar>
+					<div>
+						<h1 className="text-2xl font-bold tracking-tight sm:text-3xl">
+							Settings
+						</h1>
+						<p className="mt-1 text-muted-foreground">
+							Manage your account and platform configuration
+						</p>
+					</div>
 				</div>
 
 				<Tabs defaultValue="account" className="space-y-6">
