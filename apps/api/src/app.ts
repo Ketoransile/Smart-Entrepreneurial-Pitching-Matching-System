@@ -64,6 +64,31 @@ app.get("/health", (_req: Request, res: Response) => {
 	res.status(200).json({ status: "ok" });
 });
 
+import admin from "firebase-admin";
+
+app.get("/api/firebase-debug", (_req: Request, res: Response) => {
+	const projectId = process.env.FIREBASE_PROJECT_ID || "";
+	const clientEmail = process.env.FIREBASE_CLIENT_EMAIL || "";
+	const privateKey = process.env.FIREBASE_PRIVATE_KEY || "";
+
+	res.status(200).json({
+		status: "debug",
+		initialized: admin.apps?.length > 0 || false,
+		projectId:
+			projectId.length > 0 ? `${projectId.substring(0, 5)}...` : "missing",
+		clientEmail:
+			clientEmail.length > 0 ? `${clientEmail.substring(0, 5)}...` : "missing",
+		privateKey: privateKey.length > 0 ? "provided" : "missing",
+		privateKeyLength: privateKey.length,
+		dummyVariables: {
+			projectIdIsDummy: projectId.startsWith("your-"),
+			clientEmailIsDummy: clientEmail.startsWith("your-"),
+			privateKeyHasDots:
+				privateKey.includes("...\\n") || privateKey.includes("...", 0),
+		},
+	});
+});
+
 // Mount route modules
 app.use("/api/auth", authRoutes);
 app.use("/api/submissions", submissionRoutes);
