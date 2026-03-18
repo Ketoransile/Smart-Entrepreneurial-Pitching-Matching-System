@@ -12,6 +12,26 @@ function getFirebaseCredentials(): admin.ServiceAccount {
 		privateKey = privateKey.replace(/^["']|["']$/g, "");
 		// Replace escaped newlines with actual newlines
 		privateKey = privateKey.replace(/\\n/g, "\n");
+
+		// If Vercel squashed the multi-line key into a single line with spaces
+		if (
+			!privateKey.includes("\n") &&
+			privateKey.includes("-----BEGIN PRIVATE KEY-----")
+		) {
+			const startMarker = "-----BEGIN PRIVATE KEY-----";
+			const endMarker = "-----END PRIVATE KEY-----";
+
+			const startIndex = privateKey.indexOf(startMarker) + startMarker.length;
+			const endIndex = privateKey.indexOf(endMarker);
+
+			if (startIndex > -1 && endIndex > -1) {
+				const keyBody = privateKey
+					.substring(startIndex, endIndex)
+					.trim()
+					.replace(/ /g, "\n");
+				privateKey = `${startMarker}\n${keyBody}\n${endMarker}\n`;
+			}
+		}
 	}
 
 	if (!projectId || !clientEmail || !privateKey) {
@@ -23,18 +43,27 @@ function getFirebaseCredentials(): admin.ServiceAccount {
 	return { projectId, clientEmail, privateKey };
 }
 
+export let initializationError: string | null = null;
+
 export function initFirebase(): void {
 	if (initialized || admin.apps.length > 0) {
 		initialized = true;
 		return;
 	}
 
-	admin.initializeApp({
-		credential: admin.credential.cert(getFirebaseCredentials()),
-	});
-
-	initialized = true;
-	console.log("✅  Firebase Admin SDK initialized.");
+	try {
+		admin.initializeApp({
+			credential: admin.credential.cert(getFirebaseCredentials()),
+		});
+		initialized = true;
+		console.log("✅  Firebase Admin SDK initialized.");
+	} catch (error: any) {
+		initializationError = error.message || String(error);
+		console.error(
+			"❌ Firebase Initialization Error inside SDK:",
+			initializationError,
+		);
+	}
 }
 
 /** Pre-initialized Firebase Auth — call initFirebase() before using this. */

@@ -65,6 +65,7 @@ app.get("/health", (_req: Request, res: Response) => {
 });
 
 import admin from "firebase-admin";
+import { initializationError } from "./config/firebase";
 
 app.get("/api/firebase-debug", (_req: Request, res: Response) => {
 	const projectId = process.env.FIREBASE_PROJECT_ID || "";
@@ -74,6 +75,7 @@ app.get("/api/firebase-debug", (_req: Request, res: Response) => {
 	res.status(200).json({
 		status: "debug",
 		initialized: admin.apps?.length > 0 || false,
+		error: initializationError,
 		projectId:
 			projectId.length > 0 ? `${projectId.substring(0, 5)}...` : "missing",
 		clientEmail:
