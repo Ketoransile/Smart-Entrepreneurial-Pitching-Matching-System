@@ -9,6 +9,9 @@ class ApiConfig {
       String.fromEnvironment('API_BASE_URL', defaultValue: '');
 
   static String get baseUrl {
+    /// Returns the effective API base URL.
+    /// Uses --dart-define value when provided, otherwise falls back
+    /// to sane local defaults in debug mode (emulator vs device).
     if (_configuredBaseUrl.isNotEmpty) {
       return _configuredBaseUrl;
     }

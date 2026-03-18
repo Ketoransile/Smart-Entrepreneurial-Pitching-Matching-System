@@ -14,6 +14,8 @@ class SepmsApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    /// Builds the root application and provides top-level Bloc providers.
+    /// This widget wires global providers and configures the MaterialApp.
     return MultiBlocProvider(
       providers: [
         BlocProvider<AuthBloc>(
@@ -37,6 +39,8 @@ class AuthWrapper extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    /// Chooses the correct screen based on authentication state.
+    /// Maps auth states to appropriate pages (login, verification, dashboard).
     return BlocBuilder<AuthBloc, AuthState>(
       builder: (context, state) {
         switch (state.status) {
@@ -66,7 +70,8 @@ class AuthWrapper extends StatelessWidget {
       return const LoginPage();
     }
 
-    // TODO: Navigate to appropriate dashboard based on role
+    /// Renders the authenticated user's placeholder dashboard.
+    /// TODO: Replace with role-specific dashboards (entrepreneur/investor/admin).
     // For now, show a placeholder home screen
     return Scaffold(
       appBar: AppBar(
@@ -112,6 +117,7 @@ class _SplashScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    /// Simple splash/loading screen shown during authentication checks.
     return Scaffold(
       body: Center(
         child: Column(

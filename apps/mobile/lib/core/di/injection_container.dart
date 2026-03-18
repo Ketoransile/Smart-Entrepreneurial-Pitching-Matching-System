@@ -14,6 +14,8 @@ import '../../features/auth/presentation/bloc/auth_bloc.dart';
 final sl = GetIt.instance;
 
 Future<void> initDependencies() async {
+  /// Registers external libraries, data sources, repositories, use-cases and BLoCs
+  /// into the GetIt service locator. Call this once at app startup.
   // External
   final sharedPreferences = await SharedPreferences.getInstance();
   sl.registerLazySingleton<SharedPreferences>(() => sharedPreferences);
