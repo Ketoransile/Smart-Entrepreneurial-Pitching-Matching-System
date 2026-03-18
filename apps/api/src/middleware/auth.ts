@@ -3,6 +3,8 @@ import type admin from "firebase-admin";
 import { firebaseAuth } from "../config/firebase";
 import { type IUser, User } from "../models/User";
 
+export type AuthRequest = Request;
+
 // Extend Express Request to include our custom properties
 declare global {
 	namespace Express {
@@ -102,7 +104,11 @@ export const authorize = (...roles: string[]) => {
  * Super-admin-only access control middleware.
  * Must be used AFTER the authenticate middleware.
  */
-export const authorizeSuperAdmin = (req: Request, res: Response, next: NextFunction): void => {
+export const authorizeSuperAdmin = (
+	req: Request,
+	res: Response,
+	next: NextFunction,
+): void => {
 	if (!req.user) {
 		res.status(401).json({
 			status: "error",

@@ -181,20 +181,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 			true,
 			additionalData,
 		);
-		
+
 		if (!profile) throw new Error("Failed to create profile in backend");
-		
+
 		setUserProfile(profile);
 		return profile;
 	};
 
-	const signIn = async (email: string, password: string): Promise<UserProfile> => {
+	const signIn = async (
+		email: string,
+		password: string,
+	): Promise<UserProfile> => {
 		if (!auth) throw new Error("Firebase not initialized");
 		const credential = await signInWithEmailAndPassword(auth, email, password);
 		const profile = await fetchUserProfile(credential.user);
-		
+
 		if (!profile) throw new Error("Failed to fetch user profile");
-		
+
 		setUserProfile(profile);
 		return profile;
 	};
@@ -219,7 +222,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
 		if (!profile) throw new Error("Failed to authenticate with backend");
 
-		console.log("🔑 signInWithGoogle — profile:", { role: profile.role, email: profile.email, uid: profile.uid });
+		console.log("🔑 signInWithGoogle — profile:", {
+			role: profile.role,
+			email: profile.email,
+			uid: profile.uid,
+		});
 
 		setUserProfile(profile);
 		return profile;

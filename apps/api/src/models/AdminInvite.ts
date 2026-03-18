@@ -53,4 +53,7 @@ const AdminInviteSchema = new Schema<IAdminInvite>(
 // Auto-delete expired invites after 24h
 AdminInviteSchema.index({ expiresAt: 1 }, { expireAfterSeconds: 0 });
 
-export const AdminInvite = model<IAdminInvite>("AdminInvite", AdminInviteSchema);
+export const AdminInvite = model<IAdminInvite>(
+	"AdminInvite",
+	AdminInviteSchema,
+);

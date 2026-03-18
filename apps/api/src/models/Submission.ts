@@ -1,5 +1,6 @@
 import { type Document, model, Schema, type Types } from "mongoose";
-import type { StartupStage } from "./EntrepreneurProfile";
+
+export type SubmissionStage = "idea" | "mvp" | "early-revenue" | "scaling";
 
 export type SubmissionStatus =
 	| "draft"
@@ -15,6 +16,8 @@ export interface ISubmissionDocument {
 	url: string;
 	type:
 		| "pitch_deck"
+		| "financial_model"
+		| "legal"
 		| "business_plan"
 		| "financial_statement"
 		| "legal_doc"
@@ -30,7 +33,7 @@ export interface ISubmission extends Document {
 	title: string;
 	summary: string;
 	sector: string;
-	stage: StartupStage;
+	stage: SubmissionStage;
 	targetAmount?: number;
 	currency: string;
 	problem: {
@@ -73,6 +76,8 @@ const documentSchema = new Schema<ISubmissionDocument>({
 		type: String,
 		enum: [
 			"pitch_deck",
+			"financial_model",
+			"legal",
 			"business_plan",
 			"financial_statement",
 			"legal_doc",
@@ -101,7 +106,8 @@ const SubmissionSchema = new Schema<ISubmission>(
 		},
 		summary: {
 			type: String,
-			required: true,
+			required: false,
+			default: "",
 			maxlength: 3000,
 		},
 		sector: {
@@ -122,8 +128,14 @@ const SubmissionSchema = new Schema<ISubmission>(
 		},
 		stage: {
 			type: String,
-			enum: ["idea", "mvp", "growth", "scaling"] satisfies StartupStage[],
+			enum: [
+				"idea",
+				"mvp",
+				"early-revenue",
+				"scaling",
+			] satisfies SubmissionStage[],
 			required: true,
+			default: "idea",
 		},
 		targetAmount: {
 			type: Number,

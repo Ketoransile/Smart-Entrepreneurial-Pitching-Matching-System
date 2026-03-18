@@ -3,6 +3,7 @@
 import {
 	AlertCircle,
 	ArrowRight,
+	BarChart3,
 	Building2,
 	Camera,
 	CheckCircle2,
@@ -12,10 +13,12 @@ import {
 	IdCard,
 	Loader2,
 	Mail,
+	MessageSquare,
+	PenLine,
+	Save,
 	ShieldCheck,
 	Upload,
 	UploadCloud,
-	Save,
 	User as UserIcon,
 	X,
 } from "lucide-react";
@@ -41,11 +44,6 @@ import { Progress } from "@/components/ui/progress";
 import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuth } from "@/context/AuthContext";
-import {
-	BarChart3,
-	MessageSquare,
-	PenLine,
-} from "lucide-react";
 
 const ENTREPRENEUR_NAV = [
 	{
@@ -135,7 +133,10 @@ function FileUploadCard({
 						</p>
 					</div>
 					<Label htmlFor={id} className="cursor-pointer">
-						<Badge variant="outline" className="text-xs cursor-pointer hover:bg-muted">
+						<Badge
+							variant="outline"
+							className="text-xs cursor-pointer hover:bg-muted"
+						>
 							Replace
 						</Badge>
 						<Input
@@ -156,9 +157,7 @@ function FileUploadCard({
 						<div className="flex-1 min-w-0">
 							<p className="text-sm font-medium">
 								{label}
-								{required && (
-									<span className="text-destructive ml-1">*</span>
-								)}
+								{required && <span className="text-destructive ml-1">*</span>}
 							</p>
 							<p className="text-xs text-muted-foreground">{description}</p>
 						</div>
@@ -246,8 +245,7 @@ function VerificationProgress({
 						<div key={step.label} className="flex items-center gap-2.5">
 							{step.done ? (
 								<CheckCircle2 className="h-4 w-4 text-green-500 shrink-0" />
-							) : status === "pending" &&
-							  step.label === "Admin Approved" ? (
+							) : status === "pending" && step.label === "Admin Approved" ? (
 								<Clock className="h-4 w-4 text-blue-500 shrink-0 animate-pulse" />
 							) : (
 								<div className="h-4 w-4 rounded-full border-2 border-muted-foreground/20 shrink-0" />
@@ -262,7 +260,10 @@ function VerificationProgress({
 				</div>
 
 				{rejectionReason && (
-					<Alert variant="destructive" className="mt-3 border-destructive/30 bg-destructive/5">
+					<Alert
+						variant="destructive"
+						className="mt-3 border-destructive/30 bg-destructive/5"
+					>
 						<AlertCircle className="h-4 w-4" />
 						<AlertTitle className="text-xs font-semibold">Rejected</AlertTitle>
 						<AlertDescription className="text-xs">
@@ -283,7 +284,7 @@ export default function EntrepreneurProfilePage() {
 	const [saving, setSaving] = useState(false);
 	const [error, setError] = useState<string | null>(null);
 	const [activeTab, setActiveTab] = useState(
-		userProfile?.status === "verified" ? "personal" : "verification"
+		userProfile?.status === "verified" ? "personal" : "verification",
 	);
 
 	// Form fields
@@ -317,7 +318,10 @@ export default function EntrepreneurProfilePage() {
 			const token = await user.getIdToken();
 			const res = await fetch(`${API_URL}/users/me`, {
 				method: "PATCH",
-				headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+				headers: {
+					Authorization: `Bearer ${token}`,
+					"Content-Type": "application/json",
+				},
 				body: JSON.stringify({ fullName: editName.trim() }),
 			});
 			if (!res.ok) throw new Error("Failed to update profile");
@@ -342,8 +346,7 @@ export default function EntrepreneurProfilePage() {
 			if (res.ok) {
 				const data = await res.json();
 				setProfileData(data.profile);
-				if (data.profile?.companyName)
-					setCompanyName(data.profile.companyName);
+				if (data.profile?.companyName) setCompanyName(data.profile.companyName);
 				if (data.profile?.description)
 					setCompanyDescription(data.profile.description);
 			}
@@ -361,7 +364,11 @@ export default function EntrepreneurProfilePage() {
 
 	// Auto-switch to verification tab if unverified
 	useEffect(() => {
-		if (userProfile && userProfile.status !== "verified" && userProfile.role !== "admin") {
+		if (
+			userProfile &&
+			userProfile.status !== "verified" &&
+			userProfile.role !== "admin"
+		) {
 			setActiveTab("verification");
 		} else if (userProfile?.status === "verified") {
 			setActiveTab("personal");
@@ -469,13 +476,14 @@ export default function EntrepreneurProfilePage() {
 	};
 
 	// Computed states
-	const hasGovId =
-		!!files.governmentId || !!profileData?.nationalIdUrl;
+	const hasGovId = !!files.governmentId || !!profileData?.nationalIdUrl;
 	const hasBusinessLicense =
 		!!files.businessLicense || !!profileData?.businessLicenseUrl;
 	const hasTin = !!files.tinCertificate || !!profileData?.tinNumber;
 	const hasAllDocs = hasGovId && hasBusinessLicense && hasTin;
-	const hasNewFiles = Object.keys(files).length > 0 || (!profileData?.nationalIdUrl && !profileData?.businessLicenseUrl);
+	const hasNewFiles =
+		Object.keys(files).length > 0 ||
+		(!profileData?.nationalIdUrl && !profileData?.businessLicenseUrl);
 	const isVerified = userProfile?.status === "verified";
 	const initials = (userProfile?.displayName || "U")
 		.split(" ")
@@ -553,8 +561,13 @@ export default function EntrepreneurProfilePage() {
 											<CheckCircle2 className="h-5 w-5 text-green-500" />
 										</div>
 										<div>
-											<p className="text-sm font-semibold text-green-700 dark:text-green-400">Verification Complete</p>
-											<p className="text-xs text-muted-foreground">Your identity and business documents have been verified by an administrator.</p>
+											<p className="text-sm font-semibold text-green-700 dark:text-green-400">
+												Verification Complete
+											</p>
+											<p className="text-xs text-muted-foreground">
+												Your identity and business documents have been verified
+												by an administrator.
+											</p>
 										</div>
 									</div>
 								)}
@@ -611,9 +624,7 @@ export default function EntrepreneurProfilePage() {
 											description="PDF or Image · Certificate of Incorporation"
 											file={files.businessLicense}
 											existingUrl={profileData?.businessLicenseUrl}
-											onChange={(e) =>
-												handleFileChange(e, "businessLicense")
-											}
+											onChange={(e) => handleFileChange(e, "businessLicense")}
 											onRemove={() => removeFile("businessLicense")}
 											required
 										/>
@@ -623,9 +634,7 @@ export default function EntrepreneurProfilePage() {
 											description="PDF or Image · Tax Identification Number"
 											file={files.tinCertificate}
 											existingUrl={profileData?.tinNumber}
-											onChange={(e) =>
-												handleFileChange(e, "tinCertificate")
-											}
+											onChange={(e) => handleFileChange(e, "tinCertificate")}
 											onRemove={() => removeFile("tinCertificate")}
 											required
 										/>
@@ -643,8 +652,7 @@ export default function EntrepreneurProfilePage() {
 									<CardContent className="space-y-4">
 										<div className="space-y-2">
 											<Label htmlFor="company-name" className="text-sm">
-												Company Name{" "}
-												<span className="text-destructive">*</span>
+												Company Name <span className="text-destructive">*</span>
 											</Label>
 											<Input
 												id="company-name"
@@ -663,36 +671,34 @@ export default function EntrepreneurProfilePage() {
 												id="company-desc"
 												placeholder="What does your company do?"
 												value={companyDescription}
-												onChange={(e) =>
-													setCompanyDescription(e.target.value)
-												}
+												onChange={(e) => setCompanyDescription(e.target.value)}
 												className="h-10"
 												disabled={isVerified}
 											/>
 										</div>
 									</CardContent>
 									{!isVerified && (
-									<CardFooter className="flex justify-end border-t pt-4">
-										<Button
-											onClick={handleSaveDocuments}
-											disabled={saving}
-											className="gap-2"
-										>
-											{saving ? (
-												<>
-													<Loader2 className="h-4 w-4 animate-spin" />
-													Saving...
-												</>
-											) : (
-												<>
-													<UploadCloud className="h-4 w-4" />
-													{userProfile?.status === "unverified"
-														? "Save & Submit for Review"
-														: "Save Changes"}
-												</>
-											)}
-										</Button>
-									</CardFooter>
+										<CardFooter className="flex justify-end border-t pt-4">
+											<Button
+												onClick={handleSaveDocuments}
+												disabled={saving}
+												className="gap-2"
+											>
+												{saving ? (
+													<>
+														<Loader2 className="h-4 w-4 animate-spin" />
+														Saving...
+													</>
+												) : (
+													<>
+														<UploadCloud className="h-4 w-4" />
+														{userProfile?.status === "unverified"
+															? "Save & Submit for Review"
+															: "Save Changes"}
+													</>
+												)}
+											</Button>
+										</CardFooter>
 									)}
 								</Card>
 							</TabsContent>
@@ -714,7 +720,12 @@ export default function EntrepreneurProfilePage() {
 												<Label htmlFor="ent-edit-name" className="text-sm">
 													Full Name
 												</Label>
-												<Input id="ent-edit-name" value={editName} onChange={(e) => setEditName(e.target.value)} placeholder="Your full name" />
+												<Input
+													id="ent-edit-name"
+													value={editName}
+													onChange={(e) => setEditName(e.target.value)}
+													placeholder="Your full name"
+												/>
 											</div>
 											<div className="space-y-2">
 												<Label className="text-sm text-muted-foreground">
@@ -726,7 +737,9 @@ export default function EntrepreneurProfilePage() {
 														<CheckCircle2 className="h-3.5 w-3.5 text-green-500" />
 													)}
 												</p>
-												<p className="text-xs text-muted-foreground">Email cannot be changed</p>
+												<p className="text-xs text-muted-foreground">
+													Email cannot be changed
+												</p>
 											</div>
 											<div className="space-y-2">
 												<Label className="text-sm text-muted-foreground">
@@ -741,49 +754,72 @@ export default function EntrepreneurProfilePage() {
 													Account Status
 												</Label>
 												<div className="pt-2">
-												<Badge
-													variant="outline"
-													className={`capitalize text-xs ${
-														userProfile?.status === "verified"
-															? "bg-green-500/10 text-green-600 border-green-500/20"
-															: userProfile?.status === "pending"
-																? "bg-blue-500/10 text-blue-600 border-blue-500/20"
-																: ""
-													}`}
-												>
-													{userProfile?.status}
-												</Badge>
+													<Badge
+														variant="outline"
+														className={`capitalize text-xs ${
+															userProfile?.status === "verified"
+																? "bg-green-500/10 text-green-600 border-green-500/20"
+																: userProfile?.status === "pending"
+																	? "bg-blue-500/10 text-blue-600 border-blue-500/20"
+																	: ""
+														}`}
+													>
+														{userProfile?.status}
+													</Badge>
 												</div>
 											</div>
 										</div>
 									</CardContent>
 									<CardFooter className="flex justify-end border-t pt-4">
-										<Button onClick={handleUpdateProfile} disabled={savingProfile || editName.trim() === (userProfile?.displayName || "")} className="gap-2">
-											{savingProfile ? (<><Loader2 className="h-4 w-4 animate-spin" /> Saving...</>) : (<><Save className="h-4 w-4" /> Save Changes</>)}
+										<Button
+											onClick={handleUpdateProfile}
+											disabled={
+												savingProfile ||
+												editName.trim() === (userProfile?.displayName || "")
+											}
+											className="gap-2"
+										>
+											{savingProfile ? (
+												<>
+													<Loader2 className="h-4 w-4 animate-spin" /> Saving...
+												</>
+											) : (
+												<>
+													<Save className="h-4 w-4" /> Save Changes
+												</>
+											)}
 										</Button>
 									</CardFooter>
 								</Card>
 
 								{companyName && (
-								<Card>
-									<CardHeader className="pb-3">
-										<CardTitle className="text-base">Business Information</CardTitle>
-									</CardHeader>
-									<CardContent>
-										<div className="grid gap-4 sm:grid-cols-2">
-											<div className="space-y-2">
-												<Label className="text-sm text-muted-foreground">Company</Label>
-												<p className="text-sm font-medium">{companyName}</p>
-											</div>
-											{companyDescription && (
+									<Card>
+										<CardHeader className="pb-3">
+											<CardTitle className="text-base">
+												Business Information
+											</CardTitle>
+										</CardHeader>
+										<CardContent>
+											<div className="grid gap-4 sm:grid-cols-2">
 												<div className="space-y-2">
-													<Label className="text-sm text-muted-foreground">Description</Label>
-													<p className="text-sm text-muted-foreground">{companyDescription}</p>
+													<Label className="text-sm text-muted-foreground">
+														Company
+													</Label>
+													<p className="text-sm font-medium">{companyName}</p>
 												</div>
-											)}
-										</div>
-									</CardContent>
-								</Card>
+												{companyDescription && (
+													<div className="space-y-2">
+														<Label className="text-sm text-muted-foreground">
+															Description
+														</Label>
+														<p className="text-sm text-muted-foreground">
+															{companyDescription}
+														</p>
+													</div>
+												)}
+											</div>
+										</CardContent>
+									</Card>
 								)}
 							</TabsContent>
 						</Tabs>

@@ -46,7 +46,7 @@ router.use(authorize("investor"));
  *               preferredStages:
  *                 type: array
  *                 items:
- *                   type: string
+ *                   $ref: '#/components/schemas/InvestmentStage'
  *               investmentRange:
  *                 type: object
  *                 properties:
@@ -113,6 +113,10 @@ router.get("/profile", InvestorController.getProfile);
  *                 type: array
  *                 items:
  *                   type: string
+ *               preferredStages:
+ *                 type: array
+ *                 items:
+ *                   $ref: '#/components/schemas/InvestmentStage'
  *               investmentRange:
  *                 type: object
  *                 properties:

@@ -1,13 +1,30 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import {
+	signOut as firebaseSignOut,
+	GoogleAuthProvider,
+	signInWithPopup,
+} from "firebase/auth";
+import {
+	CheckCircle2,
+	Crown,
+	Loader2,
+	ShieldAlert,
+	ShieldCheck,
+	XCircle,
+} from "lucide-react";
 import { useParams, useRouter } from "next/navigation";
-import { signInWithPopup, signOut as firebaseSignOut, GoogleAuthProvider } from "firebase/auth";
-import { auth } from "@/lib/firebase";
-import { useAuth } from "@/context/AuthContext";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { CheckCircle2, Crown, Loader2, ShieldAlert, ShieldCheck, XCircle } from "lucide-react";
+import {
+	Card,
+	CardContent,
+	CardDescription,
+	CardHeader,
+	CardTitle,
+} from "@/components/ui/card";
+import { useAuth } from "@/context/AuthContext";
+import { auth } from "@/lib/firebase";
 
 export default function AdminInvitePage() {
 	const params = useParams();
@@ -15,11 +32,15 @@ export default function AdminInvitePage() {
 	const { user, refreshUserProfile } = useAuth();
 	const token = params.token as string;
 
-	const [status, setStatus] = useState<"loading" | "valid" | "invalid" | "accepting" | "done">("loading");
+	const [status, setStatus] = useState<
+		"loading" | "valid" | "invalid" | "accepting" | "done"
+	>("loading");
 	const [inviteData, setInviteData] = useState<any>(null);
 	const [error, setError] = useState("");
 
-	const API_URL = (process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api").replace(/\/+$/, "");
+	const API_URL = (
+		process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api"
+	).replace(/\/+$/, "");
 
 	// Validate token on load
 	useEffect(() => {
@@ -114,7 +135,9 @@ export default function AdminInvitePage() {
 					{status === "loading" && (
 						<>
 							<CardTitle>Validating Invite...</CardTitle>
-							<CardDescription>Please wait while we verify your invite link.</CardDescription>
+							<CardDescription>
+								Please wait while we verify your invite link.
+							</CardDescription>
 						</>
 					)}
 
@@ -125,8 +148,11 @@ export default function AdminInvitePage() {
 								Admin Invitation
 							</CardTitle>
 							<CardDescription>
-								You've been invited by <strong className="text-foreground">{inviteData?.createdBy}</strong> to
-								join SEPMS as an administrator.
+								You've been invited by{" "}
+								<strong className="text-foreground">
+									{inviteData?.createdBy}
+								</strong>{" "}
+								to join SEPMS as an administrator.
 							</CardDescription>
 						</>
 					)}
@@ -141,7 +167,9 @@ export default function AdminInvitePage() {
 					{status === "accepting" && (
 						<>
 							<CardTitle>Setting up your account...</CardTitle>
-							<CardDescription>Please wait while we configure your admin access.</CardDescription>
+							<CardDescription>
+								Please wait while we configure your admin access.
+							</CardDescription>
 						</>
 					)}
 
@@ -151,7 +179,9 @@ export default function AdminInvitePage() {
 								<ShieldCheck className="h-5 w-5" />
 								You're an Admin!
 							</CardTitle>
-							<CardDescription>Redirecting you to the admin dashboard...</CardDescription>
+							<CardDescription>
+								Redirecting you to the admin dashboard...
+							</CardDescription>
 						</>
 					)}
 				</CardHeader>
@@ -159,7 +189,9 @@ export default function AdminInvitePage() {
 				{status === "valid" && (
 					<CardContent className="space-y-4">
 						<div className="rounded-lg border bg-muted/30 p-4 space-y-2 text-sm">
-							<p className="text-muted-foreground">As an admin, you will be able to:</p>
+							<p className="text-muted-foreground">
+								As an admin, you will be able to:
+							</p>
 							<ul className="space-y-1 text-muted-foreground">
 								<li className="flex items-center gap-2">
 									<CheckCircle2 className="h-3.5 w-3.5 text-green-500 shrink-0" />
@@ -189,7 +221,11 @@ export default function AdminInvitePage() {
 
 				{status === "invalid" && (
 					<CardContent>
-						<Button variant="outline" className="w-full" onClick={() => router.push("/")}>
+						<Button
+							variant="outline"
+							className="w-full"
+							onClick={() => router.push("/")}
+						>
 							Go to Home
 						</Button>
 					</CardContent>

@@ -1,5 +1,9 @@
 import { type Request, type Response, Router } from "express";
-import { authenticate, authorize, authorizeSuperAdmin } from "../middleware/auth";
+import {
+	authenticate,
+	authorize,
+	authorizeSuperAdmin,
+} from "../middleware/auth";
 import { AdminInvite } from "../models/AdminInvite";
 import { User } from "../models/User";
 
@@ -8,75 +12,116 @@ const SUPER_ADMIN_EMAIL = "abdisileshi123@gmail.com";
 const router = Router();
 
 /**
- * POST /api/auth/register
+ * @openapi
+ * tags:
+ *   - name: Auth
+ *     description: Authentication, account profile, and admin invitation workflows
  */
-router.post("/register", authenticate, async (req: Request, res: Response): Promise<void> => {
-    try {
-        console.log("📋 POST /register — firebaseUid:", req.firebaseUser!.uid);
-        console.log("📋 POST /register — email:", req.firebaseUser!.email);
-        console.log("📋 POST /register — body.role:", req.body.role);
 
-        // 1. Check for existing user by Firebase UID
-        const existingByUid = await User.findOne({ firebaseUid: req.firebaseUser!.uid });
+/**
+ * @openapi
+ * /api/auth/register:
+ *   post:
+ *     tags: [Auth]
+ *     summary: Register or link authenticated Firebase user
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: false
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               fullName:
+ *                 type: string
+ *               role:
+ *                 type: string
+ *                 enum: [entrepreneur, investor]
+ *     responses:
+ *       200:
+ *         description: Existing account found or linked
+ *       201:
+ *         description: User registered successfully
+ */
+router.post(
+	"/register",
+	authenticate,
+	async (req: Request, res: Response): Promise<void> => {
+		try {
+			console.log("📋 POST /register — firebaseUid:", req.firebaseUser!.uid);
+			console.log("📋 POST /register — email:", req.firebaseUser!.email);
+			console.log("📋 POST /register — body.role:", req.body.role);
 
-        if (existingByUid) {
-            res.status(200).json({
-                status: "success",
-                message: "User already registered",
-                user: {
-                    uid: existingByUid.firebaseUid,
-                    email: existingByUid.email,
-                    displayName: existingByUid.fullName,
-                    role: existingByUid.role,
-                    adminLevel: existingByUid.adminLevel || null,
-                    status: existingByUid.status,
-                    photoURL: existingByUid.photoURL,
-                    emailVerified: existingByUid.emailVerified,
-                },
-            });
-            return;
-        }
+			// 1. Check for existing user by Firebase UID
+			const existingByUid = await User.findOne({
+				firebaseUid: req.firebaseUser!.uid,
+			});
 
-        // 2. Check for existing user by email (handles Google sign-in for users
-        //    originally created with email/password — different Firebase UID, same email)
-        const email = req.firebaseUser!.email;
-        if (email) {
-            const existingByEmail = await User.findOne({ email });
+			if (existingByUid) {
+				res.status(200).json({
+					status: "success",
+					message: "User already registered",
+					user: {
+						uid: existingByUid.firebaseUid,
+						email: existingByUid.email,
+						displayName: existingByUid.fullName,
+						role: existingByUid.role,
+						adminLevel: existingByUid.adminLevel || null,
+						status: existingByUid.status,
+						photoURL: existingByUid.photoURL,
+						emailVerified: existingByUid.emailVerified,
+					},
+				});
+				return;
+			}
 
-            if (existingByEmail) {
-                // Link the new Firebase UID to the existing account so future
-                // lookups by UID succeed immediately
-                existingByEmail.firebaseUid = req.firebaseUser!.uid;
-                if (req.firebaseUser!.picture && !existingByEmail.photoURL) {
-                    existingByEmail.photoURL = req.firebaseUser!.picture;
-                }
-                if (req.firebaseUser!.email_verified) {
-                    existingByEmail.emailVerified = true;
-                }
-                await existingByEmail.save();
+			// 2. Check for existing user by email (handles Google sign-in for users
+			//    originally created with email/password — different Firebase UID, same email)
+			const email = req.firebaseUser!.email;
+			if (email) {
+				const existingByEmail = await User.findOne({ email });
 
-                res.status(200).json({
-                    status: "success",
-                    message: "Existing account linked to Google sign-in",
-                    user: {
-                        uid: existingByEmail.firebaseUid,
-                        email: existingByEmail.email,
-                        displayName: existingByEmail.fullName,
-                        role: existingByEmail.role,
-                        adminLevel: existingByEmail.adminLevel || null,
-                        status: existingByEmail.status,
-                        photoURL: existingByEmail.photoURL,
-                        emailVerified: existingByEmail.emailVerified,
-                    },
-                });
-                return;
-            }
-        }
+				if (existingByEmail) {
+					// Link the new Firebase UID to the existing account so future
+					// lookups by UID succeed immediately
+					existingByEmail.firebaseUid = req.firebaseUser!.uid;
+					if (req.firebaseUser!.picture && !existingByEmail.photoURL) {
+						existingByEmail.photoURL = req.firebaseUser!.picture;
+					}
+					if (req.firebaseUser!.email_verified) {
+						existingByEmail.emailVerified = true;
+					}
+					await existingByEmail.save();
 
-        // 3. Brand-new user — create with the requested role
-        const requestedRole = req.body.role as "entrepreneur" | "investor" | undefined;
-        const assignedRole = (requestedRole && ["entrepreneur", "investor"].includes(requestedRole)) ? requestedRole : "entrepreneur";
-        const initialStatus = "unverified";
+					res.status(200).json({
+						status: "success",
+						message: "Existing account linked to Google sign-in",
+						user: {
+							uid: existingByEmail.firebaseUid,
+							email: existingByEmail.email,
+							displayName: existingByEmail.fullName,
+							role: existingByEmail.role,
+							adminLevel: existingByEmail.adminLevel || null,
+							status: existingByEmail.status,
+							photoURL: existingByEmail.photoURL,
+							emailVerified: existingByEmail.emailVerified,
+						},
+					});
+					return;
+				}
+			}
+
+			// 3. Brand-new user — create with the requested role
+			const requestedRole = req.body.role as
+				| "entrepreneur"
+				| "investor"
+				| undefined;
+			const assignedRole =
+				requestedRole && ["entrepreneur", "investor"].includes(requestedRole)
+					? requestedRole
+					: "entrepreneur";
+			const initialStatus = "unverified";
 
 			const newUser = await User.create({
 				firebaseUid: req.firebaseUser!.uid,
@@ -110,26 +155,54 @@ router.post("/register", authenticate, async (req: Request, res: Response): Prom
 );
 
 /**
- * GET /api/auth/me
+ * @openapi
+ * /api/auth/me:
+ *   get:
+ *     tags: [Auth]
+ *     summary: Get authenticated user profile
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: User profile fetched
+ *       404:
+ *         description: User profile not found
  */
-router.get("/me", authenticate, async (req: Request, res: Response): Promise<void> => {
-    try {
-        console.log("📋 GET /auth/me — firebaseUid:", req.firebaseUser?.uid);
-        console.log("📋 GET /auth/me — req.user:", req.user ? { email: req.user.email, role: req.user.role, firebaseUid: req.user.firebaseUid } : "null");
+router.get(
+	"/me",
+	authenticate,
+	async (req: Request, res: Response): Promise<void> => {
+		try {
+			console.log("📋 GET /auth/me — firebaseUid:", req.firebaseUser?.uid);
+			console.log(
+				"📋 GET /auth/me — req.user:",
+				req.user
+					? {
+							email: req.user.email,
+							role: req.user.role,
+							firebaseUid: req.user.firebaseUid,
+						}
+					: "null",
+			);
 
-        // DEBUG: find ALL documents with this email to detect duplicates
-        if (req.firebaseUser?.email) {
-            const allByEmail = await User.find({ email: req.firebaseUser.email }).select("firebaseUid email role status");
-            console.log("📋 DEBUG — all docs for this email:", JSON.stringify(allByEmail, null, 2));
-        }
+			// DEBUG: find ALL documents with this email to detect duplicates
+			if (req.firebaseUser?.email) {
+				const allByEmail = await User.find({
+					email: req.firebaseUser.email,
+				}).select("firebaseUid email role status");
+				console.log(
+					"📋 DEBUG — all docs for this email:",
+					JSON.stringify(allByEmail, null, 2),
+				);
+			}
 
-        if (!req.user) {
-            res.status(404).json({
-                status: "error",
-                message: "User profile not found. Please complete registration.",
-            });
-            return;
-        }
+			if (!req.user) {
+				res.status(404).json({
+					status: "error",
+					message: "User profile not found. Please complete registration.",
+				});
+				return;
+			}
 
 			res.status(200).json({
 				status: "success",
@@ -155,7 +228,29 @@ router.get("/me", authenticate, async (req: Request, res: Response): Promise<voi
 );
 
 /**
- * PATCH /api/auth/role
+ * @openapi
+ * /api/auth/role:
+ *   patch:
+ *     tags: [Auth]
+ *     summary: Update authenticated user role
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [role]
+ *             properties:
+ *               role:
+ *                 type: string
+ *                 enum: [admin, entrepreneur, investor]
+ *     responses:
+ *       200:
+ *         description: Role updated successfully
+ *       400:
+ *         description: Invalid role supplied
  */
 router.patch(
 	"/role",
@@ -208,7 +303,16 @@ router.patch(
 );
 
 /**
- * GET /api/auth/admin/users — Admin: List all users with stats
+ * @openapi
+ * /api/auth/admin/users:
+ *   get:
+ *     tags: [Auth]
+ *     summary: Admin list all users with summary stats
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Users and stats fetched
  */
 router.get(
 	"/admin/users",
@@ -230,7 +334,9 @@ router.get(
 			const skip = (parseInt(page as string) - 1) * parseInt(limit as string);
 			const total = await User.countDocuments(filter);
 			const users = await User.find(filter)
-				.select("fullName email role adminLevel status photoURL emailVerified createdAt")
+				.select(
+					"fullName email role adminLevel status photoURL emailVerified createdAt",
+				)
 				.sort({ createdAt: -1 })
 				.skip(skip)
 				.limit(parseInt(limit as string));
@@ -264,7 +370,35 @@ router.get(
 );
 
 /**
- * PATCH /api/auth/admin/users/:id/status — Admin: Update user status
+ * @openapi
+ * /api/auth/admin/users/{id}/status:
+ *   patch:
+ *     tags: [Auth]
+ *     summary: Admin update a user verification status
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [status]
+ *             properties:
+ *               status:
+ *                 type: string
+ *                 enum: [unverified, pending, verified, suspended]
+ *               reason:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: User status updated
  */
 router.patch(
 	"/admin/users/:id/status",
@@ -289,8 +423,14 @@ router.patch(
 				res.status(404).json({ status: "error", message: "User not found" });
 				return;
 			}
-			if (targetUser.adminLevel === "super_admin" && req.user?.adminLevel !== "super_admin") {
-				res.status(403).json({ status: "error", message: "Only super admins can modify super admin accounts" });
+			if (
+				targetUser.adminLevel === "super_admin" &&
+				req.user?.adminLevel !== "super_admin"
+			) {
+				res.status(403).json({
+					status: "error",
+					message: "Only super admins can modify super admin accounts",
+				});
 				return;
 			}
 
@@ -339,7 +479,16 @@ router.patch(
 );
 
 /**
- * GET /api/auth/admin/admins — Super Admin: List all admin users
+ * @openapi
+ * /api/auth/admin/admins:
+ *   get:
+ *     tags: [Auth]
+ *     summary: Super admin list all admins
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Admin users fetched
  */
 router.get(
 	"/admin/admins",
@@ -357,14 +506,35 @@ router.get(
 			});
 		} catch (error) {
 			console.error("Fetch admins error:", error);
-			res.status(500).json({ status: "error", message: "Failed to fetch admins" });
+			res
+				.status(500)
+				.json({ status: "error", message: "Failed to fetch admins" });
 		}
 	},
 );
 
 /**
- * POST /api/auth/admin/admins/invite — Super Admin: Generate an invite link
- * Body: { email?, fullName? }
+ * @openapi
+ * /api/auth/admin/admins/invite:
+ *   post:
+ *     tags: [Auth]
+ *     summary: Super admin generate an admin invite link
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: false
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               email:
+ *                 type: string
+ *               fullName:
+ *                 type: string
+ *     responses:
+ *       201:
+ *         description: Invite link generated
  */
 router.post(
 	"/admin/admins/invite",
@@ -399,13 +569,30 @@ router.post(
 			});
 		} catch (error) {
 			console.error("Generate invite error:", error);
-			res.status(500).json({ status: "error", message: "Failed to generate invite" });
+			res
+				.status(500)
+				.json({ status: "error", message: "Failed to generate invite" });
 		}
 	},
 );
 
 /**
- * GET /api/auth/admin/invite/:token — Public: Validate an invite token
+ * @openapi
+ * /api/auth/admin/invite/{token}:
+ *   get:
+ *     tags: [Auth]
+ *     summary: Validate an admin invite token
+ *     parameters:
+ *       - in: path
+ *         name: token
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Invite token is valid
+ *       404:
+ *         description: Invite token invalid or expired
  */
 router.get(
 	"/admin/invite/:token",
@@ -436,13 +623,32 @@ router.get(
 			});
 		} catch (error) {
 			console.error("Validate invite error:", error);
-			res.status(500).json({ status: "error", message: "Failed to validate invite" });
+			res
+				.status(500)
+				.json({ status: "error", message: "Failed to validate invite" });
 		}
 	},
 );
 
 /**
- * POST /api/auth/admin/invite/:token/accept — Authenticated: Accept invite
+ * @openapi
+ * /api/auth/admin/invite/{token}/accept:
+ *   post:
+ *     tags: [Auth]
+ *     summary: Accept an admin invite token
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: token
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Invite accepted and admin privileges assigned
+ *       404:
+ *         description: Invite token invalid or expired
  */
 router.post(
 	"/admin/invite/:token/accept",
@@ -478,7 +684,10 @@ router.post(
 				});
 			} else {
 				if (user.role === "admin" && user.adminLevel === "super_admin") {
-					res.status(400).json({ status: "error", message: "You are already a super admin" });
+					res.status(400).json({
+						status: "error",
+						message: "You are already a super admin",
+					});
 					return;
 				}
 				user.role = "admin";
@@ -508,14 +717,32 @@ router.post(
 			});
 		} catch (error) {
 			console.error("Accept invite error:", error);
-			res.status(500).json({ status: "error", message: "Failed to accept invite" });
+			res
+				.status(500)
+				.json({ status: "error", message: "Failed to accept invite" });
 		}
 	},
 );
 
 /**
- * DELETE /api/auth/admin/admins/:id — Super Admin: Remove admin privileges
- * Demotes admin back to entrepreneur role.
+ * @openapi
+ * /api/auth/admin/admins/{id}:
+ *   delete:
+ *     tags: [Auth]
+ *     summary: Super admin remove admin privileges
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Admin privileges removed
+ *       403:
+ *         description: Forbidden for super-admin target
  */
 router.delete(
 	"/admin/admins/:id",
@@ -531,13 +758,18 @@ router.delete(
 			}
 
 			if (targetUser.role !== "admin") {
-				res.status(400).json({ status: "error", message: "User is not an admin" });
+				res
+					.status(400)
+					.json({ status: "error", message: "User is not an admin" });
 				return;
 			}
 
 			// Prevent removing super admin
 			if (targetUser.adminLevel === "super_admin") {
-				res.status(403).json({ status: "error", message: "Cannot remove super admin privileges" });
+				res.status(403).json({
+					status: "error",
+					message: "Cannot remove super admin privileges",
+				});
 				return;
 			}
 
@@ -553,7 +785,9 @@ router.delete(
 			});
 		} catch (error) {
 			console.error("Remove admin error:", error);
-			res.status(500).json({ status: "error", message: "Failed to remove admin" });
+			res
+				.status(500)
+				.json({ status: "error", message: "Failed to remove admin" });
 		}
 	},
 );

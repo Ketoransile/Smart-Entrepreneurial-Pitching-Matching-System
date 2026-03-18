@@ -6,9 +6,53 @@ import { User } from "../models/User";
 
 const router = Router();
 
+const isEntrepreneurKycComplete = (
+	profile: InstanceType<typeof EntrepreneurProfile>,
+): boolean => {
+	return Boolean(
+		profile.companyName?.trim() &&
+			profile.companyRegistrationNumber?.trim() &&
+			profile.businessSector &&
+			profile.businessStage,
+	);
+};
+
+const isInvestorKycComplete = (
+	profile: InstanceType<typeof InvestorProfile>,
+): boolean => {
+	const hasRange =
+		typeof profile.investmentRange?.min === "number" &&
+		typeof profile.investmentRange?.max === "number" &&
+		profile.investmentRange.max > profile.investmentRange.min;
+
+	return Boolean(
+		profile.preferredSectors?.length &&
+			profile.preferredStages?.length &&
+			profile.investmentType?.length &&
+			hasRange,
+	);
+};
+
 /**
- * GET /api/users/me/profile
- * Get the current user's profile and KYC status
+ * @openapi
+ * tags:
+ *   - name: Users
+ *     description: User profile and KYC state endpoints
+ */
+
+/**
+ * @openapi
+ * /api/users/me/profile:
+ *   get:
+ *     tags: [Users]
+ *     summary: Get current user profile with role-specific details
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: User profile fetched
+ *       404:
+ *         description: User not found
  */
 router.get(
 	"/me/profile",
@@ -48,8 +92,25 @@ router.get(
 );
 
 /**
- * PUT /api/users/me/profile
- * Update profile and submit KYC documents
+ * @openapi
+ * /api/users/me/profile:
+ *   put:
+ *     tags: [Users]
+ *     summary: Update current user role-specific profile and KYC fields
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             additionalProperties: true
+ *     responses:
+ *       200:
+ *         description: Profile updated
+ *       400:
+ *         description: Invalid role for profile
  */
 router.put(
 	"/me/profile",
@@ -73,7 +134,7 @@ router.put(
 					{ new: true, upsert: true },
 				);
 
-				if (updatedProfile.businessLicenseUrl && updatedProfile.tinNumber && updatedProfile.nationalIdUrl) {
+				if (updatedProfile && isEntrepreneurKycComplete(updatedProfile)) {
 					isKycComplete = true;
 				}
 			} else if (role === "investor") {
@@ -83,7 +144,7 @@ router.put(
 					{ new: true, upsert: true },
 				);
 
-				if (updatedProfile.accreditationDocumentUrl && updatedProfile.nationalIdUrl) {
+				if (updatedProfile && isInvestorKycComplete(updatedProfile)) {
 					isKycComplete = true;
 				}
 			} else {
@@ -119,8 +180,27 @@ router.put(
 );
 
 /**
- * PATCH /api/users/me
- * Update basic user info (fullName only — role/status/adminLevel are protected)
+ * @openapi
+ * /api/users/me:
+ *   patch:
+ *     tags: [Users]
+ *     summary: Update current user basic fields
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               fullName:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: User profile updated
+ *       400:
+ *         description: No valid update fields provided
  */
 router.patch(
 	"/me",
@@ -135,12 +215,18 @@ router.patch(
 			const { fullName } = req.body;
 			const updateData: Record<string, unknown> = {};
 
-			if (fullName && typeof fullName === "string" && fullName.trim().length >= 2) {
+			if (
+				fullName &&
+				typeof fullName === "string" &&
+				fullName.trim().length >= 2
+			) {
 				updateData.fullName = fullName.trim();
 			}
 
 			if (Object.keys(updateData).length === 0) {
-				res.status(400).json({ status: "error", message: "No valid fields to update" });
+				res
+					.status(400)
+					.json({ status: "error", message: "No valid fields to update" });
 				return;
 			}
 
@@ -168,7 +254,9 @@ router.patch(
 			});
 		} catch (error) {
 			console.error("Update user error:", error);
-			res.status(500).json({ status: "error", message: "Failed to update profile" });
+			res
+				.status(500)
+				.json({ status: "error", message: "Failed to update profile" });
 		}
 	},
 );

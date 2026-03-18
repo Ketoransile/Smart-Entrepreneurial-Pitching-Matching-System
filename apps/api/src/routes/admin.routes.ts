@@ -1,53 +1,87 @@
-import { type Request, type Response, Router } from "express";
+import { Router } from "express";
+import { AdminAnalyticsController } from "../controllers/admin/analytics.controller";
+import { AdminSubmissionController } from "../controllers/admin/submission.controller";
+import { AdminUserController } from "../controllers/admin/user.controller";
 import { authenticate, authorize } from "../middleware/auth";
-import { EntrepreneurProfile } from "../models/EntrepreneurProfile";
-import { InvestorProfile } from "../models/InvestorProfile";
-import { User } from "../models/User";
 
 const router = Router();
+
+router.use(authenticate, authorize("admin"));
+
+/**
+ * @openapi
+ * tags:
+ *   - name: Admin
+ *     description: Admin dashboard, moderation, and analytics operations
+ */
+
+/**
+ * @openapi
+ * /api/admin/dashboard/stats:
+ *   get:
+ *     tags: [Admin]
+ *     summary: Get dashboard statistics for admin console
+ *     security:
+ *       - bearerAuth: []
+ */
+router.get("/dashboard/stats", AdminAnalyticsController.getDashboardStats);
+
+/**
+ * @openapi
+ * /api/admin/analytics/actions:
+ *   get:
+ *     tags: [Admin]
+ *     summary: List recent admin audit actions
+ *     security:
+ *       - bearerAuth: []
+ */
+router.get("/analytics/actions", AdminAnalyticsController.listAuditActions);
+
+/**
+ * @openapi
+ * /api/admin/users:
+ *   get:
+ *     tags: [Admin]
+ *     summary: List users with filters and pagination
+ *     security:
+ *       - bearerAuth: []
+ */
+router.get("/users", AdminUserController.listUsers);
+
+/**
+ * @openapi
+ * /api/admin/users/{userId}:
+ *   get:
+ *     tags: [Admin]
+ *     summary: Get a user details with role-specific profile
+ *     security:
+ *       - bearerAuth: []
+ */
+router.get("/users/:userId", AdminUserController.getUser);
 
 /**
  * GET /api/admin/users/:userId/profile
  * Admin view of a specific user's complete profile and KYC data
  */
-router.get(
-	"/users/:userId/profile",
-	authenticate,
-	authorize("admin"),
-	async (req: Request, res: Response): Promise<void> => {
-		try {
-			const user = await User.findById(req.params.userId);
+router.get("/users/:userId/profile", AdminUserController.getUser);
 
-			if (!user) {
-				res.status(404).json({ status: "error", message: "User not found" });
-				return;
-			}
+router.patch("/users/:userId/status", AdminUserController.updateUserStatus);
+router.patch("/users/:userId/active", AdminUserController.setUserActive);
 
-			let profile = null;
-			if (user.role === "entrepreneur") {
-				profile = await EntrepreneurProfile.findOne({ userId: user._id });
-			} else if (user.role === "investor") {
-				profile = await InvestorProfile.findOne({ userId: user._id });
-			}
+router.get("/submissions", AdminSubmissionController.listSubmissions);
+router.patch(
+	"/submissions/:submissionId/review",
+	AdminSubmissionController.reviewSubmission,
+);
+router.patch(
+	"/submissions/:submissionId/close",
+	AdminSubmissionController.forceCloseSubmission,
+);
 
-			res.status(200).json({
-				status: "success",
-				user: {
-					id: user._id,
-					email: user.email,
-					fullName: user.fullName,
-					role: user.role,
-					status: user.status,
-				},
-				profile: profile || {},
-			});
-		} catch (error) {
-			console.error("Fetch profile for admin error:", error);
-			res
-				.status(500)
-				.json({ status: "error", message: "Failed to fetch user profile" });
-		}
-	},
+router.get("/documents", AdminSubmissionController.listDocuments);
+router.patch(
+	"/documents/:documentId/review",
+	AdminSubmissionController.reviewDocument,
 );
 
 export default router;

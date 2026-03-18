@@ -25,8 +25,10 @@ import {
 	XCircle,
 } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
+import { toast } from "sonner";
 import DashboardLayout from "@/components/DashboardLayout";
 import ProtectedRoute from "@/components/ProtectedRoute";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -38,6 +40,8 @@ import {
 	DialogHeader,
 	DialogTitle,
 } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import {
 	Select,
 	SelectContent,
@@ -56,11 +60,7 @@ import {
 } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
-import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { useAuth } from "@/context/AuthContext";
-import { toast } from "sonner";
 
 interface UserRecord {
 	_id: string;
@@ -139,7 +139,11 @@ function DocLink({
 	url,
 	label,
 	missing,
-}: { url?: string; label: string; missing?: string }) {
+}: {
+	url?: string;
+	label: string;
+	missing?: string;
+}) {
 	if (!url) {
 		return (
 			<div className="flex items-center gap-3 rounded-xl border-2 border-dashed border-border/40 bg-muted/10 p-4">
@@ -159,8 +163,7 @@ function DocLink({
 	}
 
 	const isImage =
-		url.match(/\.(jpg|jpeg|png|webp|gif)/i) ||
-		url.includes("/image/upload/");
+		url.match(/\.(jpg|jpeg|png|webp|gif)/i) || url.includes("/image/upload/");
 
 	return (
 		<div className="rounded-xl border border-border/50 overflow-hidden bg-card">
@@ -377,7 +380,8 @@ export default function AdminOversight() {
 
 	const handleRemoveAdmin = async (adminId: string, adminName: string) => {
 		if (!user) return;
-		if (!confirm(`Are you sure you want to remove ${adminName} as admin?`)) return;
+		if (!confirm(`Are you sure you want to remove ${adminName} as admin?`))
+			return;
 		try {
 			const token = await user.getIdToken();
 			const res = await fetch(`${api}/auth/admin/admins/${adminId}`, {
@@ -431,7 +435,6 @@ export default function AdminOversight() {
 							label: "Pending KYC",
 							value: pendingCount,
 							icon: <UserCheck className="h-4 w-4" />,
-
 						},
 						{
 							label: "Submitted",
@@ -444,10 +447,7 @@ export default function AdminOversight() {
 							icon: <CheckCircle2 className="h-4 w-4" />,
 						},
 					].map((stat) => (
-						<Card
-							key={stat.label}
-
-						>
+						<Card key={stat.label}>
 							<CardContent className="p-4">
 								<p className="text-xs text-muted-foreground flex items-center gap-1.5">
 									{stat.icon} {stat.label}
@@ -568,18 +568,13 @@ export default function AdminOversight() {
 					{/* ─── Users Tab ─── */}
 					<TabsContent value="users">
 						<div className="flex gap-3 mb-4">
-							<Select
-								value={roleFilter}
-								onValueChange={setRoleFilter}
-							>
+							<Select value={roleFilter} onValueChange={setRoleFilter}>
 								<SelectTrigger className="w-40">
 									<SelectValue placeholder="Filter role" />
 								</SelectTrigger>
 								<SelectContent>
 									<SelectItem value="all">All roles</SelectItem>
-									<SelectItem value="entrepreneur">
-										Entrepreneur
-									</SelectItem>
+									<SelectItem value="entrepreneur">Entrepreneur</SelectItem>
 									<SelectItem value="investor">Investor</SelectItem>
 									<SelectItem value="admin">Admin</SelectItem>
 								</SelectContent>
@@ -631,8 +626,12 @@ export default function AdminOversight() {
 														variant={roleBadge(u.role)}
 														className="text-xs capitalize gap-1"
 													>
-														{u.adminLevel === "super_admin" && <Crown className="h-3 w-3 text-amber-500" />}
-														{u.adminLevel === "super_admin" ? "Super Admin" : u.role}
+														{u.adminLevel === "super_admin" && (
+															<Crown className="h-3 w-3 text-amber-500" />
+														)}
+														{u.adminLevel === "super_admin"
+															? "Super Admin"
+															: u.role}
 													</Badge>
 												</TableCell>
 												<TableCell>
@@ -648,7 +647,9 @@ export default function AdminOversight() {
 												</TableCell>
 												<TableCell className="text-right">
 													{u.adminLevel === "super_admin" && !isSuperAdmin ? (
-														<span className="text-xs text-muted-foreground">Protected</span>
+														<span className="text-xs text-muted-foreground">
+															Protected
+														</span>
 													) : (
 														<Button
 															size="sm"
@@ -674,10 +675,7 @@ export default function AdminOversight() {
 					{/* ─── Submissions Tab ─── */}
 					<TabsContent value="submissions">
 						<div className="flex gap-3 mb-4">
-							<Select
-								value={statusFilter}
-								onValueChange={setStatusFilter}
-							>
+							<Select value={statusFilter} onValueChange={setStatusFilter}>
 								<SelectTrigger className="w-44">
 									<SelectValue placeholder="Filter status" />
 								</SelectTrigger>
@@ -685,9 +683,7 @@ export default function AdminOversight() {
 									<SelectItem value="all">All statuses</SelectItem>
 									<SelectItem value="draft">Draft</SelectItem>
 									<SelectItem value="submitted">Submitted</SelectItem>
-									<SelectItem value="under_review">
-										Under Review
-									</SelectItem>
+									<SelectItem value="under_review">Under Review</SelectItem>
 									<SelectItem value="approved">Approved</SelectItem>
 									<SelectItem value="rejected">Rejected</SelectItem>
 								</SelectContent>
@@ -755,9 +751,7 @@ export default function AdminOversight() {
 													</Badge>
 												</TableCell>
 												<TableCell className="text-sm text-muted-foreground">
-													{new Date(
-														s.updatedAt,
-													).toLocaleDateString()}
+													{new Date(s.updatedAt).toLocaleDateString()}
 												</TableCell>
 											</TableRow>
 										))
@@ -776,7 +770,11 @@ export default function AdminOversight() {
 										<Crown className="h-4 w-4 text-amber-500" />
 										Admin Team
 									</CardTitle>
-									<Button size="sm" className="gap-1.5" onClick={() => setShowInviteDialog(true)}>
+									<Button
+										size="sm"
+										className="gap-1.5"
+										onClick={() => setShowInviteDialog(true)}
+									>
 										<Plus className="h-3.5 w-3.5" />
 										Invite Admin
 									</Button>
@@ -794,7 +792,10 @@ export default function AdminOversight() {
 									<TableBody>
 										{adminList.length === 0 ? (
 											<TableRow>
-												<TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
+												<TableCell
+													colSpan={5}
+													className="text-center py-8 text-muted-foreground"
+												>
 													No admins found
 												</TableCell>
 											</TableRow>
@@ -809,10 +810,21 @@ export default function AdminOversight() {
 															)}
 														</div>
 													</TableCell>
-													<TableCell className="text-muted-foreground text-sm">{a.email}</TableCell>
+													<TableCell className="text-muted-foreground text-sm">
+														{a.email}
+													</TableCell>
 													<TableCell>
-														<Badge variant={a.adminLevel === "super_admin" ? "default" : "secondary"} className="text-xs capitalize">
-															{a.adminLevel === "super_admin" ? "Super Admin" : "Admin"}
+														<Badge
+															variant={
+																a.adminLevel === "super_admin"
+																	? "default"
+																	: "secondary"
+															}
+															className="text-xs capitalize"
+														>
+															{a.adminLevel === "super_admin"
+																? "Super Admin"
+																: "Admin"}
 														</Badge>
 													</TableCell>
 													<TableCell className="text-sm text-muted-foreground">
@@ -820,14 +832,21 @@ export default function AdminOversight() {
 													</TableCell>
 													<TableCell className="text-right">
 														{a.adminLevel !== "super_admin" ? (
-															<Button size="sm" variant="ghost" className="text-destructive hover:text-destructive hover:bg-destructive/10 gap-1.5"
-																onClick={() => handleRemoveAdmin(a._id, a.fullName)}
+															<Button
+																size="sm"
+																variant="ghost"
+																className="text-destructive hover:text-destructive hover:bg-destructive/10 gap-1.5"
+																onClick={() =>
+																	handleRemoveAdmin(a._id, a.fullName)
+																}
 															>
 																<Trash2 className="h-3.5 w-3.5" />
 																Remove
 															</Button>
 														) : (
-															<span className="text-xs text-muted-foreground">Protected</span>
+															<span className="text-xs text-muted-foreground">
+																Protected
+															</span>
 														)}
 													</TableCell>
 												</TableRow>
@@ -838,7 +857,13 @@ export default function AdminOversight() {
 							</Card>
 
 							{/* Invite Admin Dialog */}
-							<Dialog open={showInviteDialog} onOpenChange={(open) => { setShowInviteDialog(open); if (!open) setInviteLink(""); }}>
+							<Dialog
+								open={showInviteDialog}
+								onOpenChange={(open) => {
+									setShowInviteDialog(open);
+									if (!open) setInviteLink("");
+								}}
+							>
 								<DialogContent className="sm:max-w-md">
 									<DialogHeader>
 										<DialogTitle className="flex items-center gap-2">
@@ -846,7 +871,8 @@ export default function AdminOversight() {
 											Invite New Admin
 										</DialogTitle>
 										<DialogDescription>
-											Generate an exclusive invite link. Anyone with this link can sign up as an admin. Links expire in 7 days.
+											Generate an exclusive invite link. Anyone with this link
+											can sign up as an admin. Links expire in 7 days.
 										</DialogDescription>
 									</DialogHeader>
 									<div className="py-4">
@@ -854,7 +880,9 @@ export default function AdminOversight() {
 											<div className="space-y-3">
 												<div className="flex items-center gap-2 rounded-lg border bg-muted/30 p-3">
 													<Link2 className="h-4 w-4 text-primary shrink-0" />
-													<code className="text-xs flex-1 break-all select-all text-foreground">{inviteLink}</code>
+													<code className="text-xs flex-1 break-all select-all text-foreground">
+														{inviteLink}
+													</code>
 												</div>
 												<Button
 													className="w-full gap-2"
@@ -866,16 +894,29 @@ export default function AdminOversight() {
 													<Copy className="h-4 w-4" />
 													Copy Link
 												</Button>
-												<p className="text-xs text-muted-foreground text-center">Share this link with the person you want to invite as admin.</p>
+												<p className="text-xs text-muted-foreground text-center">
+													Share this link with the person you want to invite as
+													admin.
+												</p>
 											</div>
 										) : (
 											<div className="text-center space-y-4">
 												<div className="flex h-16 w-16 mx-auto items-center justify-center rounded-full bg-primary/10">
 													<Link2 className="h-8 w-8 text-primary" />
 												</div>
-												<p className="text-sm text-muted-foreground">Click below to generate a one-time invite link.</p>
-												<Button onClick={handleInviteAdmin} disabled={inviting} className="gap-2">
-													{inviting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
+												<p className="text-sm text-muted-foreground">
+													Click below to generate a one-time invite link.
+												</p>
+												<Button
+													onClick={handleInviteAdmin}
+													disabled={inviting}
+													className="gap-2"
+												>
+													{inviting ? (
+														<Loader2 className="h-4 w-4 animate-spin" />
+													) : (
+														<Plus className="h-4 w-4" />
+													)}
 													{inviting ? "Generating..." : "Generate Invite Link"}
 												</Button>
 											</div>
@@ -915,8 +956,8 @@ export default function AdminOversight() {
 									</DialogTitle>
 									{actionUser?.status === "pending" && (
 										<DialogDescription>
-											Review the submitted KYC documents and approve or reject this
-											user.
+											Review the submitted KYC documents and approve or reject
+											this user.
 										</DialogDescription>
 									)}
 								</DialogHeader>
@@ -928,7 +969,12 @@ export default function AdminOversight() {
 										<div className="flex items-center gap-4">
 											<Avatar className="h-12 w-12 border-2 border-primary/10">
 												<AvatarFallback className="bg-primary/10 text-primary text-sm font-bold">
-													{(actionUser.fullName || "U").split(" ").map(n => n[0]).join("").toUpperCase().slice(0, 2)}
+													{(actionUser.fullName || "U")
+														.split(" ")
+														.map((n) => n[0])
+														.join("")
+														.toUpperCase()
+														.slice(0, 2)}
 												</AvatarFallback>
 											</Avatar>
 											<div className="flex-1 min-w-0">
@@ -985,9 +1031,7 @@ export default function AdminOversight() {
 												{actionUser.role === "entrepreneur" && (
 													<>
 														<DocLink
-															url={
-																actionUserProfile.businessLicenseUrl
-															}
+															url={actionUserProfile.businessLicenseUrl}
 															label="Business License"
 															missing="Business license not uploaded"
 														/>
@@ -1001,9 +1045,7 @@ export default function AdminOversight() {
 
 												{actionUser.role === "investor" && (
 													<DocLink
-														url={
-															actionUserProfile.accreditationDocumentUrl
-														}
+														url={actionUserProfile.accreditationDocumentUrl}
 														label="Financial Accreditation"
 														missing="Accreditation not uploaded"
 													/>
@@ -1024,15 +1066,11 @@ export default function AdminOversight() {
 										<>
 											<Separator />
 											<div className="space-y-3">
-												<h4 className="text-sm font-semibold">
-													Quick Actions
-												</h4>
+												<h4 className="text-sm font-semibold">Quick Actions</h4>
 												<div className="grid grid-cols-2 gap-3">
 													<Button
 														className="gap-2"
-														onClick={() =>
-															handleStatusUpdate("verified")
-														}
+														onClick={() => handleStatusUpdate("verified")}
 													>
 														<ShieldCheck className="h-4 w-4" />
 														Approve KYC
@@ -1045,10 +1083,7 @@ export default function AdminOversight() {
 																setNewStatus("reject-prompt");
 																return;
 															}
-															handleStatusUpdate(
-																"unverified",
-																rejectionReason,
-															);
+															handleStatusUpdate("unverified", rejectionReason);
 														}}
 													>
 														<ShieldX className="h-4 w-4" />
@@ -1057,41 +1092,40 @@ export default function AdminOversight() {
 												</div>
 
 												{/* Rejection reason textarea */}
-												{(newStatus === "reject-prompt" ||
-													rejectionReason) && (
-														<div className="space-y-2">
-															<Label
-																htmlFor="rejection-reason"
-																className="text-sm font-medium text-destructive"
-															>
-																Rejection Reason (required)
-															</Label>
-															<Textarea
-																id="rejection-reason"
-																placeholder="e.g. The National ID image is blurry and unreadable. Please re-upload a clearer photo."
-																value={rejectionReason}
-																onChange={(e) =>
-																	setRejectionReason(e.target.value)
+												{(newStatus === "reject-prompt" || rejectionReason) && (
+													<div className="space-y-2">
+														<Label
+															htmlFor="rejection-reason"
+															className="text-sm font-medium text-destructive"
+														>
+															Rejection Reason (required)
+														</Label>
+														<Textarea
+															id="rejection-reason"
+															placeholder="e.g. The National ID image is blurry and unreadable. Please re-upload a clearer photo."
+															value={rejectionReason}
+															onChange={(e) =>
+																setRejectionReason(e.target.value)
+															}
+															className="min-h-[80px]"
+														/>
+														{newStatus === "reject-prompt" && (
+															<Button
+																variant="destructive"
+																size="sm"
+																disabled={!rejectionReason.trim()}
+																onClick={() =>
+																	handleStatusUpdate(
+																		"unverified",
+																		rejectionReason,
+																	)
 																}
-																className="min-h-[80px]"
-															/>
-															{newStatus === "reject-prompt" && (
-																<Button
-																	variant="destructive"
-																	size="sm"
-																	disabled={!rejectionReason.trim()}
-																	onClick={() =>
-																		handleStatusUpdate(
-																			"unverified",
-																			rejectionReason,
-																		)
-																	}
-																>
-																	Confirm Rejection
-																</Button>
-															)}
-														</div>
-													)}
+															>
+																Confirm Rejection
+															</Button>
+														)}
+													</div>
+												)}
 											</div>
 										</>
 									)}
@@ -1101,13 +1135,8 @@ export default function AdminOversight() {
 										<>
 											<Separator />
 											<div className="space-y-2">
-												<div className="text-sm font-medium">
-													Update Status
-												</div>
-												<Select
-													value={newStatus}
-													onValueChange={setNewStatus}
-												>
+												<div className="text-sm font-medium">Update Status</div>
+												<Select value={newStatus} onValueChange={setNewStatus}>
 													<SelectTrigger>
 														<SelectValue />
 													</SelectTrigger>
@@ -1115,15 +1144,9 @@ export default function AdminOversight() {
 														<SelectItem value="unverified">
 															Unverified
 														</SelectItem>
-														<SelectItem value="pending">
-															Pending
-														</SelectItem>
-														<SelectItem value="verified">
-															Verified
-														</SelectItem>
-														<SelectItem value="suspended">
-															Suspended
-														</SelectItem>
+														<SelectItem value="pending">Pending</SelectItem>
+														<SelectItem value="verified">Verified</SelectItem>
+														<SelectItem value="suspended">Suspended</SelectItem>
 													</SelectContent>
 												</Select>
 

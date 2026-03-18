@@ -1,10 +1,12 @@
 import type { UploadApiResponse } from "cloudinary";
 import type { Request, Response } from "express";
+import mongoose from "mongoose";
 
 import cloudinary, { isCloudinaryConfigured } from "../config/cloudinary";
 import type { AuthRequest } from "../middleware/auth";
 import { handleMulterError } from "../middleware/upload";
 import { DocumentModel, type DocumentType } from "../models/Document";
+import { Submission } from "../models/Submission";
 import { enqueueDocumentProcessing } from "../workers/document.processor";
 
 const validDocumentTypes: DocumentType[] = [
@@ -23,6 +25,30 @@ const getDocumentType = (value: unknown): DocumentType => {
 	}
 
 	return "other";
+};
+
+const resolveOwnedSubmission = async (
+	submissionId: unknown,
+	ownerId: string,
+) => {
+	if (typeof submissionId !== "string" || submissionId.trim().length === 0) {
+		return null;
+	}
+
+	if (!mongoose.Types.ObjectId.isValid(submissionId)) {
+		throw new Error("Invalid submissionId");
+	}
+
+	const submission = await Submission.findOne({
+		_id: submissionId,
+		entrepreneurId: ownerId,
+	});
+
+	if (!submission) {
+		throw new Error("Submission not found or not owned by current user");
+	}
+
+	return submission;
 };
 
 export class DocumentController {
@@ -54,6 +80,10 @@ export class DocumentController {
 
 			const type = getDocumentType(req.body.type);
 			const ownerId = req.user._id;
+			const submission = await resolveOwnedSubmission(
+				req.body.submissionId,
+				ownerId.toString(),
+			);
 			const folder = `sepms/documents/${ownerId}/${type}`;
 
 			const result = await new Promise<UploadApiResponse>((resolve, reject) => {
@@ -76,7 +106,7 @@ export class DocumentController {
 
 			const savedDocument = await DocumentModel.create({
 				ownerId,
-				submissionId: req.body.submissionId || null,
+				submissionId: submission?._id || null,
 				type,
 				filename: file.originalname,
 				cloudinaryPublicId: result.public_id,
@@ -88,6 +118,18 @@ export class DocumentController {
 
 			enqueueDocumentProcessing(savedDocument._id.toString());
 
+			if (submission) {
+				submission.documents.push({
+					name: savedDocument.filename,
+					url: savedDocument.url,
+					type: savedDocument.type,
+					cloudinaryId: savedDocument.cloudinaryPublicId,
+					size: savedDocument.sizeBytes,
+					uploadedAt: new Date(),
+				});
+				await submission.save();
+			}
+
 			res.status(201).json({
 				status: "success",
 				message: "Document uploaded successfully",
@@ -95,7 +137,13 @@ export class DocumentController {
 			});
 		} catch (error) {
 			const message = handleMulterError(error);
-			res.status(500).json({ status: "error", message });
+			const statusCode =
+				message.includes("Invalid submissionId") ||
+				message.includes("Submission not found") ||
+				message.includes("Unsupported file type")
+					? 400
+					: 500;
+			res.status(statusCode).json({ status: "error", message });
 		}
 	}
 
@@ -123,6 +171,10 @@ export class DocumentController {
 
 			const type = getDocumentType(req.body.type);
 			const ownerId = req.user._id;
+			const submission = await resolveOwnedSubmission(
+				req.body.submissionId,
+				ownerId.toString(),
+			);
 
 			const uploadedDocuments = [];
 
@@ -151,7 +203,7 @@ export class DocumentController {
 
 				const savedDocument = await DocumentModel.create({
 					ownerId,
-					submissionId: req.body.submissionId || null,
+					submissionId: submission?._id || null,
 					type,
 					filename: file.originalname,
 					cloudinaryPublicId: result.public_id,
@@ -163,6 +215,21 @@ export class DocumentController {
 
 				enqueueDocumentProcessing(savedDocument._id.toString());
 				uploadedDocuments.push(savedDocument);
+
+				if (submission) {
+					submission.documents.push({
+						name: savedDocument.filename,
+						url: savedDocument.url,
+						type: savedDocument.type,
+						cloudinaryId: savedDocument.cloudinaryPublicId,
+						size: savedDocument.sizeBytes,
+						uploadedAt: new Date(),
+					});
+				}
+			}
+
+			if (submission) {
+				await submission.save();
 			}
 
 			res.status(201).json({
@@ -172,7 +239,13 @@ export class DocumentController {
 			});
 		} catch (error) {
 			const message = handleMulterError(error);
-			res.status(500).json({ status: "error", message });
+			const statusCode =
+				message.includes("Invalid submissionId") ||
+				message.includes("Submission not found") ||
+				message.includes("Unsupported file type")
+					? 400
+					: 500;
+			res.status(statusCode).json({ status: "error", message });
 		}
 	}
 

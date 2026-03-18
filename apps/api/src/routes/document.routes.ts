@@ -38,8 +38,7 @@ router.use(authenticate);
  *                 type: string
  *                 format: binary
  *               type:
- *                 type: string
- *                 enum: [pitch_deck, financial_model, legal, other]
+ *                 $ref: '#/components/schemas/DocumentType'
  *               submissionId:
  *                 type: string
  *     responses:
@@ -77,8 +76,7 @@ router.post(
  *                 type: string
  *                 format: binary
  *               type:
- *                 type: string
- *                 enum: [pitch_deck, financial_model, legal, other]
+ *                 $ref: '#/components/schemas/DocumentType'
  *     responses:
  *       201:
  *         description: Document uploaded
@@ -112,8 +110,7 @@ router.post(
  *                   type: string
  *                   format: binary
  *               type:
- *                 type: string
- *                 enum: [pitch_deck, financial_model, legal, other]
+ *                 $ref: '#/components/schemas/DocumentType'
  *     responses:
  *       201:
  *         description: Documents uploaded
@@ -186,6 +183,10 @@ router.get(
  *     responses:
  *       200:
  *         description: Validation status fetched
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ValidationStatusResponse'
  *       404:
  *         description: Not found
  */

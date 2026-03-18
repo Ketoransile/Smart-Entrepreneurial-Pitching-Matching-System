@@ -10,10 +10,17 @@ import helmet from "helmet";
 import swaggerUi from "swagger-ui-express";
 
 import { openApiSpec } from "./config/openapi";
+import adminRoutes from "./routes/admin.routes";
 import authRoutes from "./routes/auth.routes";
 import documentRoutes from "./routes/document.routes";
 import entrepreneurRoutes from "./routes/entrepreneur.routes";
+import feedbackRoutes from "./routes/feedback.routes";
 import investorRoutes from "./routes/investor.routes";
+import invitationRoutes from "./routes/invitation.routes";
+import matchingRoutes from "./routes/matching.routes";
+import meetingRoutes from "./routes/meeting.routes";
+import messageRoutes from "./routes/message.routes";
+import milestoneRoutes from "./routes/milestone.routes";
 import submissionRoutes from "./routes/submission.routes";
 import uploadRoutes from "./routes/upload.routes";
 import userRoutes from "./routes/user.routes";
@@ -71,23 +78,59 @@ app.use(mongoSanitize());
 app.use(express.json({ limit: "2mb" }));
 app.use(express.urlencoded({ extended: true }));
 
-app.get("/health", (_req: Request, res: Response) => {
+const healthHandler = (_req: Request, res: Response) => {
 	res.status(200).json({ status: "ok" });
+};
+
+const statsHandler = (_req: Request, res: Response) => {
+	const memory = process.memoryUsage();
+
+	res.status(200).json({
+		status: "ok",
+		timestamp: new Date().toISOString(),
+		uptimeSeconds: process.uptime(),
+		nodeVersion: process.version,
+		memory: {
+			rss: memory.rss,
+			heapTotal: memory.heapTotal,
+			heapUsed: memory.heapUsed,
+			external: memory.external,
+			arrayBuffers: memory.arrayBuffers,
+		},
+	});
+};
+
+app.get("/health", healthHandler);
+app.get("/api/health", healthHandler);
+app.get("/stats", statsHandler);
+app.get("/api/stats", statsHandler);
+
+app.get("/docs-json", (_req: Request, res: Response) => {
+	res.status(200).json(openApiSpec);
 });
 
 app.get("/api/docs-json", (_req: Request, res: Response) => {
 	res.status(200).json(openApiSpec);
 });
 
+app.use("/docs", swaggerUi.serve, swaggerUi.setup(openApiSpec));
 app.use("/api/docs", swaggerUi.serve, swaggerUi.setup(openApiSpec));
 
 // Mount route modules
 app.use("/api/auth", authRoutes);
+app.use("/api/admin", adminRoutes);
 app.use("/api/submissions", submissionRoutes);
 app.use("/api/upload", uploadRoutes);
 app.use("/api/documents", documentRoutes);
 app.use("/api/entrepreneur", entrepreneurRoutes);
 app.use("/api/investor", investorRoutes);
+app.use("/api/matching", matchingRoutes);
+app.use("/api/milestones", milestoneRoutes);
+app.use("/api/invitations", invitationRoutes);
+app.use("/api/feedback", feedbackRoutes);
+app.use("/api/messages", messageRoutes);
+app.use("/api/meetings", meetingRoutes);
+app.use("/api/users", userRoutes);
 
 // 404 handler
 app.use((_req: Request, res: Response) => {

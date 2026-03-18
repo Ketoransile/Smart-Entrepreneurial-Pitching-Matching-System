@@ -1,8 +1,8 @@
 "use client";
 
 import { ChevronsUpDown, Layers, LogOut, Settings, User } from "lucide-react";
-import ThemeToggle from "@/components/ThemeToggle";
 import { usePathname, useRouter } from "next/navigation";
+import ThemeToggle from "@/components/ThemeToggle";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import {
@@ -13,25 +13,25 @@ import {
 	DropdownMenuSeparator,
 	DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import VerificationGate from "@/components/VerificationGate";
-import { useAuth } from "@/context/AuthContext";
+import { Separator } from "@/components/ui/separator";
 import {
 	Sidebar,
 	SidebarContent,
 	SidebarFooter,
-	SidebarHeader,
-	SidebarMenu,
-	SidebarMenuItem,
-	SidebarMenuButton,
-	SidebarProvider,
-	SidebarInset,
-	SidebarTrigger,
-	SidebarRail,
 	SidebarGroup,
 	SidebarGroupContent,
 	SidebarGroupLabel,
+	SidebarHeader,
+	SidebarInset,
+	SidebarMenu,
+	SidebarMenuButton,
+	SidebarMenuItem,
+	SidebarProvider,
+	SidebarRail,
+	SidebarTrigger,
 } from "@/components/ui/sidebar";
-import { Separator } from "@/components/ui/separator";
+import VerificationGate from "@/components/VerificationGate";
+import { useAuth } from "@/context/AuthContext";
 
 interface NavItem {
 	label: string;
@@ -68,7 +68,10 @@ export default function DashboardLayout({
 				<SidebarHeader className="h-16 border-b flex items-center justify-center group-data-[collapsible=icon]:px-0">
 					<SidebarMenu className="group-data-[collapsible=icon]:items-center">
 						<SidebarMenuItem>
-							<SidebarMenuButton size="lg" className="pointer-events-none group-data-[collapsible=icon]:!justify-center group-data-[collapsible=icon]:!bg-transparent group-data-[collapsible=icon]:!p-0">
+							<SidebarMenuButton
+								size="lg"
+								className="pointer-events-none group-data-[collapsible=icon]:!justify-center group-data-[collapsible=icon]:!bg-transparent group-data-[collapsible=icon]:!p-0"
+							>
 								<div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-primary text-primary-foreground shadow-sm group-data-[collapsible=icon]:size-10 group-data-[collapsible=icon]:rounded-xl transition-all">
 									<Layers className="size-5" />
 								</div>
@@ -102,7 +105,9 @@ export default function DashboardLayout({
 												className="cursor-pointer rounded-md transition-all h-9 group-data-[collapsible=icon]:!justify-center group-data-[collapsible=icon]:!p-0"
 											>
 												{item.icon}
-												<span className="font-medium group-data-[collapsible=icon]:hidden">{item.label}</span>
+												<span className="font-medium group-data-[collapsible=icon]:hidden">
+													{item.label}
+												</span>
 											</SidebarMenuButton>
 										</SidebarMenuItem>
 									);
@@ -232,4 +237,3 @@ export default function DashboardLayout({
 		</SidebarProvider>
 	);
 }
-
