@@ -7,18 +7,27 @@ import express, {
 import mongoSanitize from "express-mongo-sanitize";
 import rateLimit from "express-rate-limit";
 import helmet from "helmet";
+import { connectDB } from "./config/database";
+import { initFirebase } from "./config/firebase";
 import adminRoutes from "./routes/admin.routes";
 import authRoutes from "./routes/auth.routes";
 import submissionRoutes from "./routes/submission.routes";
 import uploadRoutes from "./routes/upload.routes";
 import userRoutes from "./routes/user.routes";
-import { connectDB } from "./config/database";
-import { initFirebase } from "./config/firebase";
 
+// Initialize Firebase and Database right away for Vercel
+// (because Vercel Serverless Functions execute app.ts directly and skip server.ts)
+initFirebase();
+connectDB().catch(console.error);
 
 const app = express();
 
-app.use(helmet());
+app.use(
+	helmet({
+		crossOriginOpenerPolicy: false, // Set this completely to false
+		crossOriginResourcePolicy: { policy: "cross-origin" },
+	}),
+);
 
 const allowedOrigins = [
 	process.env.CLIENT_URL,
@@ -60,20 +69,24 @@ app.get("/health", (_req: Request, res: Response) => {
 	res.status(200).json({ status: "ok" });
 });
 
-
 // Vercel Serverless: Guarantee connections before handling API requests
 app.use(async (_req, _res, next) => {
 	try {
 		await connectDB();
-		
+
 		const projectId = process.env.FIREBASE_PROJECT_ID;
 		const clientEmail = process.env.FIREBASE_CLIENT_EMAIL;
 		const privateKey = process.env.FIREBASE_PRIVATE_KEY;
-		
-		if (projectId && clientEmail && privateKey && !projectId.startsWith("your-")) {
+
+		if (
+			projectId &&
+			clientEmail &&
+			privateKey &&
+			!projectId.startsWith("your-")
+		) {
 			initFirebase();
 		}
-		
+
 		next();
 	} catch (error) {
 		console.error("Global init middleware error:", error);
