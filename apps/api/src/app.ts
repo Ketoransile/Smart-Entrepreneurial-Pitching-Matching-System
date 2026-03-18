@@ -15,6 +15,10 @@ import submissionRoutes from "./routes/submission.routes";
 import uploadRoutes from "./routes/upload.routes";
 import userRoutes from "./routes/user.routes";
 
+// Initialize Firebase and Database right away for Vercel Serverless Functions (which bypass server.ts)
+initFirebase();
+connectDB().catch(console.error);
+
 const app = express();
 
 app.use(
