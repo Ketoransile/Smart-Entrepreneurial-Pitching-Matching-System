@@ -152,18 +152,8 @@ const LedgerEntrySchema = new Schema<ILedgerEntry>(
 
 const immutableMessage = "Ledger entries are immutable and cannot be modified.";
 LedgerEntrySchema.pre(
-	[
-		"updateOne",
-		"updateMany",
-		"findOneAndUpdate",
-		"findByIdAndUpdate",
-		"replaceOne",
-		"deleteOne",
-		"deleteMany",
-		"findOneAndDelete",
-		"findByIdAndDelete",
-	],
-	function immutableGuard(next) {
+	/^(updateOne|updateMany|findOneAndUpdate|findByIdAndUpdate|replaceOne|deleteOne|deleteMany|findOneAndDelete|findByIdAndDelete)$/,
+	function immutableGuard(next: (err?: Error) => void) {
 		next(new Error(immutableMessage));
 	},
 );

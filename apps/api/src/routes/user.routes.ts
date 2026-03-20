@@ -107,9 +107,10 @@ router.put(
 				);
 
 				if (
-					updatedProfile.businessLicenseUrl &&
-					updatedProfile.tinNumber &&
-					updatedProfile.nationalIdUrl
+					updatedProfile.companyRegistrationNumber &&
+					updatedProfile.companyAddress &&
+					updatedProfile.documents &&
+					updatedProfile.documents.length > 0
 				) {
 					isKycComplete = true;
 				}
@@ -121,8 +122,8 @@ router.put(
 				);
 
 				if (
-					updatedProfile.accreditationDocumentUrl &&
-					updatedProfile.nationalIdUrl
+					updatedProfile.accreditationDocuments &&
+					updatedProfile.accreditationDocuments.length > 0
 				) {
 					isKycComplete = true;
 				}

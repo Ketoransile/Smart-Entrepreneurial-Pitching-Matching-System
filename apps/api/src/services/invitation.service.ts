@@ -177,7 +177,7 @@ export class InvitationService {
 		}
 
 		invitation.status = payload.status;
-		invitation.responseMessage = payload.responseMessage || null;
+		invitation.responseMessage = payload.responseMessage || undefined;
 		invitation.respondedAt = new Date();
 		await invitation.save();
 
