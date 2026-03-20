@@ -20,7 +20,8 @@ import {
 	User as UserIcon,
 	X,
 } from "lucide-react";
-import { useCallback, useEffect, useState } from "react";
+import { useSearchParams } from "next/navigation";
+import { Suspense, useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 import DashboardLayout from "@/components/DashboardLayout";
 import ProfilePictureUpload from "@/components/ProfilePictureUpload";
@@ -175,16 +176,22 @@ function FileUploadCard({
 	);
 }
 
-export default function InvestorProfilePage() {
+function InvestorProfilePageInner() {
 	const { user, userProfile, refreshUserProfile } = useAuth();
 	const [profileData, setProfileData] = useState<any>(null);
 	const [loading, setLoading] = useState(true);
 	const [saving, setSaving] = useState(false);
 	const [error, setError] = useState<string | null>(null);
 	const isVerified = userProfile?.status === "verified";
-	const [activeTab, setActiveTab] = useState(
-		isVerified ? "personal" : "verification",
-	);
+	const [activeTab, setActiveTab] = useState("personal");
+	const searchParams = useSearchParams();
+
+	useEffect(() => {
+		const tab = searchParams.get("tab");
+		if (tab === "verification" || tab === "personal") {
+			setActiveTab(tab);
+		}
+	}, [searchParams]);
 
 	const [files, setFiles] = useState<{
 		governmentId?: File;
@@ -247,12 +254,6 @@ export default function InvestorProfilePage() {
 	useEffect(() => {
 		fetchProfile();
 	}, [fetchProfile]);
-
-	useEffect(() => {
-		if (userProfile && userProfile.status !== "verified")
-			setActiveTab("verification");
-		else if (userProfile?.status === "verified") setActiveTab("personal");
-	}, [userProfile]);
 
 	const handleFileChange = (
 		e: React.ChangeEvent<HTMLInputElement>,
@@ -369,34 +370,14 @@ export default function InvestorProfilePage() {
 		<ProtectedRoute allowedRoles={["investor"]}>
 			<DashboardLayout navItems={INVESTOR_NAV} title="SEPMS">
 				{/* Header */}
-				<div className="mb-8">
-					<div className="flex items-center gap-4">
-						<Avatar className="h-16 w-16 border-2 border-primary/10">
-							{userProfile?.photoURL && (
-								<AvatarImage
-									src={userProfile.photoURL}
-									alt={userProfile.displayName || ""}
-									className="object-cover"
-								/>
-							)}
-							<AvatarFallback className="bg-primary/10 text-primary text-lg font-bold">
-								{initials}
-							</AvatarFallback>
-						</Avatar>
-						<div>
-							<h1 className="text-2xl font-bold tracking-tight">
-								{userProfile?.displayName}
-							</h1>
-							<div className="flex items-center gap-2 mt-1">
-								<Mail className="h-3.5 w-3.5 text-muted-foreground" />
-								<span className="text-sm text-muted-foreground">
-									{userProfile?.email}
-								</span>
-								<Badge variant="outline" className="text-[10px] capitalize">
-									{userProfile?.role}
-								</Badge>
-							</div>
-						</div>
+				<div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+					<div>
+						<h1 className="text-2xl font-bold tracking-tight sm:text-3xl">
+							Profile Settings
+						</h1>
+						<p className="mt-1 text-muted-foreground">
+							Manage your personal information and verification documents
+						</p>
 					</div>
 				</div>
 
@@ -688,5 +669,19 @@ export default function InvestorProfilePage() {
 				</div>
 			</DashboardLayout>
 		</ProtectedRoute>
+	);
+}
+
+export default function InvestorProfilePage() {
+	return (
+		<Suspense
+			fallback={
+				<div className="flex min-h-screen items-center justify-center">
+					<div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+				</div>
+			}
+		>
+			<InvestorProfilePageInner />
+		</Suspense>
 	);
 }

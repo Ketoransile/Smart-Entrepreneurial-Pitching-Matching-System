@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
+import { Logo } from "@/components/Logo";
 import ThemeToggle from "@/components/ThemeToggle";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/context/AuthContext";
@@ -53,9 +54,7 @@ export default function Navbar() {
 			>
 				<div className="flex h-14 items-center justify-between px-5">
 					<Link href="/" className="flex items-center gap-2.5 cursor-pointer">
-						<div className="flex h-7 w-7 items-center justify-center rounded-lg bg-foreground text-background font-bold text-xs">
-							S
-						</div>
+						<Logo className="h-7 w-7" />
 						<span className="font-semibold text-sm tracking-tight">SEPMS</span>
 					</Link>
 

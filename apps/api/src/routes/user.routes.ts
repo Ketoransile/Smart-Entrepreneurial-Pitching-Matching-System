@@ -107,10 +107,13 @@ router.put(
 				);
 
 				if (
-					updatedProfile.companyRegistrationNumber &&
-					updatedProfile.companyAddress &&
-					updatedProfile.documents &&
-					updatedProfile.documents.length > 0
+					(updatedProfile.nationalIdUrl &&
+						updatedProfile.businessLicenseUrl &&
+						updatedProfile.tinNumber) ||
+					(updatedProfile.companyRegistrationNumber &&
+						updatedProfile.companyAddress &&
+						updatedProfile.documents &&
+						updatedProfile.documents.length > 0)
 				) {
 					isKycComplete = true;
 				}
@@ -122,8 +125,10 @@ router.put(
 				);
 
 				if (
-					updatedProfile.accreditationDocuments &&
-					updatedProfile.accreditationDocuments.length > 0
+					(updatedProfile.nationalIdUrl &&
+						updatedProfile.accreditationDocumentUrl) ||
+					(updatedProfile.accreditationDocuments &&
+						updatedProfile.accreditationDocuments.length > 0)
 				) {
 					isKycComplete = true;
 				}

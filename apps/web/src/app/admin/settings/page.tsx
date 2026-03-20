@@ -258,7 +258,7 @@ export default function AdminSettingsPage() {
 	const displayName = userProfile?.displayName || "Admin";
 	const email = userProfile?.email || "";
 	const adminLevel = userProfile?.adminLevel || "admin";
-	
+
 	const initials = displayName
 		.split(" ")
 		.map((n) => n[0])
@@ -272,7 +272,11 @@ export default function AdminSettingsPage() {
 				<div className="mb-8 flex items-center gap-4">
 					<Avatar className="h-16 w-16 border-2 border-primary/10">
 						{userProfile?.photoURL && (
-							<AvatarImage src={userProfile.photoURL} alt={displayName} className="object-cover" />
+							<AvatarImage
+								src={userProfile.photoURL}
+								alt={displayName}
+								className="object-cover"
+							/>
 						)}
 						<AvatarFallback className="bg-primary/10 text-primary text-lg font-bold">
 							{initials}

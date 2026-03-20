@@ -14,6 +14,9 @@ export interface IEntrepreneurProfile extends Document {
 	country?: string;
 	website?: string;
 	businessPhone?: string;
+	nationalIdUrl?: string;
+	businessLicenseUrl?: string;
+	tinNumber?: string;
 	documents: mongoose.Types.ObjectId[];
 	foundedYear?: number;
 	employeeCount?: number;
@@ -71,6 +74,9 @@ const EntrepreneurProfileSchema = new Schema<IEntrepreneurProfile>(
 		country: String,
 		website: String,
 		businessPhone: String,
+		nationalIdUrl: String,
+		businessLicenseUrl: String,
+		tinNumber: String,
 
 		documents: [{ type: Schema.Types.ObjectId, ref: "Document" }],
 

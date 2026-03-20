@@ -2,6 +2,7 @@
 
 import { ChevronsUpDown, Layers, LogOut, Settings, User } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
+import { Logo } from "@/components/Logo";
 import ThemeToggle from "@/components/ThemeToggle";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -72,8 +73,8 @@ export default function DashboardLayout({
 								size="lg"
 								className="pointer-events-none group-data-[collapsible=icon]:!justify-center group-data-[collapsible=icon]:!bg-transparent group-data-[collapsible=icon]:!p-0"
 							>
-								<div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-primary text-primary-foreground shadow-sm group-data-[collapsible=icon]:size-10 group-data-[collapsible=icon]:rounded-xl transition-all">
-									<Layers className="size-5" />
+								<div className="flex aspect-square size-8 items-center justify-center group-data-[collapsible=icon]:size-10 transition-all">
+									<Logo className="size-8 group-data-[collapsible=icon]:size-10" />
 								</div>
 								<div className="grid flex-1 text-left leading-tight group-data-[collapsible=icon]:hidden">
 									<span className="truncate font-bold tracking-tight text-lg">
@@ -211,43 +212,6 @@ export default function DashboardLayout({
 
 					<div className="flex items-center gap-2">
 						<ThemeToggle />
-						<DropdownMenu>
-							<DropdownMenuTrigger asChild>
-								<Button
-									variant="ghost"
-									className="relative h-8 w-8 rounded-full"
-								>
-									<Avatar className="h-8 w-8">
-										{userProfile?.photoURL && (
-											<AvatarImage
-												src={userProfile.photoURL}
-												alt={userProfile.displayName || ""}
-												className="object-cover"
-											/>
-										)}
-										<AvatarFallback className="bg-primary/10 text-primary text-xs">
-											{initials}
-										</AvatarFallback>
-									</Avatar>
-								</Button>
-							</DropdownMenuTrigger>
-							<DropdownMenuContent className="w-56" align="end" forceMount>
-								<DropdownMenuLabel className="font-normal">
-									<div className="flex flex-col space-y-1">
-										<p className="text-sm font-medium leading-none">
-											{userProfile?.displayName}
-										</p>
-										<p className="text-xs leading-none text-muted-foreground">
-											{userProfile?.email}
-										</p>
-									</div>
-								</DropdownMenuLabel>
-								<DropdownMenuSeparator />
-								<DropdownMenuItem className="cursor-pointer" onClick={signOut}>
-									<LogOut className="mr-2 h-4 w-4" /> Sign Out
-								</DropdownMenuItem>
-							</DropdownMenuContent>
-						</DropdownMenu>
 					</div>
 				</header>
 

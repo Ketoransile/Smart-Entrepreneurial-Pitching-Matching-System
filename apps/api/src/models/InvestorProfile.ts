@@ -22,6 +22,8 @@ export interface IInvestorProfile extends Document {
 	yearsExperience?: number;
 	industriesExpertise: string[];
 	previousInvestments: number;
+	nationalIdUrl?: string;
+	accreditationDocumentUrl?: string;
 	accreditationStatus: AccreditationStatus;
 	accreditationDocuments: mongoose.Types.ObjectId[];
 	verifiedAt?: Date;
@@ -92,6 +94,9 @@ const InvestorProfileSchema = new Schema<IInvestorProfile>(
 		yearsExperience: Number,
 		industriesExpertise: [String],
 		previousInvestments: { type: Number, default: 0 },
+
+		nationalIdUrl: String,
+		accreditationDocumentUrl: String,
 
 		accreditationStatus: {
 			type: String,
