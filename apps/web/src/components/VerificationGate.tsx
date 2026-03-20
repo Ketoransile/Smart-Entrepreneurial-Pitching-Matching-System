@@ -133,8 +133,8 @@ export default function VerificationGate({ children }: VerificationGateProps) {
 							onClick={() => {
 								const basePath =
 									userProfile?.role === "investor"
-										? "/investor/profile"
-										: "/entrepreneur/profile";
+										? "/investor/profile?tab=verification"
+										: "/entrepreneur/profile?tab=verification";
 								router.push(basePath);
 							}}
 						>

@@ -529,23 +529,34 @@ export default function AdminUsersPage() {
 				)}
 
 				{/* User Detail / KYC Review Dialog */}
-				<Dialog open={!!actionUser} onOpenChange={() => {
-					setActionUser(null);
-					setActionUserProfile(null);
-					setRejectionReason("");
-				}}>
+				<Dialog
+					open={!!actionUser}
+					onOpenChange={() => {
+						setActionUser(null);
+						setActionUserProfile(null);
+						setRejectionReason("");
+					}}
+				>
 					<DialogContent className="sm:max-w-3xl lg:max-w-4xl max-h-[90vh] flex flex-col p-0 gap-0">
 						<div className="px-6 pt-6 pb-4 shrink-0">
 							<DialogHeader>
 								<DialogTitle className="flex items-center gap-2">
 									{actionUser?.status === "pending" ? (
-										<><ShieldCheck className="h-5 w-5 text-primary" /> KYC Review</>
+										<>
+											<ShieldCheck className="h-5 w-5 text-primary" /> KYC
+											Review
+										</>
 									) : (
-										<><Users className="h-5 w-5" /> Manage User</>
+										<>
+											<Users className="h-5 w-5" /> Manage User
+										</>
 									)}
 								</DialogTitle>
 								{actionUser?.status === "pending" && (
-									<DialogDescription>Review the submitted KYC documents and approve or reject this user.</DialogDescription>
+									<DialogDescription>
+										Review the submitted KYC documents and approve or reject
+										this user.
+									</DialogDescription>
 								)}
 							</DialogHeader>
 						</div>
@@ -749,17 +760,23 @@ export default function AdminUsersPage() {
 									)}
 								</div>
 							)}
-
 						</div>
 						<div className="px-6 py-4 border-t bg-background shrink-0 rounded-b-lg">
 							<DialogFooter>
-								<Button variant="outline" onClick={() => {
-									setActionUser(null);
-									setActionUserProfile(null);
-									setRejectionReason("");
-								}}>Cancel</Button>
+								<Button
+									variant="outline"
+									onClick={() => {
+										setActionUser(null);
+										setActionUserProfile(null);
+										setRejectionReason("");
+									}}
+								>
+									Cancel
+								</Button>
 								{actionUser?.status !== "pending" && (
-									<Button onClick={() => handleStatusUpdate()}>Save Changes</Button>
+									<Button onClick={() => handleStatusUpdate()}>
+										Save Changes
+									</Button>
 								)}
 							</DialogFooter>
 						</div>

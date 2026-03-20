@@ -955,8 +955,8 @@ export default function AdminOversight() {
 								</DialogTitle>
 								{actionUser?.status === "pending" && (
 									<DialogDescription>
-										Review the submitted KYC documents and approve or reject this
-										user.
+										Review the submitted KYC documents and approve or reject
+										this user.
 									</DialogDescription>
 								)}
 							</DialogHeader>
