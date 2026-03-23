@@ -11,6 +11,8 @@ class AppDividerWithText extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    /// Builds a horizontal divider with centered uppercase text.
+    /// Used to separate sections with a small label.
     return Row(
       children: [
         const Expanded(
