@@ -46,29 +46,9 @@ import { Progress } from "@/components/ui/progress";
 import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuth } from "@/context/AuthContext";
+import { ENTREPRENEUR_NAV } from "@/constants/navigation";
 
-const ENTREPRENEUR_NAV = [
-	{
-		label: "Dashboard",
-		href: "/entrepreneur/dashboard",
-		icon: <BarChart3 className="h-4 w-4" />,
-	},
-	{
-		label: "New Pitch",
-		href: "/entrepreneur/pitch/new",
-		icon: <PenLine className="h-4 w-4" />,
-	},
-	{
-		label: "Messages",
-		href: "/entrepreneur/messages",
-		icon: <MessageSquare className="h-4 w-4" />,
-	},
-	{
-		label: "Profile",
-		href: "/entrepreneur/profile",
-		icon: <UserIcon className="h-4 w-4" />,
-	},
-];
+
 
 // ─── File Upload Card ───
 function FileUploadCard({

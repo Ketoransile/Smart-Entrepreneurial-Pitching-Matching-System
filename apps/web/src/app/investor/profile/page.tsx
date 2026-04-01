@@ -44,29 +44,9 @@ import { Progress } from "@/components/ui/progress";
 import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuth } from "@/context/AuthContext";
+import { INVESTOR_NAV } from "@/constants/navigation";
 
-const INVESTOR_NAV = [
-	{
-		label: "Discovery Feed",
-		href: "/investor/feed",
-		icon: <Compass className="h-4 w-4" />,
-	},
-	{
-		label: "Saved Pitches",
-		href: "/investor/saved",
-		icon: <Star className="h-4 w-4" />,
-	},
-	{
-		label: "Messages",
-		href: "/investor/messages",
-		icon: <MessageSquare className="h-4 w-4" />,
-	},
-	{
-		label: "My Profile",
-		href: "/investor/profile",
-		icon: <UserIcon className="h-4 w-4" />,
-	},
-];
+
 
 // ─── File Upload Card ───
 function FileUploadCard({

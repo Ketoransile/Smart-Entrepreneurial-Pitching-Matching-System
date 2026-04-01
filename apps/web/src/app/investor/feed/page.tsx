@@ -23,6 +23,7 @@ import {
 } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
 import { useAuth } from "@/context/AuthContext";
+import { INVESTOR_NAV } from "@/constants/navigation";
 
 interface Submission {
 	_id: string;
@@ -35,28 +36,7 @@ interface Submission {
 	submittedAt: string;
 }
 
-const INVESTOR_NAV = [
-	{
-		label: "Discovery Feed",
-		href: "/investor/feed",
-		icon: <Compass className="h-4 w-4" />,
-	},
-	{
-		label: "Saved Pitches",
-		href: "/investor/saved",
-		icon: <Star className="h-4 w-4" />,
-	},
-	{
-		label: "Messages",
-		href: "/investor/messages",
-		icon: <MessageSquare className="h-4 w-4" />,
-	},
-	{
-		label: "My Profile",
-		href: "/investor/profile",
-		icon: <User className="h-4 w-4" />,
-	},
-];
+
 
 const SECTORS = [
 	{ value: "all", label: "All Sectors" },
@@ -302,8 +282,9 @@ export default function InvestorFeed() {
 							<Button
 								className="w-full"
 								onClick={() => {
+									const pitchId = selectedPitch?._id;
 									setSelectedPitch(null);
-									router.push(`/investor/feed/${selectedPitch?._id}`);
+									router.push(`/investor/pitch/${pitchId}`);
 								}}
 							>
 								View Full Pitch

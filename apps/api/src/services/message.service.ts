@@ -80,9 +80,8 @@ export class MessageService {
 	static async listConversationsForUser(userId: string) {
 		const conversations = await Conversation.find({
 			participants: userId,
-			isArchived: false,
 		})
-			.sort({ lastMessageAt: -1, updatedAt: -1 })
+			.sort({ isArchived: 1, lastMessageAt: -1, updatedAt: -1 })
 			.populate("participants", "fullName email role")
 			.populate("submissionId", "title status stage")
 			.limit(100);
@@ -272,6 +271,13 @@ export class MessageService {
 			status: "open",
 		});
 
+		// Fetch names for a clear admin notification
+		const reporter = await User.findById(payload.reporterId).select("fullName email");
+		const reportedUsers = await User.find({ _id: { $in: reportedUserIds } }).select("fullName email");
+
+		const reporterName = reporter?.fullName || reporter?.email || "Unknown user";
+		const reportedNames = reportedUsers.map((u) => u.fullName || u.email).join(", ") || "Unknown user";
+
 		const admins = await User.find({ role: "admin", isActive: true }).select(
 			"_id",
 		);
@@ -279,8 +285,8 @@ export class MessageService {
 			await NotificationService.createNotification({
 				userId: admin._id.toString(),
 				type: "misconduct_reported",
-				title: "Misconduct report requires review",
-				body: reason,
+				title: `⚠️ Misconduct Report: ${reporterName} → ${reportedNames}`,
+				body: `Reporter: ${reporterName} (${reporter?.email || "N/A"})\nReported: ${reportedNames}\nReason: ${reason}${payload.details ? `\nDetails: ${payload.details}` : ""}`,
 				metadata: {
 					reportId: report._id,
 					conversationId: conversation._id,

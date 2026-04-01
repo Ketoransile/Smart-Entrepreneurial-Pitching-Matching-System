@@ -58,25 +58,9 @@ import {
 } from "@/components/ui/table";
 import { Textarea } from "@/components/ui/textarea";
 import { useAuth } from "@/context/AuthContext";
+import { ADMIN_NAV } from "@/constants/navigation";
 
-const ADMIN_NAV = [
-	{
-		label: "Overview",
-		href: "/admin/oversight",
-		icon: <LayoutDashboard className="h-4 w-4" />,
-	},
-	{ label: "Users", href: "/admin/users", icon: <Users className="h-4 w-4" /> },
-	{
-		label: "Submissions",
-		href: "/admin/submissions",
-		icon: <ClipboardList className="h-4 w-4" />,
-	},
-	{
-		label: "Settings",
-		href: "/admin/settings",
-		icon: <Settings className="h-4 w-4" />,
-	},
-];
+
 
 interface UserRecord {
 	_id: string;

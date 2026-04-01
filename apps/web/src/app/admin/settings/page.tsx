@@ -52,25 +52,9 @@ import {
 import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuth } from "@/context/AuthContext";
+import { ADMIN_NAV } from "@/constants/navigation";
 
-const ADMIN_NAV = [
-	{
-		label: "Overview",
-		href: "/admin/oversight",
-		icon: <LayoutDashboard className="h-4 w-4" />,
-	},
-	{ label: "Users", href: "/admin/users", icon: <Users className="h-4 w-4" /> },
-	{
-		label: "Submissions",
-		href: "/admin/submissions",
-		icon: <ClipboardList className="h-4 w-4" />,
-	},
-	{
-		label: "Settings",
-		href: "/admin/settings",
-		icon: <Settings className="h-4 w-4" />,
-	},
-];
+
 
 export default function AdminSettingsPage() {
 	const { user, userProfile, refreshUserProfile, signOut } = useAuth();

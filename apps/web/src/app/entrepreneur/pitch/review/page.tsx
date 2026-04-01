@@ -2,26 +2,45 @@
 
 import {
 	BarChart3,
+	CheckCircle2,
 	ClipboardList,
 	DollarSign,
+	ExternalLink,
+	FileUp,
 	Lightbulb,
+	Loader2,
 	Search,
+	XCircle,
 } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useCallback, useEffect, useState } from "react";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+	Card,
+	CardContent,
+	CardDescription,
+	CardHeader,
+	CardTitle,
+} from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { useAuth } from "@/context/AuthContext";
-import { SECTORS } from "@/lib/validations/submission";
+import { SECTORS, STAGES } from "@/lib/validations/submission";
+
+interface SubmissionDoc {
+	name: string;
+	url: string;
+	type: string;
+	cloudinaryId?: string;
+}
 
 interface Submission {
 	_id: string;
 	title: string;
 	summary: string;
 	sector: string;
+	stage: string;
 	targetAmount: number;
 	status: string;
 	problem: { statement: string; targetMarket: string; marketSize: string };
@@ -41,7 +60,31 @@ interface Submission {
 		burnRate: string;
 		runway: string;
 	};
-	documents: { name: string; url: string; type: string }[];
+	documents: SubmissionDoc[];
+}
+
+interface DocStatus {
+	_id: string;
+	filename: string;
+	type: string;
+	status: string;
+	processingError?: string;
+}
+
+interface ChecklistItem {
+	category: string;
+	label: string;
+	required: boolean;
+	uploaded: boolean;
+	count: number;
+	status: "verified" | "processing" | "failed" | "flagged" | "missing";
+}
+
+interface CompletenessResult {
+	score: number;
+	complete: boolean;
+	checklist: ChecklistItem[];
+	missingRequired: string[];
 }
 
 function ReviewPitchPageInner() {
@@ -51,6 +94,10 @@ function ReviewPitchPageInner() {
 	const id = searchParams.get("id");
 
 	const [submission, setSubmission] = useState<Submission | null>(null);
+	const [docStatuses, setDocStatuses] = useState<DocStatus[]>([]);
+	const [completeness, setCompleteness] = useState<CompletenessResult | null>(
+		null,
+	);
 	const [loading, setLoading] = useState(true);
 	const [submitting, setSubmitting] = useState(false);
 	const [error, setError] = useState("");
@@ -69,6 +116,26 @@ function ReviewPitchPageInner() {
 			if (res.ok) {
 				const { submission } = await res.json();
 				setSubmission(submission);
+			}
+
+			// Fetch document statuses
+			const docRes = await fetch(`${API_URL}/documents?submissionId=${id}`, {
+				headers: { Authorization: `Bearer ${await user.getIdToken()}` },
+			});
+			if (docRes.ok) {
+				const { documents } = await docRes.json();
+				if (Array.isArray(documents)) {
+					setDocStatuses(documents);
+				}
+			}
+
+			// Fetch completeness
+			const compRes = await fetch(`${API_URL}/submissions/${id}/completeness`, {
+				headers: { Authorization: `Bearer ${await user.getIdToken()}` },
+			});
+			if (compRes.ok) {
+				const { completeness: compData } = await compRes.json();
+				setCompleteness(compData);
 			}
 		} catch (err) {
 			console.error("Failed to load submission:", err);
@@ -113,6 +180,14 @@ function ReviewPitchPageInner() {
 		return SECTORS.find((s) => s.value === value)?.label || value;
 	};
 
+	const getStageLabel = (value: string) => {
+		return STAGES.find((s) => s.value === value)?.label || value;
+	};
+
+	const hasDocIssues =
+		docStatuses.some((d) => d.status === "failed") ||
+		docStatuses.some((d) => d.status === "processing");
+
 	if (loading) {
 		return (
 			<div className="flex min-h-screen items-center justify-center">
@@ -152,8 +227,9 @@ function ReviewPitchPageInner() {
 						<h1 className="text-3xl font-bold tracking-tight">
 							{submission.title}
 						</h1>
-						<div className="flex items-center justify-center gap-3">
+						<div className="flex items-center justify-center gap-3 flex-wrap">
 							<Badge>{getSectorLabel(submission.sector)}</Badge>
+							<Badge variant="outline">{getStageLabel(submission.stage)}</Badge>
 							<span className="text-muted-foreground">•</span>
 							<span className="text-lg font-semibold text-primary">
 								${submission.targetAmount?.toLocaleString()}
@@ -164,7 +240,7 @@ function ReviewPitchPageInner() {
 					<Separator />
 
 					{/* Summary */}
-					<Card>
+					<Card className="animate-in fade-in slide-in-from-bottom-4 duration-500 delay-100 fill-mode-both">
 						<CardHeader>
 							<CardTitle className="text-lg flex items-center gap-2">
 								<ClipboardList className="h-5 w-5" /> Executive Summary
@@ -178,7 +254,7 @@ function ReviewPitchPageInner() {
 					</Card>
 
 					{/* Problem */}
-					<Card>
+					<Card className="animate-in fade-in slide-in-from-bottom-4 duration-500 delay-150 fill-mode-both">
 						<CardHeader>
 							<CardTitle className="text-lg flex items-center gap-2">
 								<Search className="h-5 w-5" /> The Problem
@@ -207,7 +283,7 @@ function ReviewPitchPageInner() {
 					</Card>
 
 					{/* Solution */}
-					<Card>
+					<Card className="animate-in fade-in slide-in-from-bottom-4 duration-500 delay-200 fill-mode-both">
 						<CardHeader>
 							<CardTitle className="text-lg flex items-center gap-2">
 								<Lightbulb className="h-5 w-5" /> Solution
@@ -236,7 +312,7 @@ function ReviewPitchPageInner() {
 					</Card>
 
 					{/* Business Model */}
-					<Card>
+					<Card className="animate-in fade-in slide-in-from-bottom-4 duration-500 delay-300 fill-mode-both">
 						<CardHeader>
 							<CardTitle className="text-lg flex items-center gap-2">
 								<BarChart3 className="h-5 w-5" /> Business Model
@@ -266,7 +342,7 @@ function ReviewPitchPageInner() {
 					</Card>
 
 					{/* Financials */}
-					<Card>
+					<Card className="animate-in fade-in slide-in-from-bottom-4 duration-500 delay-500 fill-mode-both">
 						<CardHeader>
 							<CardTitle className="text-lg flex items-center gap-2">
 								<DollarSign className="h-5 w-5" /> Financials
@@ -309,6 +385,212 @@ function ReviewPitchPageInner() {
 							</div>
 						</CardContent>
 					</Card>
+
+					{/* Documents & Completeness */}
+					<Card className="animate-in fade-in slide-in-from-bottom-4 duration-500 delay-700 fill-mode-both">
+						<CardHeader>
+							<div className="flex items-center justify-between">
+								<div>
+									<CardTitle className="text-lg flex items-center gap-2">
+										<FileUp className="h-5 w-5" /> Supporting Documents
+									</CardTitle>
+									<CardDescription>AI-Verification Checklist</CardDescription>
+								</div>
+								{completeness && (
+									<div className="flex flex-col items-end">
+										<span className="text-sm font-medium">
+											Completeness Score
+										</span>
+										<Badge
+											variant={
+												completeness.score === 100 ? "default" : "secondary"
+											}
+											className={
+												completeness.score === 100
+													? "bg-emerald-600 mt-1"
+													: "mt-1"
+											}
+										>
+											{completeness.score}%
+										</Badge>
+									</div>
+								)}
+							</div>
+						</CardHeader>
+						<CardContent className="space-y-6">
+							{/* Checklist */}
+							{completeness && completeness.checklist.length > 0 && (
+								<div className="space-y-2">
+									<h4 className="font-medium text-sm mb-3">
+										Required vs Uploaded
+									</h4>
+									<div className="grid gap-2 sm:grid-cols-2">
+										{completeness.checklist.map((item) => (
+											<div
+												key={item.category}
+												className={`flex flex-col justify-between rounded-lg border p-3 ${
+													item.required && !item.uploaded
+														? "border-destructive/50 bg-destructive/5"
+														: "bg-card"
+												}`}
+											>
+												<div className="flex items-center justify-between mb-2">
+													<div className="flex items-center gap-2">
+														<p className="text-sm font-medium flex items-center gap-1">
+															{item.label}
+															{item.required && (
+																<span className="text-destructive">*</span>
+															)}
+														</p>
+													</div>
+													{item.status === "verified" && (
+														<CheckCircle2 className="h-4 w-4 text-emerald-600" />
+													)}
+													{item.status === "processing" && (
+														<Loader2 className="h-4 w-4 text-muted-foreground animate-spin" />
+													)}
+													{item.status === "failed" && (
+														<XCircle className="h-4 w-4 text-destructive" />
+													)}
+													{item.status === "flagged" && (
+														<XCircle className="h-4 w-4 text-amber-600" />
+													)}
+													{item.status === "missing" && item.required && (
+														<span className="text-xs text-destructive font-medium">
+															Missing
+														</span>
+													)}
+													{item.status === "missing" && !item.required && (
+														<span className="text-xs text-muted-foreground">
+															Optional
+														</span>
+													)}
+												</div>
+												<div className="text-xs text-muted-foreground">
+													{item.count} file{item.count !== 1 ? "s" : ""}{" "}
+													uploaded
+												</div>
+											</div>
+										))}
+									</div>
+								</div>
+							)}
+
+							<Separator />
+
+							{/* Uploaded Files Details */}
+							<div>
+								<h4 className="font-medium text-sm mb-3">Files</h4>
+								{submission.documents && submission.documents.length > 0 ? (
+									<div className="space-y-3">
+										{submission.documents.map((doc, idx) => {
+											const docStatus = docStatuses.find(
+												(ds) => ds.filename === doc.name,
+											);
+											return (
+												<div
+													key={`${doc.name}-${idx}`}
+													className="flex items-center justify-between rounded-lg border p-3"
+												>
+													<div className="flex items-center gap-3 min-w-0">
+														<FileUp className="h-4 w-4 shrink-0 text-muted-foreground" />
+														<div className="min-w-0">
+															<p className="text-sm font-medium truncate">
+																{doc.name}
+															</p>
+															<p className="text-xs text-muted-foreground capitalize">
+																{doc.type.replace(/_/g, " ")}
+															</p>
+															{docStatus?.processingError && (
+																<p className="text-xs text-destructive mt-1">
+																	{docStatus.processingError}
+																</p>
+															)}
+														</div>
+													</div>
+													<div className="flex items-center gap-2 shrink-0">
+														{docStatus?.status === "processed" && (
+															<Badge
+																variant="default"
+																className="gap-1 bg-emerald-600"
+															>
+																<CheckCircle2 className="h-3 w-3" /> Verified
+															</Badge>
+														)}
+														{docStatus?.status === "processing" && (
+															<Badge variant="secondary" className="gap-1">
+																<Loader2 className="h-3 w-3 animate-spin" />{" "}
+																Processing
+															</Badge>
+														)}
+														{docStatus?.status === "failed" && (
+															<Badge variant="destructive" className="gap-1">
+																<XCircle className="h-3 w-3" /> Failed
+															</Badge>
+														)}
+														{docStatus?.status === "flagged" && (
+															<Badge
+																variant="destructive"
+																className="gap-1 bg-amber-600 hover:bg-amber-700"
+															>
+																<XCircle className="h-3 w-3" /> Suspicious
+															</Badge>
+														)}
+														{(!docStatus ||
+															docStatus?.status === "uploaded") && (
+															<Badge variant="outline">Uploaded</Badge>
+														)}
+														<a
+															href={doc.url}
+															target="_blank"
+															rel="noopener noreferrer"
+														>
+															<ExternalLink className="h-4 w-4 text-muted-foreground hover:text-primary" />
+														</a>
+													</div>
+												</div>
+											);
+										})}
+									</div>
+								) : (
+									<p className="text-sm text-muted-foreground">
+										No documents attached. Consider adding supporting files to
+										strengthen your pitch.
+									</p>
+								)}
+							</div>
+						</CardContent>
+					</Card>
+
+					{/* Document processing & completeness warning */}
+					{(hasDocIssues || (completeness && !completeness.complete)) && (
+						<div className="rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800 dark:border-amber-900 dark:bg-amber-950 dark:text-amber-200">
+							<strong>⚠ Missing or invalid documents:</strong>{" "}
+							<ul className="list-disc ml-5 mt-1">
+								{completeness && !completeness.complete && (
+									<li>
+										Missing required documents:{" "}
+										{completeness.missingRequired.join(", ")}
+									</li>
+								)}
+								{docStatuses.some((d) => d.status === "processing") && (
+									<li>Some documents are still being processed.</li>
+								)}
+								{docStatuses.some((d) => d.status === "failed") && (
+									<li>
+										Some documents failed validation — please go back and
+										re-upload them.
+									</li>
+								)}
+								{docStatuses.some((d) => d.status === "flagged") && (
+									<li className="text-amber-700 font-semibold">
+										Some documents were flagged as suspicious and require admin
+										review.
+									</li>
+								)}
+							</ul>
+						</div>
+					)}
 
 					{/* Error */}
 					{error && (

@@ -1,4 +1,5 @@
 import type { Request, Response } from "express";
+import { DocumentValidationService } from "../services/document-validation.service";
 import { SubmissionService } from "../services/submission.service";
 import { enqueueSubmissionAnalysis } from "../workers/ai.processor";
 
@@ -137,6 +138,38 @@ export class SubmissionController {
 		}
 	}
 
+	/**
+	 * UC-05 Step 8: AI Completeness Checker endpoint.
+	 * Returns the document completeness score, full checklist,
+	 * and list of missing required documents.
+	 */
+	static async getCompleteness(req: Request, res: Response): Promise<void> {
+		try {
+			if (!req.user) {
+				res.status(401).json({ status: "error", message: "Unauthorized" });
+				return;
+			}
+
+			// Verify the user owns this submission
+			await SubmissionService.getOneForUser(req.params.id, req.user);
+
+			const completeness = await DocumentValidationService.checkCompleteness(
+				req.params.id,
+			);
+
+			res.status(200).json({
+				status: "success",
+				completeness,
+			});
+		} catch (error) {
+			handleSubmissionError(
+				res,
+				error,
+				"Failed to check document completeness",
+			);
+		}
+	}
+
 	static async removeDraft(req: Request, res: Response): Promise<void> {
 		try {
 			if (!req.user) {
@@ -191,6 +224,37 @@ export class SubmissionController {
 			});
 		} catch (error) {
 			handleSubmissionError(res, error, "Failed to fetch submissions");
+		}
+	}
+
+	static async updateStatusAdmin(req: Request, res: Response): Promise<void> {
+		try {
+			const { status, reason } = req.body;
+			const validStatuses = ["approved", "rejected", "suspended"];
+			if (!validStatuses.includes(status)) {
+				res
+					.status(400)
+					.json({ status: "error", message: "Invalid status value provided" });
+				return;
+			}
+
+			// Service call (we'll implement this directly in the controller or pass to service)
+			// Wait, SubmissionService might not have an updateStatus method. Let's just do it here or call a service method.
+			// Ideally we use a service method, but `SubmissionService.updateStatus` doesn't exist yet.
+			// Let's call SubmissionService.updateAdminStatus
+			const result = await SubmissionService.updateAdminStatus(
+				req.params.id,
+				status,
+				reason,
+			);
+
+			res.status(200).json({
+				status: "success",
+				message: `Submission status successfully updated to ${status}`,
+				submission: result,
+			});
+		} catch (error) {
+			handleSubmissionError(res, error, "Failed to update submission status");
 		}
 	}
 }

@@ -239,6 +239,31 @@ router.post(
 
 /**
  * @openapi
+ * /api/submissions/{id}/completeness:
+ *   get:
+ *     tags: [Submissions]
+ *     summary: Get document completeness score and required checklist
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Completeness result
+ */
+router.get(
+	"/:id/completeness",
+	authenticate,
+	authorize("entrepreneur"),
+	SubmissionController.getCompleteness,
+);
+
+/**
+ * @openapi
  * /api/submissions/{id}:
  *   delete:
  *     tags: [Submissions]
@@ -262,6 +287,42 @@ router.delete(
 	authenticate,
 	authorize("entrepreneur"),
 	SubmissionController.removeDraft,
+);
+
+/**
+ * @openapi
+ * /api/submissions/{id}/status:
+ *   patch:
+ *     tags: [Submissions]
+ *     summary: Admin update submission status (SC-17 Final Approval)
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [status]
+ *             properties:
+ *               status:
+ *                 type: string
+ *                 enum: [approved, rejected, suspended]
+ *               reason:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Status updated
+ */
+router.patch(
+	"/:id/status",
+	authenticate,
+	authorize("admin", "super_admin"),
+	SubmissionController.updateStatusAdmin,
 );
 
 export default router;

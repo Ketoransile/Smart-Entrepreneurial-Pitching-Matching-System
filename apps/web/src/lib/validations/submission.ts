@@ -56,7 +56,7 @@ export const financialsSchema = z.object({
 	runway: z.string().max(500).optional().or(z.literal("")),
 });
 
-// Step 5: Metadata (title, sector, amount, summary)
+// Step 5: Metadata (title, sector, stage, amount, summary)
 export const metadataSchema = z.object({
 	title: z
 		.string()
@@ -74,6 +74,7 @@ export const metadataSchema = z.object({
 		"retail",
 		"other",
 	]),
+	stage: z.enum(["mvp", "early-revenue", "scaling"]),
 	targetAmount: z
 		.number({ error: "Please enter a valid number" })
 		.min(1000, "Minimum funding amount is $1,000")
@@ -111,4 +112,26 @@ export const SECTORS = [
 	{ value: "manufacturing", label: "Manufacturing" },
 	{ value: "retail", label: "Retail" },
 	{ value: "other", label: "Other" },
+] as const;
+
+export const STAGES = [
+	{ value: "mvp", label: "MVP / Prototype" },
+	{ value: "early-revenue", label: "Early Revenue" },
+	{ value: "scaling", label: "Scaling / Growth" },
+] as const;
+
+export const DOC_CATEGORIES = [
+	{ value: "pitch_deck", label: "Pitch Deck", required: true },
+	{
+		value: "financial_model",
+		label: "Optional Financial Model",
+		required: false,
+	},
+	{ value: "product_demo", label: "Product Demo/Screenshots", required: false },
+	{
+		value: "customer_testimonials",
+		label: "Customer Testimonials",
+		required: false,
+	},
+	{ value: "other", label: "Other Supporting Details", required: false },
 ] as const;

@@ -12,7 +12,8 @@ import { enqueueDocumentProcessing } from "../workers/document.processor";
 const validDocumentTypes: DocumentType[] = [
 	"pitch_deck",
 	"financial_model",
-	"legal",
+	"product_demo",
+	"customer_testimonials",
 	"other",
 ];
 
@@ -256,7 +257,29 @@ export class DocumentController {
 				return;
 			}
 
-			const documents = await DocumentModel.find({ ownerId: req.user._id })
+			const filter: Record<string, unknown> = {};
+
+			if (
+				(req.user.role as string) === "admin" ||
+				(req.user.role as string) === "super_admin"
+			) {
+				if (req.query.submissionId) {
+					filter.submissionId = req.query.submissionId;
+				}
+				// If admin and no submissionId, we could return all or none. Let's stick to the query.
+				if (!req.query.submissionId && !req.query.ownerId) {
+					filter.ownerId = req.user._id;
+				} else if (req.query.ownerId) {
+					filter.ownerId = req.query.ownerId;
+				}
+			} else {
+				filter.ownerId = req.user._id;
+				if (req.query.submissionId) {
+					filter.submissionId = req.query.submissionId;
+				}
+			}
+
+			const documents = await DocumentModel.find(filter)
 				.sort({ createdAt: -1 })
 				.limit(100);
 
@@ -351,6 +374,57 @@ export class DocumentController {
 		} catch (error) {
 			const message =
 				error instanceof Error ? error.message : "Failed to delete document";
+			res.status(500).json({ status: "error", message });
+		}
+	}
+
+	static async overrideStatus(req: AuthRequest, res: Response): Promise<void> {
+		try {
+			if (
+				!req.user ||
+				((req.user.role as string) !== "admin" &&
+					(req.user.role as string) !== "super_admin")
+			) {
+				res.status(403).json({ status: "error", message: "Forbidden" });
+				return;
+			}
+
+			const document = await DocumentModel.findById(req.params.id);
+
+			if (!document) {
+				res
+					.status(404)
+					.json({ status: "error", message: "Document not found" });
+				return;
+			}
+
+			if (document.status !== "flagged" && document.status !== "failed") {
+				res.status(400).json({
+					status: "error",
+					message:
+						"Only flagged or failed documents can be manually overridden.",
+				});
+				return;
+			}
+
+			// Admin overrides AI decision (UC-14)
+			document.status = "processed";
+			document.processingError = undefined;
+			document.processedAt = new Date();
+
+			// If we wanted to keep track of who overrode it, we could add `overriddenBy: req.user._id` to Document schema.
+			await document.save();
+
+			res.status(200).json({
+				status: "success",
+				message: "Document status forcibly verified via Admin override.",
+				document,
+			});
+		} catch (error) {
+			const message =
+				error instanceof Error
+					? error.message
+					: "Failed to override document status";
 			res.status(500).json({ status: "error", message });
 		}
 	}

@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { MessageController } from "../controllers/message.controller";
-import { authenticate } from "../middleware/auth";
+import { authenticate, authorize } from "../middleware/auth";
 
 const router = Router();
 
@@ -223,6 +223,67 @@ router.patch(
 	"/notifications/:notificationId/read",
 	authenticate,
 	MessageController.markNotificationRead,
+);
+
+/**
+ * @openapi
+ * /api/messages/admin/reports:
+ *   get:
+ *     tags: [Communication]
+ *     summary: Admin list all misconduct reports
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: status
+ *         schema:
+ *           type: string
+ *           enum: [all, open, resolved]
+ *     responses:
+ *       200:
+ *         description: Reports fetched
+ */
+router.get(
+	"/admin/reports",
+	authenticate,
+	authorize("admin"),
+	MessageController.listReports,
+);
+
+/**
+ * @openapi
+ * /api/messages/admin/reports/{reportId}/resolve:
+ *   patch:
+ *     tags: [Communication]
+ *     summary: Admin resolve a misconduct report
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: reportId
+ *         required: true
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [action]
+ *             properties:
+ *               action:
+ *                 type: string
+ *                 enum: [unfreeze, keep_frozen]
+ *     responses:
+ *       200:
+ *         description: Report resolved
+ */
+router.patch(
+	"/admin/reports/:reportId/resolve",
+	authenticate,
+	authorize("admin"),
+	MessageController.resolveReport,
 );
 
 export default router;
