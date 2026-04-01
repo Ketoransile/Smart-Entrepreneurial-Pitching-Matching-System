@@ -5,12 +5,18 @@ import {
 	type Types,
 } from "mongoose";
 
-export type DocumentType = "pitch_deck" | "financial_model" | "legal" | "other";
+export type DocumentType =
+	| "pitch_deck"
+	| "financial_model"
+	| "product_demo"
+	| "customer_testimonials"
+	| "other";
 export type DocumentProcessingStatus =
 	| "uploaded"
 	| "processing"
 	| "processed"
-	| "failed";
+	| "failed"
+	| "flagged";
 
 export interface IDocument extends MongooseDocument {
 	ownerId: Types.ObjectId;
@@ -51,7 +57,8 @@ const DocumentSchema = new Schema<IDocument>(
 			enum: [
 				"pitch_deck",
 				"financial_model",
-				"legal",
+				"product_demo",
+				"customer_testimonials",
 				"other",
 			] satisfies DocumentType[],
 			required: true,

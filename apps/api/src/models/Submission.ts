@@ -1,6 +1,6 @@
 import { type Document, model, Schema, type Types } from "mongoose";
 
-export type SubmissionStage = "idea" | "mvp" | "early-revenue" | "scaling";
+export type SubmissionStage = "mvp" | "early-revenue" | "scaling";
 
 export type SubmissionStatus =
 	| "draft"
@@ -8,6 +8,7 @@ export type SubmissionStatus =
 	| "under_review"
 	| "approved"
 	| "rejected"
+	| "suspended"
 	| "matched"
 	| "closed";
 
@@ -17,11 +18,8 @@ export interface ISubmissionDocument {
 	type:
 		| "pitch_deck"
 		| "financial_model"
-		| "legal"
-		| "business_plan"
-		| "financial_statement"
-		| "legal_doc"
-		| "video"
+		| "product_demo"
+		| "customer_testimonials"
 		| "other";
 	cloudinaryId?: string;
 	size?: number;
@@ -128,14 +126,9 @@ const SubmissionSchema = new Schema<ISubmission>(
 		},
 		stage: {
 			type: String,
-			enum: [
-				"idea",
-				"mvp",
-				"early-revenue",
-				"scaling",
-			] satisfies SubmissionStage[],
+			enum: ["mvp", "early-revenue", "scaling"] satisfies SubmissionStage[],
 			required: true,
-			default: "idea",
+			default: "mvp",
 		},
 		targetAmount: {
 			type: Number,
@@ -166,7 +159,7 @@ const SubmissionSchema = new Schema<ISubmission>(
 		documents: [documentSchema],
 		aiScore: { type: Number, min: 0, max: 100 },
 		aiAnalysis: { type: Schema.Types.Mixed },
-		currentStep: { type: Number, default: 1, min: 1, max: 5 },
+		currentStep: { type: Number, default: 1, min: 1, max: 6 },
 		currency: {
 			type: String,
 			default: "USD",
@@ -181,6 +174,7 @@ const SubmissionSchema = new Schema<ISubmission>(
 				"under_review",
 				"approved",
 				"rejected",
+				"suspended",
 				"matched",
 				"closed",
 			] satisfies SubmissionStatus[],

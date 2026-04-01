@@ -22,6 +22,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { useAuth } from "@/context/AuthContext";
 import { SECTORS } from "@/lib/validations/submission";
+import { ENTREPRENEUR_NAV } from "@/constants/navigation";
 
 interface Submission {
 	_id: string;
@@ -33,28 +34,7 @@ interface Submission {
 	aiScore?: number;
 }
 
-const ENTREPRENEUR_NAV = [
-	{
-		label: "Dashboard",
-		href: "/entrepreneur/dashboard",
-		icon: <BarChart3 className="h-4 w-4" />,
-	},
-	{
-		label: "New Pitch",
-		href: "/entrepreneur/pitch/new",
-		icon: <PenLine className="h-4 w-4" />,
-	},
-	{
-		label: "Messages",
-		href: "/entrepreneur/messages",
-		icon: <MessageSquare className="h-4 w-4" />,
-	},
-	{
-		label: "Profile",
-		href: "/entrepreneur/profile",
-		icon: <User className="h-4 w-4" />,
-	},
-];
+
 
 function statusVariant(
 	status: string,

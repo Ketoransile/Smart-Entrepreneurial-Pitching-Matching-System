@@ -1,4 +1,6 @@
 import type { Request, Response } from "express";
+import { Conversation } from "../models/Conversation";
+import { MisconductReport } from "../models/MisconductReport";
 import { MessageService } from "../services/message.service";
 import { NotificationService } from "../services/notification.service";
 
@@ -212,6 +214,58 @@ export class MessageController {
 			res
 				.status(500)
 				.json({ status: "error", message: "Failed to update notification" });
+		}
+	}
+
+	/* ── Admin: Misconduct Reports ── */
+
+	static async listReports(req: Request, res: Response): Promise<void> {
+		try {
+			const { status: statusFilter } = req.query;
+			const filter: Record<string, unknown> = {};
+			if (statusFilter && statusFilter !== "all") filter.status = statusFilter;
+
+			const reports = await MisconductReport.find(filter)
+				.populate("reporterId", "fullName email role")
+				.populate("reportedUserIds", "fullName email role")
+				.populate("conversationId")
+				.sort({ createdAt: -1 })
+				.limit(100);
+
+			res.status(200).json({ status: "success", count: reports.length, reports });
+		} catch (error) {
+			console.error("Failed to fetch reports", error);
+			res.status(500).json({ status: "error", message: "Failed to fetch reports" });
+		}
+	}
+
+	static async resolveReport(req: Request, res: Response): Promise<void> {
+		try {
+			const { action } = req.body; // "unfreeze" | "keep_frozen"
+			const report = await MisconductReport.findById(req.params.reportId);
+			if (!report) {
+				res.status(404).json({ status: "error", message: "Report not found" });
+				return;
+			}
+
+			report.status = "resolved";
+			await report.save();
+
+			// If admin chooses to unfreeze, restore the conversation
+			if (action === "unfreeze") {
+				await Conversation.findByIdAndUpdate(report.conversationId, { isArchived: false });
+			}
+
+			res.status(200).json({
+				status: "success",
+				message: action === "unfreeze"
+					? "Report resolved — conversation has been unfrozen"
+					: "Report resolved — conversation remains frozen",
+				report,
+			});
+		} catch (error) {
+			console.error("Failed to resolve report", error);
+			res.status(500).json({ status: "error", message: "Failed to resolve report" });
 		}
 	}
 }

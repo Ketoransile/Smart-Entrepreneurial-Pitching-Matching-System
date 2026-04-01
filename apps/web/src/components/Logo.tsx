@@ -17,19 +17,19 @@ export function Logo({ className, ...props }: LogoProps) {
 		>
 			<title>SEPMS Logo</title>
 			<defs>
-				<linearGradient id="logoGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-					<stop offset="0%" stopColor="#3b82f6" />
-					<stop offset="100%" stopColor="#8b5cf6" />
+				<linearGradient id="logoSGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+					<stop offset="0%" stopColor="#2563eb" />
+					<stop offset="100%" stopColor="#7c3aed" />
 				</linearGradient>
 			</defs>
-			<rect width="100" height="100" rx="22" fill="url(#logoGrad)" />
-			<circle cx="36" cy="36" r="14" fill="#ffffff" />
-			<circle cx="64" cy="64" r="14" fill="#ffffff" fillOpacity="0.8" />
+			<rect width="100" height="100" rx="20" fill="url(#logoSGrad)" />
 			<path
-				d="M 36 36 L 64 64"
+				d="M 65 35 C 65 25 35 25 35 35 C 35 50 65 50 65 65 C 65 75 35 75 35 65"
+				fill="none"
 				stroke="#ffffff"
-				strokeWidth="6"
+				strokeWidth="12"
 				strokeLinecap="round"
+				strokeLinejoin="round"
 			/>
 		</svg>
 	);

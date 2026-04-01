@@ -26,6 +26,7 @@ import { auth, googleProvider } from "@/lib/firebase";
 export type UserRole = "admin" | "entrepreneur" | "investor" | null;
 
 export interface UserProfile {
+	_id?: string;
 	uid: string;
 	email: string | null;
 	displayName: string | null;

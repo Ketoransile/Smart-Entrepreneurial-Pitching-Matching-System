@@ -25,6 +25,7 @@ import {
 	Users,
 	XCircle,
 } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 import DashboardLayout from "@/components/DashboardLayout";
@@ -62,6 +63,7 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { useAuth } from "@/context/AuthContext";
+import { ADMIN_NAV } from "@/constants/navigation";
 
 interface UserRecord {
 	_id: string;
@@ -88,28 +90,7 @@ interface Stats {
 	[key: string]: number;
 }
 
-const ADMIN_NAV = [
-	{
-		label: "Overview",
-		href: "/admin/oversight",
-		icon: <LayoutDashboard className="h-4 w-4" />,
-	},
-	{
-		label: "Users",
-		href: "/admin/users",
-		icon: <Users className="h-4 w-4" />,
-	},
-	{
-		label: "Submissions",
-		href: "/admin/submissions",
-		icon: <ClipboardList className="h-4 w-4" />,
-	},
-	{
-		label: "Settings",
-		href: "/admin/settings",
-		icon: <Settings className="h-4 w-4" />,
-	},
-];
+
 
 function roleBadge(role: string) {
 	switch (role) {
@@ -212,6 +193,7 @@ function DocLink({
 
 export default function AdminOversight() {
 	const { user, userProfile } = useAuth();
+	const router = useRouter();
 	const isSuperAdmin = userProfile?.adminLevel === "super_admin";
 	const [users, setUsers] = useState<UserRecord[]>([]);
 	const [submissions, setSubmissions] = useState<SubmissionRecord[]>([]);
@@ -236,6 +218,12 @@ export default function AdminOversight() {
 	// Add admin by email (super admin only)
 	const [addByEmail, setAddByEmail] = useState("");
 	const [addByEmailLoading, setAddByEmailLoading] = useState(false);
+
+	// Submissions Review
+	const [selectedSubmission, setSelectedSubmission] =
+		useState<SubmissionRecord | null>(null);
+	const [submissionDocs, setSubmissionDocs] = useState<any[]>([]);
+	const [loadingDocs, setLoadingDocs] = useState(false);
 
 	const api = (
 		process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api"
@@ -354,6 +342,80 @@ export default function AdminOversight() {
 	};
 
 	const pendingCount = pendingUsers.length;
+
+	const fetchSubmissionDocs = async (sub: SubmissionRecord) => {
+		if (!user) return;
+		setSelectedSubmission(sub);
+		setLoadingDocs(true);
+		try {
+			const token = await user.getIdToken();
+			const res = await fetch(`${api}/documents?submissionId=${sub._id}`, {
+				headers: { Authorization: `Bearer ${token}` },
+			});
+			const data = await res.json();
+			if (data.status === "success") {
+				setSubmissionDocs(data.documents);
+			} else {
+				setSubmissionDocs([]);
+			}
+		} catch (err) {
+			console.error("Failed to load generic docs", err);
+			setSubmissionDocs([]);
+		} finally {
+			setLoadingDocs(false);
+		}
+	};
+
+	const handleOverrideFlag = async (docId: string) => {
+		if (!user) return;
+		try {
+			const token = await user.getIdToken();
+			const res = await fetch(`${api}/documents/${docId}/override`, {
+				method: "POST",
+				headers: { Authorization: `Bearer ${token}` },
+			});
+			const data = await res.json();
+			if (data.status === "success") {
+				toast.success("AI determination overridden successfully!");
+				if (selectedSubmission) {
+					fetchSubmissionDocs(selectedSubmission);
+				}
+				fetchData(); // refresh overview stats if relevant
+			} else {
+				toast.error(data.message || "Failed to override document");
+			}
+		} catch (err) {
+			toast.error("An error occurred during Admin override");
+		}
+	};
+
+	const handlePitchStatusUpdate = async (status: string) => {
+		if (!user || !selectedSubmission) return;
+		try {
+			const token = await user.getIdToken();
+			const res = await fetch(
+				`${api}/submissions/${selectedSubmission._id}/status`,
+				{
+					method: "PATCH",
+					headers: {
+						Authorization: `Bearer ${token}`,
+						"Content-Type": "application/json",
+					},
+					body: JSON.stringify({ status }),
+				},
+			);
+			const data = await res.json();
+			if (data.status === "success") {
+				toast.success(`Pitch successfully marked as ${status}!`);
+				setSelectedSubmission(null);
+				fetchData();
+			} else {
+				toast.error(data.message || "Failed to update pitch status");
+			}
+		} catch (err) {
+			toast.error("An error occurred updating the pitch status");
+		}
+	};
 
 	const handleInviteAdmin = async () => {
 		if (!user) return;
@@ -721,6 +783,7 @@ export default function AdminOversight() {
 									<SelectItem value="under_review">Under Review</SelectItem>
 									<SelectItem value="approved">Approved</SelectItem>
 									<SelectItem value="rejected">Rejected</SelectItem>
+									<SelectItem value="suspended">Suspended</SelectItem>
 								</SelectContent>
 							</Select>
 						</div>
@@ -735,6 +798,7 @@ export default function AdminOversight() {
 										<TableHead>Amount</TableHead>
 										<TableHead>Status</TableHead>
 										<TableHead>Updated</TableHead>
+										<TableHead className="text-right">Actions</TableHead>
 									</TableRow>
 								</TableHeader>
 								<TableBody>
@@ -750,7 +814,7 @@ export default function AdminOversight() {
 									) : submissions.length === 0 ? (
 										<TableRow>
 											<TableCell
-												colSpan={6}
+												colSpan={7}
 												className="text-center py-8 text-muted-foreground"
 											>
 												No submissions found
@@ -787,6 +851,15 @@ export default function AdminOversight() {
 												</TableCell>
 												<TableCell className="text-sm text-muted-foreground">
 													{new Date(s.updatedAt).toLocaleDateString()}
+												</TableCell>
+												<TableCell className="text-right">
+													<Button
+														size="sm"
+														variant="outline"
+														onClick={() => router.push(`/admin/pitch/${s._id}`)}
+													>
+														View Full Pitch
+													</Button>
 												</TableCell>
 											</TableRow>
 										))
@@ -1301,6 +1374,116 @@ export default function AdminOversight() {
 					</DialogContent>
 				</Dialog>
 			</DashboardLayout>
+
+			<Dialog
+				open={!!selectedSubmission}
+				onOpenChange={(op) => !op && setSelectedSubmission(null)}
+			>
+				<DialogContent className="sm:max-w-2xl bg-card border-border">
+					<DialogHeader>
+						<DialogTitle>
+							AI Flag Override: {selectedSubmission?.title}
+						</DialogTitle>
+						<DialogDescription>
+							Manually unblock documents that were flagged by AI as 'Suspicious'
+							or 'Fraudulent'.
+						</DialogDescription>
+					</DialogHeader>
+
+					<div className="py-4 space-y-4">
+						{loadingDocs ? (
+							<p className="text-sm text-muted-foreground flex items-center gap-2">
+								<Loader2 className="h-4 w-4 animate-spin" /> Loading
+								documents...
+							</p>
+						) : submissionDocs.length === 0 ? (
+							<p className="text-sm text-muted-foreground">
+								No documents found for this submission.
+							</p>
+						) : (
+							<div className="space-y-3">
+								{submissionDocs.map((doc) => (
+									<div
+										key={doc._id}
+										className="border p-3 rounded-lg flex items-center justify-between"
+									>
+										<div className="flex flex-col gap-1 min-w-0 pr-4">
+											<div className="flex items-center gap-2">
+												<span className="font-medium text-sm truncate">
+													{doc.filename}
+												</span>
+												<Badge
+													variant={
+														doc.status === "flagged"
+															? "destructive"
+															: doc.status === "failed"
+																? "destructive"
+																: "secondary"
+													}
+												>
+													{doc.status}
+												</Badge>
+											</div>
+											{doc.processingError && (
+												<span className="text-xs text-destructive mt-1">
+													<b>AI Reason:</b> {doc.processingError}
+												</span>
+											)}
+										</div>
+										<div className="flex gap-2">
+											<a
+												href={doc.url}
+												target="_blank"
+												rel="noopener noreferrer"
+											>
+												<Button size="sm" variant="ghost">
+													View
+												</Button>
+											</a>
+											{(doc.status === "flagged" ||
+												doc.status === "failed") && (
+												<Button
+													size="sm"
+													variant="outline"
+													className="border-amber-500 text-amber-600 hover:bg-amber-50 hover:text-amber-700"
+													onClick={() => handleOverrideFlag(doc._id)}
+												>
+													Override Flag
+												</Button>
+											)}
+										</div>
+									</div>
+								))}
+							</div>
+						)}
+					</div>
+					<DialogFooter className="border-t pt-4 flex flex-col sm:flex-row gap-2">
+						<div className="flex w-full items-center justify-between">
+							<Button
+								variant="outline"
+								className="text-red-600 hover:text-red-700 hover:bg-red-50"
+								onClick={() => handlePitchStatusUpdate("suspended")}
+							>
+								Suspend Pitch (SC-23)
+							</Button>
+							<div className="flex gap-2">
+								<Button
+									variant="outline"
+									onClick={() => handlePitchStatusUpdate("rejected")}
+								>
+									Reject
+								</Button>
+								<Button
+									className="bg-green-600 hover:bg-green-700"
+									onClick={() => handlePitchStatusUpdate("approved")}
+								>
+									Fully Approve Pitch
+								</Button>
+							</div>
+						</div>
+					</DialogFooter>
+				</DialogContent>
+			</Dialog>
 		</ProtectedRoute>
 	);
 }

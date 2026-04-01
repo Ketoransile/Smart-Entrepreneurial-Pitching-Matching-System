@@ -63,6 +63,7 @@ router.post(
 					status: "success",
 					message: "User already registered",
 					user: {
+						_id: existingByUid._id,
 						uid: existingByUid.firebaseUid,
 						email: existingByUid.email,
 						displayName: existingByUid.fullName,
@@ -98,6 +99,7 @@ router.post(
 						status: "success",
 						message: "Existing account linked to Google sign-in",
 						user: {
+							_id: existingByEmail._id,
 							uid: existingByEmail.firebaseUid,
 							email: existingByEmail.email,
 							displayName: existingByEmail.fullName,
@@ -145,6 +147,7 @@ router.post(
 				status: "success",
 				message: "User registered successfully",
 				user: {
+					_id: newUser._id,
 					uid: newUser.firebaseUid,
 					email: newUser.email,
 					displayName: newUser.fullName,
@@ -215,6 +218,7 @@ router.get(
 			res.status(200).json({
 				status: "success",
 				user: {
+					_id: req.user._id,
 					uid: req.user.firebaseUid,
 					email: req.user.email,
 					displayName: req.user.fullName,
@@ -291,6 +295,8 @@ router.patch(
 				status: "success",
 				message: "Role updated successfully",
 				user: {
+					__id: updatedUser._id,
+					id: updatedUser._id,
 					uid: updatedUser.firebaseUid,
 					email: updatedUser.email,
 					displayName: updatedUser.fullName,
@@ -469,6 +475,7 @@ router.patch(
 				status: "success",
 				message: "User status updated",
 				user: {
+					_id: updatedUser._id,
 					id: updatedUser._id,
 					fullName: updatedUser.fullName,
 					email: updatedUser.email,
@@ -713,6 +720,7 @@ router.post(
 				status: "success",
 				message: "You are now an admin!",
 				user: {
+					_id: user._id,
 					uid: user.firebaseUid,
 					email: user.email,
 					displayName: user.fullName,

@@ -222,4 +222,26 @@ router.delete(
 	DocumentController.remove,
 );
 
+/**
+ * @openapi
+ * /api/documents/{id}/override:
+ *   post:
+ *     tags: [Documents]
+ *     summary: Administrator override of AI failure/flag (UC-14)
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *     responses:
+ *       200:
+ *         description: Document status successfully overridden
+ */
+router.post(
+	"/:id/override",
+	authorize("admin", "super_admin"),
+	DocumentController.overrideStatus,
+);
+
 export default router;
