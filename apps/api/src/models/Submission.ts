@@ -166,7 +166,7 @@ const SubmissionSchema = new Schema<ISubmission>(
 		documents: [documentSchema],
 		aiScore: { type: Number, min: 0, max: 100 },
 		aiAnalysis: { type: Schema.Types.Mixed },
-		currentStep: { type: Number, default: 1, min: 1, max: 5 },
+		currentStep: { type: Number, default: 1, min: 1, max: 6 },
 		currency: {
 			type: String,
 			default: "USD",

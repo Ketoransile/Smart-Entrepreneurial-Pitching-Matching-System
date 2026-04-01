@@ -1,3 +1,4 @@
+import { DocumentModel } from "../models/Document";
 import { type ISubmission, Submission } from "../models/Submission";
 import type { IUser } from "../models/User";
 
@@ -15,6 +16,9 @@ const parseIntOrDefault = (value: unknown, fallback: number): number => {
 	const parsed = Number.parseInt(String(value ?? ""), 10);
 	return Number.isNaN(parsed) ? fallback : parsed;
 };
+
+const hasMinLength = (value: unknown, min: number): boolean =>
+	typeof value === "string" && value.trim().length >= min;
 
 export class SubmissionService {
 	static createError(
@@ -109,6 +113,7 @@ export class SubmissionService {
 			"summary",
 			"currentStep",
 			"documents",
+			"currency",
 		] as const;
 
 		for (const field of allowedFields) {
@@ -141,21 +146,77 @@ export class SubmissionService {
 			);
 		}
 
+		// ── Comprehensive pre-submission validation ──
 		const errors: string[] = [];
+
+		// Overview fields
 		if (!submission.title || submission.title === "Untitled Pitch") {
 			errors.push("Title is required");
 		}
-		if (!submission.problem?.statement) {
-			errors.push("Problem statement is required");
+		if (!hasMinLength(submission.summary, 20)) {
+			errors.push("Executive summary is required (min 20 characters)");
 		}
-		if (!submission.solution?.description) {
-			errors.push("Solution description is required");
+		if (!submission.targetAmount || submission.targetAmount <= 0) {
+			errors.push("Target funding amount is required");
 		}
-		if (!submission.businessModel?.revenueStreams) {
+
+		// Problem section
+		if (!hasMinLength(submission.problem?.statement, 20)) {
+			errors.push("Problem statement is required (min 20 characters)");
+		}
+		if (!hasMinLength(submission.problem?.targetMarket, 10)) {
+			errors.push("Target market description is required");
+		}
+		if (!hasMinLength(submission.problem?.marketSize, 5)) {
+			errors.push("Market size is required");
+		}
+
+		// Solution section
+		if (!hasMinLength(submission.solution?.description, 20)) {
+			errors.push("Solution description is required (min 20 characters)");
+		}
+		if (!hasMinLength(submission.solution?.uniqueValue, 10)) {
+			errors.push("Unique value proposition is required");
+		}
+		if (!hasMinLength(submission.solution?.competitiveAdvantage, 10)) {
+			errors.push("Competitive advantage is required");
+		}
+
+		// Business model section
+		if (!hasMinLength(submission.businessModel?.revenueStreams, 10)) {
 			errors.push("Revenue streams are required");
 		}
-		if (!submission.targetAmount) {
-			errors.push("Target funding amount is required");
+		if (!hasMinLength(submission.businessModel?.pricingStrategy, 10)) {
+			errors.push("Pricing strategy is required");
+		}
+		if (!hasMinLength(submission.businessModel?.customerAcquisition, 10)) {
+			errors.push("Customer acquisition strategy is required");
+		}
+
+		// Financials section
+		if (!hasMinLength(submission.financials?.projectedRevenue, 5)) {
+			errors.push("Projected revenue is required");
+		}
+
+		// Document validation: check for docs still processing or failed
+		if (submission.documents && submission.documents.length > 0) {
+			const dbDocs = await DocumentModel.find({
+				submissionId: submission._id,
+			}).select("status filename processingError");
+
+			const failedDocs = dbDocs.filter((d) => d.status === "failed");
+			const processingDocs = dbDocs.filter((d) => d.status === "processing");
+
+			if (processingDocs.length > 0) {
+				errors.push(
+					`${processingDocs.length} document(s) still processing — please wait`,
+				);
+			}
+			if (failedDocs.length > 0) {
+				errors.push(
+					`${failedDocs.length} document(s) failed validation — please remove or re-upload them`,
+				);
+			}
 		}
 
 		if (errors.length > 0) {

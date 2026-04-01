@@ -3,16 +3,22 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
 	BarChart3,
+	CheckCircle2,
 	ClipboardList,
 	DollarSign,
+	FileUp,
 	Lightbulb,
+	Loader2,
 	Search,
+	Trash2,
+	XCircle,
 } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useCallback, useEffect, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { toast } from "sonner";
 import ProtectedRoute from "@/components/ProtectedRoute";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
 	Card,
@@ -45,7 +51,17 @@ import {
 	SECTORS,
 	type SolutionData,
 	solutionSchema,
+	STAGES,
 } from "@/lib/validations/submission";
+
+interface UploadedDoc {
+	_id: string;
+	filename: string;
+	type: string;
+	status: string;
+	url: string;
+	processingError?: string;
+}
 
 const STEPS = [
 	{ id: 1, title: "Overview", icon: <ClipboardList className="h-5 w-5" /> },
@@ -53,6 +69,14 @@ const STEPS = [
 	{ id: 3, title: "Solution", icon: <Lightbulb className="h-5 w-5" /> },
 	{ id: 4, title: "Business Model", icon: <BarChart3 className="h-5 w-5" /> },
 	{ id: 5, title: "Financials", icon: <DollarSign className="h-5 w-5" /> },
+	{ id: 6, title: "Documents", icon: <FileUp className="h-5 w-5" /> },
+];
+
+const DOC_TYPES = [
+	{ value: "pitch_deck", label: "Pitch Deck" },
+	{ value: "financial_model", label: "Financial Model" },
+	{ value: "legal", label: "Legal Document" },
+	{ value: "other", label: "Other" },
 ];
 
 function NewPitchPageInner() {
@@ -80,6 +104,11 @@ function NewPitchPageInner() {
 	const [saving, setSaving] = useState(false);
 	const [saveMessage, setSaveMessage] = useState("");
 
+	// Document upload state
+	const [uploadedDocs, setUploadedDocs] = useState<UploadedDoc[]>([]);
+	const [uploading, setUploading] = useState(false);
+	const [selectedDocType, setSelectedDocType] = useState("pitch_deck");
+
 	const API_URL = (
 		process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api"
 	).replace(/\/+$/, "");
@@ -90,6 +119,7 @@ function NewPitchPageInner() {
 		defaultValues: {
 			title: "",
 			sector: "technology",
+			stage: "idea",
 			targetAmount: 0,
 			summary: "",
 		},
@@ -141,6 +171,7 @@ function NewPitchPageInner() {
 				metadataForm.reset({
 					title: submission.title || "",
 					sector: submission.sector || "technology",
+					stage: submission.stage || "idea",
 					targetAmount: submission.targetAmount || 0,
 					summary: submission.summary || "",
 				});
@@ -150,6 +181,22 @@ function NewPitchPageInner() {
 					businessForm.reset(submission.businessModel);
 				if (submission.financials) financialsForm.reset(submission.financials);
 				setCurrentStep(submission.currentStep || 1);
+			}
+
+			// Load associated documents
+			const docRes = await fetch(`${API_URL}/documents?submissionId=${editId}`, {
+				headers: { Authorization: `Bearer ${await user.getIdToken()}` },
+			});
+			if (docRes.ok) {
+				const { documents } = await docRes.json();
+				if (Array.isArray(documents)) {
+					setUploadedDocs(
+						documents.filter(
+							(d: UploadedDoc) =>
+								d._id && (d.filename || d.url),
+						),
+					);
+				}
 			}
 		} catch (err) {
 			console.error("Failed to load draft:", err);
@@ -190,6 +237,7 @@ function NewPitchPageInner() {
 					body: JSON.stringify({
 						title: metaValues.title || "Untitled Pitch",
 						sector: metaValues.sector,
+						stage: metaValues.stage,
 					}),
 				});
 				if (res.ok) {
@@ -237,6 +285,64 @@ function NewPitchPageInner() {
 		});
 	};
 
+	// Document upload handler
+	const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+		const files = e.target.files;
+		if (!files || files.length === 0 || !user || !submissionId) return;
+
+		setUploading(true);
+		try {
+			const token = await user.getIdToken();
+
+			for (let i = 0; i < files.length; i++) {
+				const formData = new FormData();
+				formData.append("file", files[i]);
+				formData.append("type", selectedDocType);
+				formData.append("submissionId", submissionId);
+
+				const res = await fetch(`${API_URL}/documents`, {
+					method: "POST",
+					headers: { Authorization: `Bearer ${token}` },
+					body: formData,
+				});
+
+				if (res.ok) {
+					const { document } = await res.json();
+					setUploadedDocs((prev) => [...prev, document]);
+					toast.success(`Uploaded: ${files[i].name}`);
+				} else {
+					const data = await res.json();
+					toast.error(data.message || `Failed to upload ${files[i].name}`);
+				}
+			}
+		} catch (err) {
+			console.error("Upload error:", err);
+			toast.error("Upload failed");
+		} finally {
+			setUploading(false);
+			// Reset input
+			e.target.value = "";
+		}
+	};
+
+	// Delete document
+	const handleDeleteDoc = async (docId: string) => {
+		if (!user) return;
+		try {
+			const token = await user.getIdToken();
+			const res = await fetch(`${API_URL}/documents/${docId}`, {
+				method: "DELETE",
+				headers: { Authorization: `Bearer ${token}` },
+			});
+			if (res.ok) {
+				setUploadedDocs((prev) => prev.filter((d) => d._id !== docId));
+				toast.success("Document removed");
+			}
+		} catch (err) {
+			console.error("Delete error:", err);
+		}
+	};
+
 	// Step navigation
 	const goNext = async () => {
 		let isValid = false;
@@ -257,11 +363,15 @@ function NewPitchPageInner() {
 			case 5:
 				isValid = await financialsForm.trigger();
 				break;
+			case 6:
+				// Documents step — no form validation, just proceed
+				isValid = true;
+				break;
 		}
 
 		if (isValid) {
 			await saveDraft();
-			if (currentStep < 5) {
+			if (currentStep < 6) {
 				setCurrentStep((prev) => prev + 1);
 			} else {
 				// Go to review page
@@ -275,6 +385,31 @@ function NewPitchPageInner() {
 	};
 
 	const progress = (currentStep / STEPS.length) * 100;
+
+	const getDocStatusBadge = (status: string) => {
+		switch (status) {
+			case "processed":
+				return (
+					<Badge variant="default" className="gap-1 bg-emerald-600">
+						<CheckCircle2 className="h-3 w-3" /> Verified
+					</Badge>
+				);
+			case "processing":
+				return (
+					<Badge variant="secondary" className="gap-1">
+						<Loader2 className="h-3 w-3 animate-spin" /> Processing
+					</Badge>
+				);
+			case "failed":
+				return (
+					<Badge variant="destructive" className="gap-1">
+						<XCircle className="h-3 w-3" /> Failed
+					</Badge>
+				);
+			default:
+				return <Badge variant="outline">Uploaded</Badge>;
+		}
+	};
 
 	return (
 		<ProtectedRoute allowedRoles={["entrepreneur"]}>
@@ -358,29 +493,56 @@ function NewPitchPageInner() {
 									)}
 								</div>
 
-								<div className="space-y-2">
-									<Label htmlFor="sector">Industry Sector *</Label>
-									<Controller
-										name="sector"
-										control={metadataForm.control}
-										render={({ field }) => (
-											<Select
-												value={field.value}
-												onValueChange={field.onChange}
-											>
-												<SelectTrigger className="w-full">
-													<SelectValue placeholder="Select a sector" />
-												</SelectTrigger>
-												<SelectContent>
-													{SECTORS.map((s) => (
-														<SelectItem key={s.value} value={s.value}>
-															{s.label}
-														</SelectItem>
-													))}
-												</SelectContent>
-											</Select>
-										)}
-									/>
+								<div className="grid gap-6 sm:grid-cols-2">
+									<div className="space-y-2">
+										<Label htmlFor="sector">Industry Sector *</Label>
+										<Controller
+											name="sector"
+											control={metadataForm.control}
+											render={({ field }) => (
+												<Select
+													value={field.value}
+													onValueChange={field.onChange}
+												>
+													<SelectTrigger className="w-full">
+														<SelectValue placeholder="Select a sector" />
+													</SelectTrigger>
+													<SelectContent>
+														{SECTORS.map((s) => (
+															<SelectItem key={s.value} value={s.value}>
+																{s.label}
+															</SelectItem>
+														))}
+													</SelectContent>
+												</Select>
+											)}
+										/>
+									</div>
+
+									<div className="space-y-2">
+										<Label htmlFor="stage">Startup Stage *</Label>
+										<Controller
+											name="stage"
+											control={metadataForm.control}
+											render={({ field }) => (
+												<Select
+													value={field.value}
+													onValueChange={field.onChange}
+												>
+													<SelectTrigger className="w-full">
+														<SelectValue placeholder="Select a stage" />
+													</SelectTrigger>
+													<SelectContent>
+														{STAGES.map((s) => (
+															<SelectItem key={s.value} value={s.value}>
+																{s.label}
+															</SelectItem>
+														))}
+													</SelectContent>
+												</Select>
+											)}
+										/>
+									</div>
 								</div>
 
 								<div className="space-y-2">
@@ -666,6 +828,144 @@ function NewPitchPageInner() {
 										{...financialsForm.register("runway")}
 									/>
 								</div>
+							</CardContent>
+						</Card>
+					)}
+
+					{/* Step 6: Documents */}
+					{currentStep === 6 && (
+						<Card>
+							<CardHeader>
+								<CardTitle className="flex items-center gap-2">
+									<FileUp className="h-5 w-5" /> Supporting Documents
+								</CardTitle>
+								<CardDescription>
+									Upload pitch decks, financial models, legal documents, or
+									other supporting materials. Each file is validated
+									automatically.
+								</CardDescription>
+							</CardHeader>
+							<CardContent className="space-y-6">
+								{!submissionId && (
+									<div className="rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800 dark:border-amber-900 dark:bg-amber-950 dark:text-amber-200">
+										Please save your pitch draft first (go back and fill in at
+										least Step 1) before uploading documents.
+									</div>
+								)}
+
+								{submissionId && (
+									<>
+										<div className="flex items-end gap-4">
+											<div className="flex-1 space-y-2">
+												<Label>Document Type</Label>
+												<Select
+													value={selectedDocType}
+													onValueChange={setSelectedDocType}
+												>
+													<SelectTrigger>
+														<SelectValue />
+													</SelectTrigger>
+													<SelectContent>
+														{DOC_TYPES.map((dt) => (
+															<SelectItem key={dt.value} value={dt.value}>
+																{dt.label}
+															</SelectItem>
+														))}
+													</SelectContent>
+												</Select>
+											</div>
+											<div>
+												<Label
+													htmlFor="file-upload"
+													className="inline-flex cursor-pointer items-center gap-2 rounded-md bg-primary px-4 py-2.5 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
+												>
+													{uploading ? (
+														<>
+															<Loader2 className="h-4 w-4 animate-spin" />
+															Uploading...
+														</>
+													) : (
+														<>
+															<FileUp className="h-4 w-4" />
+															Choose Files
+														</>
+													)}
+												</Label>
+												<Input
+													id="file-upload"
+													type="file"
+													multiple
+													className="hidden"
+													accept=".pdf,.pptx,.ppt,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png,.webp"
+													onChange={handleFileUpload}
+													disabled={uploading}
+												/>
+											</div>
+										</div>
+
+										<p className="text-xs text-muted-foreground">
+											Accepted: PDF, PPTX, DOCX, XLSX, JPG, PNG, WEBP — Max
+											25MB per file
+										</p>
+
+										{/* Uploaded documents list */}
+										{uploadedDocs.length > 0 && (
+											<div className="space-y-3">
+												<h4 className="font-medium text-sm">
+													Uploaded Documents ({uploadedDocs.length})
+												</h4>
+												{uploadedDocs.map((doc) => (
+													<div
+														key={doc._id}
+														className="flex items-center justify-between rounded-lg border bg-card p-3"
+													>
+														<div className="flex items-center gap-3 min-w-0">
+															<FileUp className="h-4 w-4 shrink-0 text-muted-foreground" />
+															<div className="min-w-0">
+																<p className="text-sm font-medium truncate">
+																	{doc.filename}
+																</p>
+																<p className="text-xs text-muted-foreground">
+																	{
+																		DOC_TYPES.find((dt) => dt.value === doc.type)
+																			?.label || doc.type
+																	}
+																</p>
+																{doc.processingError && (
+																	<p className="text-xs text-destructive mt-1">
+																		{doc.processingError}
+																	</p>
+																)}
+															</div>
+														</div>
+														<div className="flex items-center gap-2 shrink-0">
+															{getDocStatusBadge(doc.status)}
+															<Button
+																variant="ghost"
+																size="icon"
+																className="h-8 w-8 text-muted-foreground hover:text-destructive"
+																onClick={() => handleDeleteDoc(doc._id)}
+															>
+																<Trash2 className="h-4 w-4" />
+															</Button>
+														</div>
+													</div>
+												))}
+											</div>
+										)}
+
+										{uploadedDocs.length === 0 && (
+											<div className="rounded-lg border-2 border-dashed border-border p-8 text-center">
+												<FileUp className="mx-auto h-10 w-10 text-muted-foreground/50 mb-3" />
+												<p className="text-sm text-muted-foreground">
+													No documents uploaded yet. Upload your pitch deck,
+													financials, or legal docs to strengthen your
+													submission.
+												</p>
+											</div>
+										)}
+									</>
+								)}
 							</CardContent>
 						</Card>
 					)}
