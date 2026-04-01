@@ -3,7 +3,11 @@ import mongoose from "mongoose";
 import { Conversation } from "../models/Conversation";
 import { Meeting } from "../models/Meeting";
 import { Message } from "../models/Message";
-import { buildConversationParticipantSet } from "../services/message.service";
+import { MisconductReport } from "../models/MisconductReport";
+import {
+	buildConversationParticipantSet,
+	normalizeMisconductReason,
+} from "../services/message.service";
 
 describe("Communication domain validation", () => {
 	it("buildConversationParticipantSet returns sorted unique participants", () => {
@@ -64,5 +68,24 @@ describe("Communication domain validation", () => {
 		const error = meeting.validateSync();
 		expect(error).toBeDefined();
 		expect(error?.errors.durationMinutes).toBeDefined();
+	});
+
+	it("normalizes misconduct reason input safely", () => {
+		expect(normalizeMisconductReason("  abusive language  ")).toBe(
+			"abusive language",
+		);
+		expect(normalizeMisconductReason(undefined)).toBe("");
+	});
+
+	it("creates a valid misconduct report model", () => {
+		const report = new MisconductReport({
+			conversationId: new mongoose.Types.ObjectId(),
+			reporterId: new mongoose.Types.ObjectId(),
+			reportedUserIds: [new mongoose.Types.ObjectId()],
+			reason: "Investor shared abusive and threatening messages",
+		});
+
+		expect(report.status).toBe("open");
+		expect(report.validateSync()).toBeUndefined();
 	});
 });

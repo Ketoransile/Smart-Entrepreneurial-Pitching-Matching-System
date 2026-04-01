@@ -2,6 +2,7 @@ import { AdminAction } from "../../models/AdminAction";
 import { EntrepreneurProfile } from "../../models/EntrepreneurProfile";
 import { InvestorProfile } from "../../models/InvestorProfile";
 import { User } from "../../models/User";
+import { MeetingService } from "../meeting.service";
 
 export const normalizePagination = (page?: number, limit?: number) => {
 	const safePage = Math.max(
@@ -22,6 +23,11 @@ const buildUserSearchFilter = (search?: string) => {
 	const regex = new RegExp(search.trim(), "i");
 	return { $or: [{ email: regex }, { fullName: regex }] };
 };
+
+export const shouldAutoCancelMeetingsForUserSuspension = (
+	previousStatus: "unverified" | "pending" | "verified" | "suspended",
+	nextStatus: "unverified" | "pending" | "verified" | "suspended",
+) => previousStatus !== "suspended" && nextStatus === "suspended";
 
 class AdminUserServiceError extends Error {
 	statusCode: number;
@@ -113,8 +119,21 @@ export class AdminUserService {
 
 		const previousStatus = user.status;
 		user.status = payload.status;
+		let cancelledMeetings = 0;
 		if (payload.status === "suspended") {
 			user.isActive = false;
+			if (
+				shouldAutoCancelMeetingsForUserSuspension(
+					previousStatus,
+					payload.status,
+				)
+			) {
+				const result = await MeetingService.cancelMeetingsForSuspendedUser({
+					userId: user._id.toString(),
+					reason: payload.reason,
+				});
+				cancelledMeetings = result.cancelledCount;
+			}
 		}
 		if (payload.status === "verified") {
 			user.kycRejectionReason = undefined;
@@ -131,6 +150,7 @@ export class AdminUserService {
 			metadata: {
 				previousStatus,
 				nextStatus: payload.status,
+				cancelledMeetings,
 			},
 		});
 

@@ -136,6 +136,30 @@ export class MessageController {
 		}
 	}
 
+	static async reportMisconduct(req: Request, res: Response): Promise<void> {
+		try {
+			if (!req.user) {
+				res.status(401).json({ status: "error", message: "Unauthorized" });
+				return;
+			}
+
+			const result = await MessageService.reportMisconduct({
+				conversationId: req.params.conversationId,
+				reporterId: req.user._id.toString(),
+				reason: req.body.reason,
+				details: req.body.details,
+			});
+
+			res.status(201).json({
+				status: "success",
+				message: "Conversation frozen and admin alerted",
+				...result,
+			});
+		} catch (error) {
+			handleMessageError(res, error, "Failed to report misconduct");
+		}
+	}
+
 	static async listNotifications(req: Request, res: Response): Promise<void> {
 		try {
 			if (!req.user) {

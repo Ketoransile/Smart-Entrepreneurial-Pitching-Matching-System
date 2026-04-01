@@ -1,6 +1,9 @@
 import { Meeting } from "../models/Meeting";
 import { NotificationService } from "./notification.service";
 
+export const isMeetingAutoCancellable = (status: string): boolean =>
+	status === "scheduled" || status === "ongoing";
+
 class MeetingServiceError extends Error {
 	statusCode: number;
 
@@ -134,5 +137,51 @@ export class MeetingService {
 		}
 
 		return meeting;
+	}
+
+	static async cancelMeetingsForSuspendedUser(payload: {
+		userId: string;
+		reason?: string;
+	}) {
+		const meetings = await Meeting.find({
+			participants: payload.userId,
+			status: { $in: ["scheduled", "ongoing"] },
+		});
+
+		let cancelledCount = 0;
+		for (const meeting of meetings) {
+			if (!isMeetingAutoCancellable(meeting.status)) {
+				continue;
+			}
+
+			meeting.status = "cancelled";
+			const suspensionNote = payload.reason
+				? `Cancelled due to participant suspension: ${payload.reason}`
+				: "Cancelled due to participant suspension";
+			meeting.notes = meeting.notes
+				? `${meeting.notes}\n${suspensionNote}`
+				: suspensionNote;
+			await meeting.save();
+			cancelledCount += 1;
+
+			const recipients = meeting.participants
+				.map((participantId) => participantId.toString())
+				.filter((participantId) => participantId !== payload.userId);
+
+			for (const recipientId of recipients) {
+				await NotificationService.createNotification({
+					userId: recipientId,
+					type: "meeting_cancelled",
+					title: "Meeting cancelled",
+					body: `Meeting "${meeting.title}" was cancelled due to account enforcement.`,
+					metadata: {
+						meetingId: meeting._id,
+						affectedUserId: payload.userId,
+					},
+				});
+			}
+		}
+
+		return { cancelledCount };
 	}
 }

@@ -1,5 +1,7 @@
 import { Conversation } from "../models/Conversation";
 import { Message } from "../models/Message";
+import { MisconductReport } from "../models/MisconductReport";
+import { User } from "../models/User";
 import { emitToConversation } from "../socket";
 import { NotificationService } from "./notification.service";
 
@@ -24,6 +26,11 @@ export const buildConversationParticipantSet = (
 ): string[] => {
 	return Array.from(new Set([userA, userB])).sort();
 };
+
+export const normalizeMisconductReason = (value: unknown): string =>
+	String(value ?? "")
+		.trim()
+		.slice(0, 1000);
 
 export class MessageService {
 	static createError(message: string, statusCode: number): MessageServiceError {
@@ -219,5 +226,80 @@ export class MessageService {
 				},
 			},
 		);
+	}
+
+	static async reportMisconduct(payload: {
+		conversationId: string;
+		reporterId: string;
+		reason: string;
+		details?: string;
+	}) {
+		const conversation = await Conversation.findById(payload.conversationId);
+		if (!conversation) {
+			throw MessageService.createError("Conversation not found", 404);
+		}
+
+		const isParticipant = conversation.participants.some(
+			(participantId) => participantId.toString() === payload.reporterId,
+		);
+		if (!isParticipant) {
+			throw MessageService.createError("Access denied", 403);
+		}
+
+		const reason = normalizeMisconductReason(payload.reason);
+		if (reason.length < 5) {
+			throw MessageService.createError(
+				"A clear misconduct reason is required",
+				400,
+			);
+		}
+
+		const reportedUserIds = conversation.participants
+			.map((participantId) => participantId.toString())
+			.filter((participantId) => participantId !== payload.reporterId);
+
+		if (!conversation.isArchived) {
+			conversation.isArchived = true;
+			await conversation.save();
+		}
+
+		const report = await MisconductReport.create({
+			conversationId: conversation._id,
+			reporterId: payload.reporterId,
+			reportedUserIds,
+			reason,
+			details: payload.details || null,
+			status: "open",
+		});
+
+		const admins = await User.find({ role: "admin", isActive: true }).select(
+			"_id",
+		);
+		for (const admin of admins) {
+			await NotificationService.createNotification({
+				userId: admin._id.toString(),
+				type: "misconduct_reported",
+				title: "Misconduct report requires review",
+				body: reason,
+				metadata: {
+					reportId: report._id,
+					conversationId: conversation._id,
+					reporterId: payload.reporterId,
+					reportedUserIds,
+				},
+			});
+		}
+
+		emitToConversation(payload.conversationId, "conversation:frozen", {
+			conversationId: payload.conversationId,
+			reason: "reported_misconduct",
+			reportId: report._id,
+		});
+
+		return {
+			report,
+			conversation,
+			alertedAdmins: admins.length,
+		};
 	}
 }

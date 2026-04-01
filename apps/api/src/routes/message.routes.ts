@@ -153,6 +153,42 @@ router.post(
 
 /**
  * @openapi
+ * /api/messages/conversations/{conversationId}/report:
+ *   post:
+ *     tags: [Communication]
+ *     summary: Report misconduct and freeze the conversation pending admin review
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: conversationId
+ *         required: true
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [reason]
+ *             properties:
+ *               reason:
+ *                 type: string
+ *               details:
+ *                 type: string
+ *     responses:
+ *       201:
+ *         description: Report created, conversation frozen, and admins alerted
+ */
+router.post(
+	"/conversations/:conversationId/report",
+	authenticate,
+	MessageController.reportMisconduct,
+);
+
+/**
+ * @openapi
  * /api/messages/notifications:
  *   get:
  *     tags: [Communication]

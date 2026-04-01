@@ -5,7 +5,11 @@ import { SystemConfig } from "../models/SystemConfig";
 import { buildDocumentReviewPatch } from "../services/admin/document.service";
 import { normalizeLookbackDays } from "../services/admin/stats.service";
 import { reviewDecisionToStatus } from "../services/admin/submission.service";
-import { normalizePagination } from "../services/admin/user.service";
+import {
+	normalizePagination,
+	shouldAutoCancelMeetingsForUserSuspension,
+} from "../services/admin/user.service";
+import { isMeetingAutoCancellable } from "../services/meeting.service";
 
 describe("Admin dashboard and analytics helpers", () => {
 	it("normalizes lookback days into safe range", () => {
@@ -32,6 +36,24 @@ describe("Admin dashboard and analytics helpers", () => {
 	it("maps admin review decision to submission status", () => {
 		expect(reviewDecisionToStatus("approve")).toBe("approved");
 		expect(reviewDecisionToStatus("reject")).toBe("rejected");
+	});
+
+	it("detects when suspension should auto-cancel meetings", () => {
+		expect(
+			shouldAutoCancelMeetingsForUserSuspension("verified", "suspended"),
+		).toBe(true);
+		expect(
+			shouldAutoCancelMeetingsForUserSuspension("suspended", "suspended"),
+		).toBe(false);
+		expect(
+			shouldAutoCancelMeetingsForUserSuspension("pending", "verified"),
+		).toBe(false);
+	});
+
+	it("recognizes which meeting statuses are auto-cancellable", () => {
+		expect(isMeetingAutoCancellable("scheduled")).toBe(true);
+		expect(isMeetingAutoCancellable("ongoing")).toBe(true);
+		expect(isMeetingAutoCancellable("completed")).toBe(false);
 	});
 
 	it("builds document review patch for failure with reason", () => {

@@ -18,6 +18,7 @@ export * from "./Meeting";
 export * from "./Message";
 // Deal tracking layer
 export * from "./Milestone";
+export * from "./MisconductReport";
 export * from "./Notification";
 // Content & workflow layer
 export * from "./Submission";
