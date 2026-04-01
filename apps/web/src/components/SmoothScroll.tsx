@@ -1,5 +1,6 @@
 "use client";
 
+// @ts-expect-error
 import { ReactLenis } from "lenis/react";
 import type { ReactNode } from "react";
 
