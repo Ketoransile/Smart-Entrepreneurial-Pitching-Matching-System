@@ -25,6 +25,7 @@ import {
 	Users,
 	XCircle,
 } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 import DashboardLayout from "@/components/DashboardLayout";
@@ -212,6 +213,7 @@ function DocLink({
 
 export default function AdminOversight() {
 	const { user, userProfile } = useAuth();
+	const router = useRouter();
 	const isSuperAdmin = userProfile?.adminLevel === "super_admin";
 	const [users, setUsers] = useState<UserRecord[]>([]);
 	const [submissions, setSubmissions] = useState<SubmissionRecord[]>([]);
