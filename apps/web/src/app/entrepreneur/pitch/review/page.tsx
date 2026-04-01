@@ -240,7 +240,7 @@ function ReviewPitchPageInner() {
 					<Separator />
 
 					{/* Summary */}
-					<Card>
+					<Card className="animate-in fade-in slide-in-from-bottom-4 duration-500 delay-100 fill-mode-both">
 						<CardHeader>
 							<CardTitle className="text-lg flex items-center gap-2">
 								<ClipboardList className="h-5 w-5" /> Executive Summary
@@ -254,7 +254,7 @@ function ReviewPitchPageInner() {
 					</Card>
 
 					{/* Problem */}
-					<Card>
+					<Card className="animate-in fade-in slide-in-from-bottom-4 duration-500 delay-150 fill-mode-both">
 						<CardHeader>
 							<CardTitle className="text-lg flex items-center gap-2">
 								<Search className="h-5 w-5" /> The Problem
@@ -283,7 +283,7 @@ function ReviewPitchPageInner() {
 					</Card>
 
 					{/* Solution */}
-					<Card>
+					<Card className="animate-in fade-in slide-in-from-bottom-4 duration-500 delay-200 fill-mode-both">
 						<CardHeader>
 							<CardTitle className="text-lg flex items-center gap-2">
 								<Lightbulb className="h-5 w-5" /> Solution
@@ -312,7 +312,7 @@ function ReviewPitchPageInner() {
 					</Card>
 
 					{/* Business Model */}
-					<Card>
+					<Card className="animate-in fade-in slide-in-from-bottom-4 duration-500 delay-300 fill-mode-both">
 						<CardHeader>
 							<CardTitle className="text-lg flex items-center gap-2">
 								<BarChart3 className="h-5 w-5" /> Business Model
@@ -342,7 +342,7 @@ function ReviewPitchPageInner() {
 					</Card>
 
 					{/* Financials */}
-					<Card>
+					<Card className="animate-in fade-in slide-in-from-bottom-4 duration-500 delay-500 fill-mode-both">
 						<CardHeader>
 							<CardTitle className="text-lg flex items-center gap-2">
 								<DollarSign className="h-5 w-5" /> Financials
@@ -387,7 +387,7 @@ function ReviewPitchPageInner() {
 					</Card>
 
 					{/* Documents & Completeness */}
-					<Card>
+					<Card className="animate-in fade-in slide-in-from-bottom-4 duration-500 delay-700 fill-mode-both">
 						<CardHeader>
 							<div className="flex items-center justify-between">
 								<div>

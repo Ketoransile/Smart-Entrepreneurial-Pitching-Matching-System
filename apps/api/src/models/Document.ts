@@ -8,11 +8,8 @@ import {
 export type DocumentType =
 	| "pitch_deck"
 	| "financial_model"
-	| "legal"
-	| "business_license"
-	| "tin_certificate"
-	| "financial_statement"
-	| "memorandum_of_association"
+	| "product_demo"
+	| "customer_testimonials"
 	| "other";
 export type DocumentProcessingStatus =
 	| "uploaded"
@@ -59,11 +56,8 @@ const DocumentSchema = new Schema<IDocument>(
 			enum: [
 				"pitch_deck",
 				"financial_model",
-				"legal",
-				"business_license",
-				"tin_certificate",
-				"financial_statement",
-				"memorandum_of_association",
+				"product_demo",
+				"customer_testimonials",
 				"other",
 			] satisfies DocumentType[],
 			required: true,

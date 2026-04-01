@@ -41,29 +41,9 @@ export interface ChecklistItem {
  */
 export const REQUIRED_DOC_CATEGORIES = [
 	{
-		category: "business_license",
-		label: "Business License",
-		required: true,
-	},
-	{
-		category: "tin_certificate",
-		label: "TIN Certificate",
-		required: true,
-	},
-	{
 		category: "pitch_deck",
 		label: "Pitch Deck",
 		required: true,
-	},
-	{
-		category: "financial_statement",
-		label: "Financial Statements",
-		required: true,
-	},
-	{
-		category: "memorandum_of_association",
-		label: "Memorandum of Association",
-		required: false,
 	},
 	{
 		category: "financial_model",
@@ -71,8 +51,13 @@ export const REQUIRED_DOC_CATEGORIES = [
 		required: false,
 	},
 	{
-		category: "legal",
-		label: "Legal Documents",
+		category: "product_demo",
+		label: "Product Demo",
+		required: false,
+	},
+	{
+		category: "customer_testimonials",
+		label: "Customer Testimonials",
 		required: false,
 	},
 	{
@@ -86,11 +71,8 @@ export const REQUIRED_DOC_CATEGORIES = [
 const MAX_FILE_SIZES: Record<string, number> = {
 	pitch_deck: 25 * 1024 * 1024,
 	financial_model: 15 * 1024 * 1024,
-	financial_statement: 15 * 1024 * 1024,
-	legal: 10 * 1024 * 1024,
-	business_license: 10 * 1024 * 1024,
-	tin_certificate: 10 * 1024 * 1024,
-	memorandum_of_association: 10 * 1024 * 1024,
+	product_demo: 25 * 1024 * 1024,
+	customer_testimonials: 10 * 1024 * 1024,
 	other: 25 * 1024 * 1024,
 };
 
@@ -110,31 +92,20 @@ const ALLOWED_MIMES: Record<string, string[]> = {
 		"application/vnd.ms-excel",
 		"text/plain",
 	],
-	financial_statement: [
-		"application/pdf",
-		"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-		"application/vnd.ms-excel",
-		"image/jpeg",
-		"image/png",
-	],
-	legal: [
-		"application/pdf",
-		"application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-		"application/msword",
-		"image/jpeg",
-		"image/png",
-	],
-	business_license: [
+	product_demo: [
 		"application/pdf",
 		"image/jpeg",
 		"image/png",
 		"image/webp",
+		"application/vnd.openxmlformats-officedocument.presentationml.presentation",
+		"application/vnd.ms-powerpoint",
 	],
-	tin_certificate: ["application/pdf", "image/jpeg", "image/png", "image/webp"],
-	memorandum_of_association: [
+	customer_testimonials: [
 		"application/pdf",
 		"application/vnd.openxmlformats-officedocument.wordprocessingml.document",
 		"application/msword",
+		"image/jpeg",
+		"image/png",
 	],
 	other: [
 		"application/pdf",

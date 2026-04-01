@@ -113,7 +113,7 @@ function NewPitchPageInner() {
 		defaultValues: {
 			title: "",
 			sector: "technology",
-			stage: "idea",
+			stage: "mvp",
 			targetAmount: 0,
 			summary: "",
 		},
@@ -465,7 +465,7 @@ function NewPitchPageInner() {
 
 					{/* Step 1: Overview / Metadata */}
 					{currentStep === 1 && (
-						<Card>
+						<Card className="animate-in fade-in slide-in-from-bottom-4 duration-500">
 							<CardHeader>
 								<CardTitle className="flex items-center gap-2">
 									<ClipboardList className="h-5 w-5" /> Pitch Overview
@@ -580,7 +580,7 @@ function NewPitchPageInner() {
 
 					{/* Step 2: Problem */}
 					{currentStep === 2 && (
-						<Card>
+						<Card className="animate-in fade-in slide-in-from-bottom-4 duration-500">
 							<CardHeader>
 								<CardTitle className="flex items-center gap-2">
 									<Search className="h-5 w-5" /> The Problem
@@ -640,7 +640,7 @@ function NewPitchPageInner() {
 
 					{/* Step 3: Solution */}
 					{currentStep === 3 && (
-						<Card>
+						<Card className="animate-in fade-in slide-in-from-bottom-4 duration-500">
 							<CardHeader>
 								<CardTitle className="flex items-center gap-2">
 									<Lightbulb className="h-5 w-5" /> Your Solution
@@ -707,7 +707,7 @@ function NewPitchPageInner() {
 
 					{/* Step 4: Business Model */}
 					{currentStep === 4 && (
-						<Card>
+						<Card className="animate-in fade-in slide-in-from-bottom-4 duration-500">
 							<CardHeader>
 								<CardTitle className="flex items-center gap-2">
 									<BarChart3 className="h-5 w-5" /> Business Model
@@ -772,7 +772,7 @@ function NewPitchPageInner() {
 
 					{/* Step 5: Financials */}
 					{currentStep === 5 && (
-						<Card>
+						<Card className="animate-in fade-in slide-in-from-bottom-4 duration-500">
 							<CardHeader>
 								<CardTitle className="flex items-center gap-2">
 									<DollarSign className="h-5 w-5" /> Financial Details
@@ -830,7 +830,7 @@ function NewPitchPageInner() {
 
 					{/* Step 6: Documents */}
 					{currentStep === 6 && (
-						<Card>
+						<Card className="animate-in fade-in slide-in-from-bottom-4 duration-500">
 							<CardHeader>
 								<CardTitle className="flex items-center gap-2">
 									<FileUp className="h-5 w-5" /> Supporting Documents
@@ -851,14 +851,14 @@ function NewPitchPageInner() {
 
 								{submissionId && (
 									<>
-										<div className="flex items-end gap-4">
-											<div className="flex-1 space-y-2">
-												<Label>Document Type</Label>
+										<div className="space-y-4">
+											<div className="space-y-2">
+												<Label>1. Select Document Type</Label>
 												<Select
 													value={selectedDocType}
 													onValueChange={setSelectedDocType}
 												>
-													<SelectTrigger>
+													<SelectTrigger className="w-full">
 														<SelectValue />
 													</SelectTrigger>
 													<SelectContent>
@@ -870,39 +870,40 @@ function NewPitchPageInner() {
 													</SelectContent>
 												</Select>
 											</div>
-											<div>
-												<Label
+
+											<div className="space-y-2">
+												<Label>2. Upload File(s)</Label>
+												<label
 													htmlFor="file-upload"
-													className="inline-flex cursor-pointer items-center gap-2 rounded-md bg-primary px-4 py-2.5 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
+													className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed rounded-lg cursor-pointer bg-muted/20 hover:bg-muted/50 border-muted-foreground/30 hover:border-primary/50 transition-all"
 												>
-													{uploading ? (
-														<>
-															<Loader2 className="h-4 w-4 animate-spin" />
-															Uploading...
-														</>
-													) : (
-														<>
-															<FileUp className="h-4 w-4" />
-															Choose Files
-														</>
-													)}
-												</Label>
-												<Input
-													id="file-upload"
-													type="file"
-													multiple
-													className="hidden"
-													accept=".pdf,.pptx,.ppt,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png,.webp"
-													onChange={handleFileUpload}
-													disabled={uploading}
-												/>
+													<div className="flex flex-col items-center justify-center pt-5 pb-6">
+														{uploading ? (
+															<Loader2 className="w-8 h-8 mb-3 text-primary animate-spin" />
+														) : (
+															<FileUp className="w-8 h-8 mb-3 text-muted-foreground" />
+														)}
+														<p className="mb-2 text-sm text-foreground font-medium">
+															{uploading
+																? "Uploading carefully..."
+																: "Click to browse and upload"}
+														</p>
+														<p className="text-xs text-muted-foreground">
+															SVG, PNG, JPG, GIF up to 25MB
+														</p>
+													</div>
+													<Input
+														id="file-upload"
+														type="file"
+														multiple
+														className="hidden"
+														accept=".pdf,.pptx,.ppt,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png,.webp"
+														onChange={handleFileUpload}
+														disabled={uploading}
+													/>
+												</label>
 											</div>
 										</div>
-
-										<p className="text-xs text-muted-foreground">
-											Accepted: PDF, PPTX, DOCX, XLSX, JPG, PNG, WEBP — Max 25MB
-											per file
-										</p>
 
 										{/* Uploaded documents list */}
 										{uploadedDocs.length > 0 && (

@@ -1,6 +1,6 @@
 import { type Document, model, Schema, type Types } from "mongoose";
 
-export type SubmissionStage = "idea" | "mvp" | "early-revenue" | "scaling";
+export type SubmissionStage = "mvp" | "early-revenue" | "scaling";
 
 export type SubmissionStatus =
 	| "draft"
@@ -17,11 +17,8 @@ export interface ISubmissionDocument {
 	type:
 		| "pitch_deck"
 		| "financial_model"
-		| "legal"
-		| "business_license"
-		| "tin_certificate"
-		| "financial_statement"
-		| "memorandum_of_association"
+		| "product_demo"
+		| "customer_testimonials"
 		| "other";
 	cloudinaryId?: string;
 	size?: number;
@@ -128,14 +125,9 @@ const SubmissionSchema = new Schema<ISubmission>(
 		},
 		stage: {
 			type: String,
-			enum: [
-				"idea",
-				"mvp",
-				"early-revenue",
-				"scaling",
-			] satisfies SubmissionStage[],
+			enum: ["mvp", "early-revenue", "scaling"] satisfies SubmissionStage[],
 			required: true,
-			default: "idea",
+			default: "mvp",
 		},
 		targetAmount: {
 			type: Number,

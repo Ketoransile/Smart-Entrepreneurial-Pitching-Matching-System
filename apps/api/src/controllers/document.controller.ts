@@ -12,11 +12,8 @@ import { enqueueDocumentProcessing } from "../workers/document.processor";
 const validDocumentTypes: DocumentType[] = [
 	"pitch_deck",
 	"financial_model",
-	"legal",
-	"business_license",
-	"tin_certificate",
-	"financial_statement",
-	"memorandum_of_association",
+	"product_demo",
+	"customer_testimonials",
 	"other",
 ];
 

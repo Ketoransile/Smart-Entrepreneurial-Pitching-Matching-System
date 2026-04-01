@@ -74,7 +74,7 @@ export const metadataSchema = z.object({
 		"retail",
 		"other",
 	]),
-	stage: z.enum(["idea", "mvp", "early-revenue", "scaling"]),
+	stage: z.enum(["mvp", "early-revenue", "scaling"]),
 	targetAmount: z
 		.number({ error: "Please enter a valid number" })
 		.min(1000, "Minimum funding amount is $1,000")
@@ -115,27 +115,23 @@ export const SECTORS = [
 ] as const;
 
 export const STAGES = [
-	{ value: "idea", label: "Idea Stage" },
 	{ value: "mvp", label: "MVP / Prototype" },
 	{ value: "early-revenue", label: "Early Revenue" },
 	{ value: "scaling", label: "Scaling / Growth" },
 ] as const;
 
 export const DOC_CATEGORIES = [
-	{ value: "business_license", label: "Business License", required: true },
-	{ value: "tin_certificate", label: "TIN Certificate", required: true },
 	{ value: "pitch_deck", label: "Pitch Deck", required: true },
 	{
-		value: "financial_statement",
-		label: "Financial Statements",
-		required: true,
-	},
-	{
-		value: "memorandum_of_association",
-		label: "Memorandum of Association",
+		value: "financial_model",
+		label: "Optional Financial Model",
 		required: false,
 	},
-	{ value: "financial_model", label: "Financial Model", required: false },
-	{ value: "legal", label: "Other Legal Documents", required: false },
-	{ value: "other", label: "Other Supporting Docs", required: false },
+	{ value: "product_demo", label: "Product Demo/Screenshots", required: false },
+	{
+		value: "customer_testimonials",
+		label: "Customer Testimonials",
+		required: false,
+	},
+	{ value: "other", label: "Other Supporting Details", required: false },
 ] as const;
