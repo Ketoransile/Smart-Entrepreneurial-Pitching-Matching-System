@@ -12,6 +12,7 @@ import {
 	LayoutDashboard,
 	Link2,
 	Loader2,
+	Mail,
 	Plus,
 	Rocket,
 	Send,
@@ -232,6 +233,10 @@ export default function AdminOversight() {
 	const [inviteLink, setInviteLink] = useState("");
 	const [inviting, setInviting] = useState(false);
 
+	// Add admin by email (super admin only)
+	const [addByEmail, setAddByEmail] = useState("");
+	const [addByEmailLoading, setAddByEmailLoading] = useState(false);
+
 	const api = (
 		process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api"
 	).replace(/\/+$/, "");
@@ -375,6 +380,36 @@ export default function AdminOversight() {
 			toast.error("Failed to generate invite");
 		} finally {
 			setInviting(false);
+		}
+	};
+
+	const handleAddAdminByEmail = async () => {
+		if (!user || !addByEmail.trim()) return;
+		setAddByEmailLoading(true);
+		try {
+			const token = await user.getIdToken();
+			const res = await fetch(`${api}/auth/admin/admins/add-by-email`, {
+				method: "POST",
+				headers: {
+					Authorization: `Bearer ${token}`,
+					"Content-Type": "application/json",
+				},
+				body: JSON.stringify({ email: addByEmail.trim() }),
+			});
+			const data = await res.json();
+			if (data.status === "success") {
+				toast.success(data.message);
+				setAddByEmail("");
+				setShowInviteDialog(false);
+				fetchAdmins();
+				fetchData();
+			} else {
+				toast.error(data.message);
+			}
+		} catch (err) {
+			toast.error("Failed to add admin");
+		} finally {
+			setAddByEmailLoading(false);
 		}
 	};
 
@@ -776,7 +811,7 @@ export default function AdminOversight() {
 										onClick={() => setShowInviteDialog(true)}
 									>
 										<Plus className="h-3.5 w-3.5" />
-										Invite Admin
+										Add Admin
 									</Button>
 								</CardHeader>
 								<Table>
@@ -861,67 +896,144 @@ export default function AdminOversight() {
 								open={showInviteDialog}
 								onOpenChange={(open) => {
 									setShowInviteDialog(open);
-									if (!open) setInviteLink("");
+									if (!open) {
+										setInviteLink("");
+										setAddByEmail("");
+									}
 								}}
 							>
 								<DialogContent className="sm:max-w-md">
 									<DialogHeader>
 										<DialogTitle className="flex items-center gap-2">
 											<ShieldAlert className="h-5 w-5 text-primary" />
-											Invite New Admin
+											Add New Admin
 										</DialogTitle>
 										<DialogDescription>
-											Generate an exclusive invite link. Anyone with this link
-											can sign up as an admin. Links expire in 7 days.
+											Promote an existing user by email or generate an invite
+											link for new users.
 										</DialogDescription>
 									</DialogHeader>
-									<div className="py-4">
-										{inviteLink ? (
-											<div className="space-y-3">
-												<div className="flex items-center gap-2 rounded-lg border bg-muted/30 p-3">
-													<Link2 className="h-4 w-4 text-primary shrink-0" />
-													<code className="text-xs flex-1 break-all select-all text-foreground">
-														{inviteLink}
-													</code>
+									<Tabs defaultValue="add-by-email" className="mt-2">
+										<TabsList className="w-full">
+											<TabsTrigger
+												value="add-by-email"
+												className="flex-1 gap-1.5"
+											>
+												<Mail className="h-3.5 w-3.5" />
+												Add by Email
+											</TabsTrigger>
+											<TabsTrigger
+												value="invite-link"
+												className="flex-1 gap-1.5"
+											>
+												<Link2 className="h-3.5 w-3.5" />
+												Invite Link
+											</TabsTrigger>
+										</TabsList>
+
+										{/* Add by Email Tab */}
+										<TabsContent value="add-by-email" className="mt-4">
+											<div className="space-y-4">
+												<div className="flex h-14 w-14 mx-auto items-center justify-center rounded-full bg-primary/10">
+													<Mail className="h-7 w-7 text-primary" />
+												</div>
+												<p className="text-sm text-muted-foreground text-center">
+													Promote an existing platform user to admin by entering
+													their email address.
+												</p>
+												<div className="space-y-2">
+													<Label
+														htmlFor="admin-email"
+														className="text-sm font-medium"
+													>
+														User Email
+													</Label>
+													<Input
+														id="admin-email"
+														type="email"
+														placeholder="user@example.com"
+														value={addByEmail}
+														onChange={(e) => setAddByEmail(e.target.value)}
+														onKeyDown={(e) => {
+															if (e.key === "Enter" && addByEmail.trim()) {
+																handleAddAdminByEmail();
+															}
+														}}
+													/>
 												</div>
 												<Button
 													className="w-full gap-2"
-													onClick={() => {
-														navigator.clipboard.writeText(inviteLink);
-														toast.success("Link copied to clipboard!");
-													}}
+													onClick={handleAddAdminByEmail}
+													disabled={addByEmailLoading || !addByEmail.trim()}
 												>
-													<Copy className="h-4 w-4" />
-													Copy Link
-												</Button>
-												<p className="text-xs text-muted-foreground text-center">
-													Share this link with the person you want to invite as
-													admin.
-												</p>
-											</div>
-										) : (
-											<div className="text-center space-y-4">
-												<div className="flex h-16 w-16 mx-auto items-center justify-center rounded-full bg-primary/10">
-													<Link2 className="h-8 w-8 text-primary" />
-												</div>
-												<p className="text-sm text-muted-foreground">
-													Click below to generate a one-time invite link.
-												</p>
-												<Button
-													onClick={handleInviteAdmin}
-													disabled={inviting}
-													className="gap-2"
-												>
-													{inviting ? (
+													{addByEmailLoading ? (
 														<Loader2 className="h-4 w-4 animate-spin" />
 													) : (
-														<Plus className="h-4 w-4" />
+														<ShieldCheck className="h-4 w-4" />
 													)}
-													{inviting ? "Generating..." : "Generate Invite Link"}
+													{addByEmailLoading
+														? "Promoting..."
+														: "Promote to Admin"}
 												</Button>
+												<p className="text-xs text-muted-foreground/70 text-center">
+													The user must already have an account on the platform.
+												</p>
 											</div>
-										)}
-									</div>
+										</TabsContent>
+
+										{/* Invite Link Tab */}
+										<TabsContent value="invite-link" className="mt-4">
+											{inviteLink ? (
+												<div className="space-y-3">
+													<div className="flex items-center gap-2 rounded-lg border bg-muted/30 p-3">
+														<Link2 className="h-4 w-4 text-primary shrink-0" />
+														<code className="text-xs flex-1 break-all select-all text-foreground">
+															{inviteLink}
+														</code>
+													</div>
+													<Button
+														className="w-full gap-2"
+														onClick={() => {
+															navigator.clipboard.writeText(inviteLink);
+															toast.success("Link copied to clipboard!");
+														}}
+													>
+														<Copy className="h-4 w-4" />
+														Copy Link
+													</Button>
+													<p className="text-xs text-muted-foreground text-center">
+														Share this link with the person you want to invite
+														as admin.
+													</p>
+												</div>
+											) : (
+												<div className="text-center space-y-4">
+													<div className="flex h-14 w-14 mx-auto items-center justify-center rounded-full bg-primary/10">
+														<Link2 className="h-7 w-7 text-primary" />
+													</div>
+													<p className="text-sm text-muted-foreground">
+														Generate a one-time invite link for someone who
+														doesn&apos;t have an account yet. Links expire in 7
+														days.
+													</p>
+													<Button
+														onClick={handleInviteAdmin}
+														disabled={inviting}
+														className="gap-2"
+													>
+														{inviting ? (
+															<Loader2 className="h-4 w-4 animate-spin" />
+														) : (
+															<Plus className="h-4 w-4" />
+														)}
+														{inviting
+															? "Generating..."
+															: "Generate Invite Link"}
+													</Button>
+												</div>
+											)}
+										</TabsContent>
+									</Tabs>
 								</DialogContent>
 							</Dialog>
 						</TabsContent>
@@ -955,8 +1067,8 @@ export default function AdminOversight() {
 								</DialogTitle>
 								{actionUser?.status === "pending" && (
 									<DialogDescription>
-										Review the submitted KYC documents and approve or reject this
-										user.
+										Review the submitted KYC documents and approve or reject
+										this user.
 									</DialogDescription>
 								)}
 							</DialogHeader>

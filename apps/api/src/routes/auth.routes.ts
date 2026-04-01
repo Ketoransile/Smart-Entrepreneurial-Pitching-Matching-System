@@ -113,24 +113,32 @@ router.post(
 			}
 
 			// 3. Brand-new user — create with the requested role
+			const isSuperAdminEmail =
+				req.firebaseUser!.email?.toLowerCase() ===
+				SUPER_ADMIN_EMAIL.toLowerCase();
+
 			const requestedRole = req.body.role as
 				| "entrepreneur"
 				| "investor"
 				| undefined;
-			const assignedRole =
-				requestedRole && ["entrepreneur", "investor"].includes(requestedRole)
+			const assignedRole = isSuperAdminEmail
+				? "admin"
+				: requestedRole && ["entrepreneur", "investor"].includes(requestedRole)
 					? requestedRole
 					: "entrepreneur";
-			const initialStatus = "unverified";
+			const initialStatus = isSuperAdminEmail ? "verified" : "unverified";
 
 			const newUser = await User.create({
 				firebaseUid: req.firebaseUser!.uid,
 				fullName: req.body.fullName || req.firebaseUser!.name || "New User",
 				email: req.firebaseUser!.email,
 				role: assignedRole,
+				adminLevel: isSuperAdminEmail ? "super_admin" : undefined,
 				status: initialStatus,
 				photoURL: req.firebaseUser!.picture || null,
-				emailVerified: false,
+				emailVerified: isSuperAdminEmail
+					? true
+					: req.firebaseUser!.email_verified || false,
 			});
 
 			res.status(201).json({
@@ -788,6 +796,99 @@ router.delete(
 			res
 				.status(500)
 				.json({ status: "error", message: "Failed to remove admin" });
+		}
+	},
+);
+
+/**
+ * @openapi
+ * /api/auth/admin/admins/add-by-email:
+ *   post:
+ *     tags: [Auth]
+ *     summary: Super admin promote an existing user to admin by email
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [email]
+ *             properties:
+ *               email:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: User promoted to admin
+ *       400:
+ *         description: User is already an admin
+ *       404:
+ *         description: User not found
+ */
+router.post(
+	"/admin/admins/add-by-email",
+	authenticate,
+	authorizeSuperAdmin,
+	async (req: Request, res: Response): Promise<void> => {
+		try {
+			const { email } = req.body;
+
+			if (!email || typeof email !== "string") {
+				res.status(400).json({
+					status: "error",
+					message: "Email is required",
+				});
+				return;
+			}
+
+			const normalizedEmail = email.trim().toLowerCase();
+
+			// Find the user by email
+			const targetUser = await User.findOne({ email: normalizedEmail });
+
+			if (!targetUser) {
+				res.status(404).json({
+					status: "error",
+					message:
+						"No user found with this email. They need to sign up first, or use the invite link to add new users.",
+				});
+				return;
+			}
+
+			// Check if already an admin
+			if (targetUser.role === "admin") {
+				const level =
+					targetUser.adminLevel === "super_admin" ? "super admin" : "admin";
+				res.status(400).json({
+					status: "error",
+					message: `${targetUser.fullName} is already a${level === "super admin" ? " " : "n "}${level}.`,
+				});
+				return;
+			}
+
+			// Promote user to admin
+			targetUser.role = "admin";
+			targetUser.adminLevel = "admin";
+			targetUser.status = "verified";
+			targetUser.kycRejectionReason = undefined;
+			await targetUser.save();
+
+			res.status(200).json({
+				status: "success",
+				message: `${targetUser.fullName} has been promoted to admin.`,
+				user: {
+					id: targetUser._id,
+					fullName: targetUser.fullName,
+					email: targetUser.email,
+					role: targetUser.role,
+					adminLevel: targetUser.adminLevel,
+					status: targetUser.status,
+				},
+			});
+		} catch (error) {
+			console.error("Add admin by email error:", error);
+			res.status(500).json({ status: "error", message: "Failed to add admin" });
 		}
 	},
 );
