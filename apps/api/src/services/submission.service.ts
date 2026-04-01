@@ -205,9 +205,9 @@ export class SubmissionService {
 		);
 
 		if (!completeness.complete) {
-			errors.push(
-				`Missing required documents: ${completeness.missingRequired.join(", ")}`,
-			);
+			completeness.missingRequired.forEach((missingDoc) => {
+				errors.push(`${missingDoc} missing`);
+			});
 		}
 
 		// Check for documents still processing or failed
