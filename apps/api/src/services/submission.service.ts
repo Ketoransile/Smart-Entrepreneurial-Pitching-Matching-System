@@ -65,7 +65,7 @@ export class SubmissionService {
 		submissionId: string,
 		user: IUser,
 	): Promise<ISubmission> {
-		const submission = await Submission.findById(submissionId);
+		const submission = await Submission.findById(submissionId).populate("entrepreneurId", "fullName email");
 
 		if (!submission) {
 			throw SubmissionService.createError("Submission not found", 404);
@@ -76,6 +76,11 @@ export class SubmissionService {
 			submission.entrepreneurId.toString() !== user._id.toString()
 		) {
 			throw SubmissionService.createError("Access denied", 403);
+		}
+
+		// Don't let investors snoop on incomplete or suspended pitches
+		if (user.role === "investor" && submission.status !== "approved" && submission.status !== "matched") {
+			throw SubmissionService.createError("Pitch is not publicly available yet", 403);
 		}
 
 		return submission;

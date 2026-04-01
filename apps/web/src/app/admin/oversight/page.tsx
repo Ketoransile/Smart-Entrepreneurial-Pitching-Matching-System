@@ -874,9 +874,9 @@ export default function AdminOversight() {
 													<Button
 														size="sm"
 														variant="outline"
-														onClick={() => fetchSubmissionDocs(s)}
+														onClick={() => router.push(`/admin/pitch/${s._id}`)}
 													>
-														Review AI Flags
+														View Full Pitch
 													</Button>
 												</TableCell>
 											</TableRow>
