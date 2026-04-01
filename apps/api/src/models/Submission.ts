@@ -8,6 +8,7 @@ export type SubmissionStatus =
 	| "under_review"
 	| "approved"
 	| "rejected"
+	| "suspended"
 	| "matched"
 	| "closed";
 
@@ -173,6 +174,7 @@ const SubmissionSchema = new Schema<ISubmission>(
 				"under_review",
 				"approved",
 				"rejected",
+				"suspended",
 				"matched",
 				"closed",
 			] satisfies SubmissionStatus[],

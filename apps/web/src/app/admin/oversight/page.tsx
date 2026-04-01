@@ -407,6 +407,34 @@ export default function AdminOversight() {
 		}
 	};
 
+	const handlePitchStatusUpdate = async (status: string) => {
+		if (!user || !selectedSubmission) return;
+		try {
+			const token = await user.getIdToken();
+			const res = await fetch(
+				`${api}/submissions/${selectedSubmission._id}/status`,
+				{
+					method: "PATCH",
+					headers: {
+						Authorization: `Bearer ${token}`,
+						"Content-Type": "application/json",
+					},
+					body: JSON.stringify({ status }),
+				},
+			);
+			const data = await res.json();
+			if (data.status === "success") {
+				toast.success(`Pitch successfully marked as ${status}!`);
+				setSelectedSubmission(null);
+				fetchData();
+			} else {
+				toast.error(data.message || "Failed to update pitch status");
+			}
+		} catch (err) {
+			toast.error("An error occurred updating the pitch status");
+		}
+	};
+
 	const handleInviteAdmin = async () => {
 		if (!user) return;
 		setInviting(true);
@@ -773,6 +801,7 @@ export default function AdminOversight() {
 									<SelectItem value="under_review">Under Review</SelectItem>
 									<SelectItem value="approved">Approved</SelectItem>
 									<SelectItem value="rejected">Rejected</SelectItem>
+									<SelectItem value="suspended">Suspended</SelectItem>
 								</SelectContent>
 							</Select>
 						</div>
@@ -1446,6 +1475,31 @@ export default function AdminOversight() {
 							</div>
 						)}
 					</div>
+					<DialogFooter className="border-t pt-4 flex flex-col sm:flex-row gap-2">
+						<div className="flex w-full items-center justify-between">
+							<Button
+								variant="outline"
+								className="text-red-600 hover:text-red-700 hover:bg-red-50"
+								onClick={() => handlePitchStatusUpdate("suspended")}
+							>
+								Suspend Pitch (SC-23)
+							</Button>
+							<div className="flex gap-2">
+								<Button
+									variant="outline"
+									onClick={() => handlePitchStatusUpdate("rejected")}
+								>
+									Reject
+								</Button>
+								<Button
+									className="bg-green-600 hover:bg-green-700"
+									onClick={() => handlePitchStatusUpdate("approved")}
+								>
+									Fully Approve Pitch
+								</Button>
+							</div>
+						</div>
+					</DialogFooter>
 				</DialogContent>
 			</Dialog>
 		</ProtectedRoute>

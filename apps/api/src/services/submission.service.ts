@@ -275,7 +275,7 @@ export class SubmissionService {
 		const safeLimit = Math.min(Math.max(parseIntOrDefault(limit, 12), 1), 100);
 
 		const filter: Record<string, unknown> = {
-			status: { $in: ["submitted", "under_review", "approved"] },
+			status: "approved",
 		};
 
 		if (sector && sector !== "all") {
@@ -330,6 +330,7 @@ export class SubmissionService {
 			under_review: await Submission.countDocuments({ status: "under_review" }),
 			approved: await Submission.countDocuments({ status: "approved" }),
 			rejected: await Submission.countDocuments({ status: "rejected" }),
+			suspended: await Submission.countDocuments({ status: "suspended" }),
 		};
 
 		return {
@@ -339,5 +340,31 @@ export class SubmissionService {
 			totalPages: Math.ceil(total / safeLimit),
 			stats,
 		};
+	}
+
+	static async updateAdminStatus(id: string, status: string, reason?: string) {
+		const submission = await Submission.findById(id);
+		if (!submission) {
+			throw SubmissionService.createError("Submission not found", 404);
+		}
+
+		if (submission.status === "draft") {
+			throw SubmissionService.createError(
+				"Cannot change status of a draft pitch.",
+				400,
+			);
+		}
+
+		submission.status = status as "approved" | "rejected" | "suspended";
+
+		// If rejected or suspended, we might want to store the reason somewhere
+		// (e.g., `adminFeedback: reason` in schema, but for now we just change status).
+
+		await submission.save();
+
+		// SC-17: "The system immediately sends a push notification to the user..."
+		// This is where NotificationService.createNotification(...) would go in Phase 3/4.
+
+		return submission;
 	}
 }

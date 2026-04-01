@@ -289,4 +289,40 @@ router.delete(
 	SubmissionController.removeDraft,
 );
 
+/**
+ * @openapi
+ * /api/submissions/{id}/status:
+ *   patch:
+ *     tags: [Submissions]
+ *     summary: Admin update submission status (SC-17 Final Approval)
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [status]
+ *             properties:
+ *               status:
+ *                 type: string
+ *                 enum: [approved, rejected, suspended]
+ *               reason:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Status updated
+ */
+router.patch(
+	"/:id/status",
+	authenticate,
+	authorize("admin", "super_admin"),
+	SubmissionController.updateStatusAdmin,
+);
+
 export default router;

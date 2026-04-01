@@ -1,6 +1,7 @@
 import { AdminAction } from "../../models/AdminAction";
 import { EntrepreneurProfile } from "../../models/EntrepreneurProfile";
 import { InvestorProfile } from "../../models/InvestorProfile";
+import { Submission } from "../../models/Submission";
 import { User } from "../../models/User";
 import { MeetingService } from "../meeting.service";
 
@@ -133,6 +134,17 @@ export class AdminUserService {
 					reason: payload.reason,
 				});
 				cancelledMeetings = result.cancelledCount;
+			}
+
+			// SC-24/SC-25: Automatically unpublish all active pitches for suspended users
+			if (user.role === "entrepreneur") {
+				await Submission.updateMany(
+					{
+						entrepreneurId: user._id,
+						status: { $in: ["submitted", "under_review", "approved"] },
+					},
+					{ $set: { status: "suspended" } },
+				);
 			}
 		}
 		if (payload.status === "verified") {
