@@ -88,13 +88,38 @@ export default function ProtectedRoute({
 			<div className="flex min-h-screen items-center justify-center bg-background p-4">
 				<div className="flex flex-col items-center gap-4 text-center max-w-md">
 					<div className="h-12 w-12 rounded-full bg-destructive/10 flex items-center justify-center text-destructive mb-2">
-						<svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
+						<svg
+							className="h-6 w-6"
+							fill="none"
+							viewBox="0 0 24 24"
+							stroke="currentColor"
+						>
+							<path
+								strokeLinecap="round"
+								strokeLinejoin="round"
+								strokeWidth={2}
+								d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+							/>
+						</svg>
 					</div>
 					<h2 className="text-xl font-bold">Failed to load profile</h2>
-					<p className="text-sm text-muted-foreground">We couldn't load your profile from the server. The connection might have failed or the API is down.</p>
+					<p className="text-sm text-muted-foreground">
+						We couldn't load your profile from the server. The connection might
+						have failed or the API is down.
+					</p>
 					<div className="flex items-center gap-3 mt-4">
-						<button onClick={() => window.location.reload()} className="px-4 py-2 bg-primary text-primary-foreground rounded-md text-sm font-medium hover:bg-primary/90 transition-colors">Retry Connection</button>
-						<a href="/" className="px-4 py-2 border border-border rounded-md text-sm font-medium hover:bg-muted transition-colors">Go to Home</a>
+						<button
+							onClick={() => window.location.reload()}
+							className="px-4 py-2 bg-primary text-primary-foreground rounded-md text-sm font-medium hover:bg-primary/90 transition-colors"
+						>
+							Retry Connection
+						</button>
+						<a
+							href="/"
+							className="px-4 py-2 border border-border rounded-md text-sm font-medium hover:bg-muted transition-colors"
+						>
+							Go to Home
+						</a>
 					</div>
 				</div>
 			</div>

@@ -1,8 +1,18 @@
-import { type Document, model, Schema, type Types } from "mongoose";
+import {
+	type Document as MongooseDocument,
+	model,
+	Schema,
+	type Types,
+} from "mongoose";
 
 export type DocumentType = "pitch_deck" | "financial_model" | "legal" | "other";
+export type DocumentProcessingStatus =
+	| "uploaded"
+	| "processing"
+	| "processed"
+	| "failed";
 
-export interface IDocument extends Document {
+export interface IDocument extends MongooseDocument {
 	ownerId: Types.ObjectId;
 	submissionId?: Types.ObjectId;
 	type: DocumentType;
@@ -11,6 +21,13 @@ export interface IDocument extends Document {
 	url: string;
 	sizeBytes: number;
 	mimeType: string;
+	status: DocumentProcessingStatus;
+	extractedText?: string;
+	aiSummary?: string;
+	aiTags: string[];
+	aiConfidence?: number;
+	processingError?: string;
+	processedAt?: Date;
 	createdAt: Date;
 	updatedAt: Date;
 }
@@ -61,8 +78,48 @@ const DocumentSchema = new Schema<IDocument>(
 			type: String,
 			required: true,
 		},
+		status: {
+			type: String,
+			enum: [
+				"uploaded",
+				"processing",
+				"processed",
+				"failed",
+			] satisfies DocumentProcessingStatus[],
+			default: "uploaded",
+			index: true,
+		},
+		extractedText: {
+			type: String,
+			default: null,
+		},
+		aiSummary: {
+			type: String,
+			default: null,
+		},
+		aiTags: {
+			type: [String],
+			default: [],
+		},
+		aiConfidence: {
+			type: Number,
+			default: null,
+			min: 0,
+			max: 1,
+		},
+		processingError: {
+			type: String,
+			default: null,
+		},
+		processedAt: {
+			type: Date,
+			default: null,
+		},
 	},
 	{ timestamps: true },
 );
 
+DocumentSchema.index({ ownerId: 1, status: 1, createdAt: -1 });
+
 export const DocumentModel = model<IDocument>("Document", DocumentSchema);
+export const Document = DocumentModel;

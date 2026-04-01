@@ -5,6 +5,7 @@ let initialized = false;
 function getFirebaseCredentials(): admin.ServiceAccount {
 	const projectId = process.env.FIREBASE_PROJECT_ID;
 	const clientEmail = process.env.FIREBASE_CLIENT_EMAIL;
+
 	// Unescape escaped newlines and remove wrapping quotes that Vercel sometimes injects
 	let privateKey = process.env.FIREBASE_PRIVATE_KEY;
 	if (privateKey) {

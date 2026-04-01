@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useState } from "react";
 import { toast } from "sonner";
+import { Logo } from "@/components/Logo";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -88,9 +89,7 @@ function SignUpForm() {
 
 				<div className="relative z-10 flex flex-col gap-8">
 					<Link href="/" className="flex items-center gap-3 w-fit">
-						<div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary text-primary-foreground font-bold text-xl">
-							S
-						</div>
+						<Logo className="h-10 w-10" />
 						<span className="text-xl font-bold tracking-tight">SEPMS</span>
 					</Link>
 
@@ -111,8 +110,8 @@ function SignUpForm() {
 			<div className="flex w-full flex-col justify-center p-8 sm:p-12 lg:w-1/2">
 				<div className="mx-auto w-full max-w-sm space-y-6">
 					<div className="space-y-2 text-center lg:text-left">
-						<div className="mx-auto mb-6 flex h-12 w-12 items-center justify-center rounded-xl bg-primary text-primary-foreground font-bold text-xl lg:hidden">
-							S
+						<div className="mx-auto mb-6 flex h-12 w-12 lg:hidden">
+							<Logo className="h-12 w-12" />
 						</div>
 						<h2 className="text-3xl font-bold tracking-tight">
 							Create an account
@@ -154,7 +153,10 @@ function SignUpForm() {
 								xmlns="http://www.w3.org/2000/svg"
 								viewBox="0 0 24 24"
 								className="h-5 w-5"
+								role="img"
+								aria-label="Google Logo"
 							>
+								<title>Google Logo</title>
 								<path
 									d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z"
 									fill="#4285F4"

@@ -36,10 +36,26 @@ interface Submission {
 }
 
 const INVESTOR_NAV = [
-	{ label: "Discovery Feed", href: "/investor/feed", icon: <Compass className="h-4 w-4" /> },
-	{ label: "Saved Pitches", href: "/investor/saved", icon: <Star className="h-4 w-4" /> },
-	{ label: "Messages", href: "/investor/messages", icon: <MessageSquare className="h-4 w-4" /> },
-	{ label: "My Profile", href: "/investor/profile", icon: <User className="h-4 w-4" /> },
+	{
+		label: "Discovery Feed",
+		href: "/investor/feed",
+		icon: <Compass className="h-4 w-4" />,
+	},
+	{
+		label: "Saved Pitches",
+		href: "/investor/saved",
+		icon: <Star className="h-4 w-4" />,
+	},
+	{
+		label: "Messages",
+		href: "/investor/messages",
+		icon: <MessageSquare className="h-4 w-4" />,
+	},
+	{
+		label: "My Profile",
+		href: "/investor/profile",
+		icon: <User className="h-4 w-4" />,
+	},
 ];
 
 const SECTORS = [

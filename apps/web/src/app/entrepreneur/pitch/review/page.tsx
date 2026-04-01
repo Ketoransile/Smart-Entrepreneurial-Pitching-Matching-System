@@ -1,6 +1,12 @@
 "use client";
 
-import { BarChart3, ClipboardList, DollarSign, Lightbulb, Search } from "lucide-react";
+import {
+	BarChart3,
+	ClipboardList,
+	DollarSign,
+	Lightbulb,
+	Search,
+} from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useCallback, useEffect, useState } from "react";
 import ProtectedRoute from "@/components/ProtectedRoute";
@@ -160,7 +166,9 @@ function ReviewPitchPageInner() {
 					{/* Summary */}
 					<Card>
 						<CardHeader>
-							<CardTitle className="text-lg flex items-center gap-2"><ClipboardList className="h-5 w-5" /> Executive Summary</CardTitle>
+							<CardTitle className="text-lg flex items-center gap-2">
+								<ClipboardList className="h-5 w-5" /> Executive Summary
+							</CardTitle>
 						</CardHeader>
 						<CardContent>
 							<p className="text-muted-foreground leading-relaxed">
@@ -172,7 +180,9 @@ function ReviewPitchPageInner() {
 					{/* Problem */}
 					<Card>
 						<CardHeader>
-							<CardTitle className="text-lg flex items-center gap-2"><Search className="h-5 w-5" /> The Problem</CardTitle>
+							<CardTitle className="text-lg flex items-center gap-2">
+								<Search className="h-5 w-5" /> The Problem
+							</CardTitle>
 						</CardHeader>
 						<CardContent className="space-y-4">
 							<div>
@@ -199,7 +209,9 @@ function ReviewPitchPageInner() {
 					{/* Solution */}
 					<Card>
 						<CardHeader>
-							<CardTitle className="text-lg flex items-center gap-2"><Lightbulb className="h-5 w-5" /> Solution</CardTitle>
+							<CardTitle className="text-lg flex items-center gap-2">
+								<Lightbulb className="h-5 w-5" /> Solution
+							</CardTitle>
 						</CardHeader>
 						<CardContent className="space-y-4">
 							<div>
@@ -226,7 +238,9 @@ function ReviewPitchPageInner() {
 					{/* Business Model */}
 					<Card>
 						<CardHeader>
-							<CardTitle className="text-lg flex items-center gap-2"><BarChart3 className="h-5 w-5" /> Business Model</CardTitle>
+							<CardTitle className="text-lg flex items-center gap-2">
+								<BarChart3 className="h-5 w-5" /> Business Model
+							</CardTitle>
 						</CardHeader>
 						<CardContent className="space-y-4">
 							<div>
@@ -254,7 +268,9 @@ function ReviewPitchPageInner() {
 					{/* Financials */}
 					<Card>
 						<CardHeader>
-							<CardTitle className="text-lg flex items-center gap-2"><DollarSign className="h-5 w-5" /> Financials</CardTitle>
+							<CardTitle className="text-lg flex items-center gap-2">
+								<DollarSign className="h-5 w-5" /> Financials
+							</CardTitle>
 						</CardHeader>
 						<CardContent>
 							<div className="grid gap-4 sm:grid-cols-2">

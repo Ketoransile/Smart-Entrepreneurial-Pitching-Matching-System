@@ -1,21 +1,39 @@
-import { type Document, model, Schema, type Types } from "mongoose";
-import type { StartupStage } from "./EntrepreneurProfile";
+import mongoose, { type Document, Schema } from "mongoose";
+import type {
+	AccreditationStatus,
+	BusinessSector,
+	BusinessStage,
+	InvestmentType,
+} from "../types";
 
 export interface IInvestorProfile extends Document {
-	userId: Types.ObjectId;
-	firmName?: string;
-	bio?: string;
-	investmentFocusAreas: string[];
-	preferredStages: StartupStage[];
-	ticketSizeMin?: number;
-	ticketSizeMax?: number;
-	currency: string;
-	location?: string;
-	linkedinUrl?: string;
-	portfolioUrl?: string;
+	userId: mongoose.Types.ObjectId;
+	fullName: string;
+	profilePicture?: string;
+	investmentFirm?: string;
+	position?: string;
+	preferredSectors: BusinessSector[];
+	preferredStages: BusinessStage[];
+	investmentRange: {
+		min: number;
+		max: number;
+	};
+	investmentType: InvestmentType[];
+	yearsExperience?: number;
+	industriesExpertise: string[];
+	previousInvestments: number;
 	nationalIdUrl?: string;
 	accreditationDocumentUrl?: string;
-	isPublic: boolean;
+	accreditationStatus: AccreditationStatus;
+	accreditationDocuments: mongoose.Types.ObjectId[];
+	verifiedAt?: Date;
+	verifiedBy?: mongoose.Types.ObjectId;
+	address?: string;
+	phoneNumber?: string;
+	portfolioCount: number;
+	totalInvested: number;
+	meetingsAttended: number;
+	embeddingId?: mongoose.Types.ObjectId;
 	createdAt: Date;
 	updatedAt: Date;
 }
@@ -29,73 +47,88 @@ const InvestorProfileSchema = new Schema<IInvestorProfile>(
 			unique: true,
 			index: true,
 		},
-		firmName: {
+
+		fullName: { type: String, required: true },
+		profilePicture: String,
+
+		investmentFirm: String,
+		position: String,
+
+		preferredSectors: [
+			{
+				type: String,
+				enum: [
+					"technology",
+					"healthcare",
+					"agriculture",
+					"finance",
+					"education",
+					"retail",
+					"manufacturing",
+					"energy",
+					"transportation",
+					"other",
+				],
+			},
+		],
+
+		preferredStages: [
+			{
+				type: String,
+				enum: ["idea", "mvp", "early-revenue", "scaling"],
+			},
+		],
+
+		investmentRange: {
+			min: { type: Number, default: 0 },
+			max: { type: Number, default: 1000000 },
+		},
+
+		investmentType: [
+			{
+				type: String,
+				enum: ["equity", "debt", "grant", "convertible-note"],
+			},
+		],
+
+		yearsExperience: Number,
+		industriesExpertise: [String],
+		previousInvestments: { type: Number, default: 0 },
+
+		nationalIdUrl: String,
+		accreditationDocumentUrl: String,
+
+		accreditationStatus: {
 			type: String,
-			trim: true,
-			default: null,
+			enum: ["pending", "verified", "rejected"],
+			default: "pending",
 		},
-		bio: {
-			type: String,
-			maxlength: 2000,
-			default: null,
-		},
-		investmentFocusAreas: {
-			type: [String],
-			default: [],
-		},
-		preferredStages: {
-			type: [String],
-			enum: ["idea", "mvp", "growth", "scaling"] satisfies StartupStage[],
-			default: [],
-		},
-		ticketSizeMin: {
-			type: Number,
-			min: 0,
-			default: null,
-		},
-		ticketSizeMax: {
-			type: Number,
-			min: 0,
-			default: null,
-		},
-		currency: {
-			type: String,
-			default: "ETB",
-			uppercase: true,
-			trim: true,
-		},
-		location: {
-			type: String,
-			default: null,
-		},
-		linkedinUrl: {
-			type: String,
-			default: null,
-		},
-		portfolioUrl: {
-			type: String,
-			default: null,
-		},
-		nationalIdUrl: {
-			type: String,
-			default: null,
-		},
-		accreditationDocumentUrl: {
-			type: String,
-			default: null,
-		},
-		isPublic: {
-			type: Boolean,
-			default: true,
-		},
+		accreditationDocuments: [{ type: Schema.Types.ObjectId, ref: "Document" }],
+		verifiedAt: Date,
+		verifiedBy: { type: Schema.Types.ObjectId, ref: "User" },
+
+		address: String,
+		phoneNumber: String,
+
+		portfolioCount: { type: Number, default: 0 },
+		totalInvested: { type: Number, default: 0 },
+		meetingsAttended: { type: Number, default: 0 },
+
+		embeddingId: { type: Schema.Types.ObjectId, ref: "EmbeddingEntry" },
 	},
-	{ timestamps: true },
+	{
+		timestamps: true,
+	},
 );
 
-InvestorProfileSchema.index({ investmentFocusAreas: 1, isPublic: 1 });
-InvestorProfileSchema.index({ preferredStages: 1, isPublic: 1 });
+// Indexes for matching
+InvestorProfileSchema.index({ preferredSectors: 1 });
+InvestorProfileSchema.index({
+	"investmentRange.min": 1,
+	"investmentRange.max": 1,
+});
 
-export const InvestorProfile = model<IInvestorProfile>(
+export const InvestorProfile = mongoose.model<IInvestorProfile>(
 	"InvestorProfile",
 	InvestorProfileSchema,
 );

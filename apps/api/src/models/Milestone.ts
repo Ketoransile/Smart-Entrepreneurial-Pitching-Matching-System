@@ -1,24 +1,76 @@
 import { type Document, model, Schema, type Types } from "mongoose";
 
 export type MilestoneStatus =
-	| "pending"
+	| "planned"
 	| "in_progress"
-	| "completed"
-	| "missed";
+	| "submitted"
+	| "approved"
+	| "rejected"
+	| "paid"
+	| "cancelled";
+
+export type MilestoneEscrowStatus =
+	| "not_held"
+	| "held"
+	| "released"
+	| "refunded";
+
+export interface IMilestoneEvidenceDocument {
+	name: string;
+	url: string;
+	type: "invoice" | "report" | "delivery_note" | "photo" | "video" | "other";
+	uploadedAt: Date;
+}
 
 export interface IMilestone extends Document {
 	submissionId: Types.ObjectId;
-	matchResultId?: Types.ObjectId;
-	relatedMeetingId?: Types.ObjectId;
+	matchResultId: Types.ObjectId;
+	entrepreneurId: Types.ObjectId;
+	investorId: Types.ObjectId;
 	createdBy: Types.ObjectId;
 	title: string;
 	description?: string;
-	dueDate?: Date;
-	completedAt?: Date;
+	amount: number;
+	currency: string;
+	dueDate: Date;
+	evidenceDocuments: IMilestoneEvidenceDocument[];
+	submittedAt?: Date;
+	verifiedAt?: Date;
+	verifiedBy?: Types.ObjectId;
+	verificationNotes?: string;
+	escrowStatus: MilestoneEscrowStatus;
+	escrowReference?: string;
+	paymentReleasedAt?: Date;
+	paymentReference?: string;
 	status: MilestoneStatus;
 	createdAt: Date;
 	updatedAt: Date;
 }
+
+const milestoneEvidenceSchema = new Schema<IMilestoneEvidenceDocument>(
+	{
+		name: {
+			type: String,
+			required: true,
+			trim: true,
+		},
+		url: {
+			type: String,
+			required: true,
+		},
+		type: {
+			type: String,
+			enum: ["invoice", "report", "delivery_note", "photo", "video", "other"],
+			default: "other",
+		},
+		uploadedAt: {
+			type: Date,
+			required: true,
+			default: () => new Date(),
+		},
+	},
+	{ _id: false },
+);
 
 const MilestoneSchema = new Schema<IMilestone>(
 	{
@@ -31,12 +83,20 @@ const MilestoneSchema = new Schema<IMilestone>(
 		matchResultId: {
 			type: Schema.Types.ObjectId,
 			ref: "MatchResult",
-			default: null,
+			required: true,
+			index: true,
 		},
-		relatedMeetingId: {
+		entrepreneurId: {
 			type: Schema.Types.ObjectId,
-			ref: "Meeting",
-			default: null,
+			ref: "User",
+			required: true,
+			index: true,
+		},
+		investorId: {
+			type: Schema.Types.ObjectId,
+			ref: "User",
+			required: true,
+			index: true,
 		},
 		createdBy: {
 			type: Schema.Types.ObjectId,
@@ -53,28 +113,85 @@ const MilestoneSchema = new Schema<IMilestone>(
 			maxlength: 2000,
 			default: null,
 		},
+		amount: {
+			type: Number,
+			required: true,
+			min: 0.01,
+		},
+		currency: {
+			type: String,
+			required: true,
+			default: "USD",
+			uppercase: true,
+			trim: true,
+		},
 		dueDate: {
+			type: Date,
+			required: true,
+		},
+		evidenceDocuments: {
+			type: [milestoneEvidenceSchema],
+			default: [],
+		},
+		submittedAt: {
 			type: Date,
 			default: null,
 		},
-		completedAt: {
+		verifiedAt: {
 			type: Date,
+			default: null,
+		},
+		verifiedBy: {
+			type: Schema.Types.ObjectId,
+			ref: "User",
+			default: null,
+		},
+		verificationNotes: {
+			type: String,
+			maxlength: 2000,
+			default: null,
+		},
+		escrowStatus: {
+			type: String,
+			enum: [
+				"not_held",
+				"held",
+				"released",
+				"refunded",
+			] satisfies MilestoneEscrowStatus[],
+			default: "not_held",
+		},
+		escrowReference: {
+			type: String,
+			default: null,
+		},
+		paymentReleasedAt: {
+			type: Date,
+			default: null,
+		},
+		paymentReference: {
+			type: String,
 			default: null,
 		},
 		status: {
 			type: String,
 			enum: [
-				"pending",
+				"planned",
 				"in_progress",
-				"completed",
-				"missed",
+				"submitted",
+				"approved",
+				"rejected",
+				"paid",
+				"cancelled",
 			] satisfies MilestoneStatus[],
-			default: "pending",
+			default: "planned",
 		},
 	},
 	{ timestamps: true },
 );
 
 MilestoneSchema.index({ submissionId: 1, status: 1 });
+MilestoneSchema.index({ matchResultId: 1, status: 1 });
+MilestoneSchema.index({ dueDate: 1, status: 1 });
 
 export const Milestone = model<IMilestone>("Milestone", MilestoneSchema);

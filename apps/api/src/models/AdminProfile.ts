@@ -1,9 +1,13 @@
-import { type Document, model, Schema, type Types } from "mongoose";
+import mongoose, { type Document, Schema } from "mongoose";
 
 export interface IAdminProfile extends Document {
-	userId: Types.ObjectId;
-	department?: string;
-	permissions: string[];
+	userId: mongoose.Types.ObjectId;
+	fullName: string;
+	profilePicture?: string;
+	department: string;
+	permissionLevel: "super" | "moderator" | "support";
+	lastActive: Date;
+	actionsPerformed: number;
 	createdAt: Date;
 	updatedAt: Date;
 }
@@ -17,20 +21,26 @@ const AdminProfileSchema = new Schema<IAdminProfile>(
 			unique: true,
 			index: true,
 		},
-		department: {
+
+		fullName: { type: String, required: true },
+		profilePicture: String,
+
+		department: { type: String, required: true },
+		permissionLevel: {
 			type: String,
-			trim: true,
-			default: null,
+			enum: ["super", "moderator", "support"],
+			default: "moderator",
 		},
-		permissions: {
-			type: [String],
-			default: [],
-		},
+
+		lastActive: { type: Date, default: Date.now },
+		actionsPerformed: { type: Number, default: 0 },
 	},
-	{ timestamps: true },
+	{
+		timestamps: true,
+	},
 );
 
-export const AdminProfile = model<IAdminProfile>(
+export const AdminProfile = mongoose.model<IAdminProfile>(
 	"AdminProfile",
 	AdminProfileSchema,
 );

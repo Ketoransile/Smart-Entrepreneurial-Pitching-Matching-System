@@ -11,7 +11,8 @@ export type NotificationEventType =
 	| "submission_status_changed"
 	| "milestone_updated"
 	| "feedback_received"
-	| "admin_action";
+	| "admin_action"
+	| "misconduct_reported";
 
 export interface INotification extends Document {
 	userId: Types.ObjectId;
@@ -48,6 +49,7 @@ const NotificationSchema = new Schema<INotification>(
 				"milestone_updated",
 				"feedback_received",
 				"admin_action",
+				"misconduct_reported",
 			] satisfies NotificationEventType[],
 			required: true,
 		},

@@ -1,7 +1,13 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { BarChart3, ClipboardList, DollarSign, Lightbulb, Search } from "lucide-react";
+import {
+	BarChart3,
+	ClipboardList,
+	DollarSign,
+	Lightbulb,
+	Search,
+} from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useCallback, useEffect, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
@@ -57,8 +63,14 @@ function NewPitchPageInner() {
 
 	// Block unverified users from creating pitches
 	useEffect(() => {
-		if (userProfile && userProfile.status !== "verified" && userProfile.role !== "admin") {
-			toast.error("You must complete KYC verification before creating pitches.");
+		if (
+			userProfile &&
+			userProfile.status !== "verified" &&
+			userProfile.role !== "admin"
+		) {
+			toast.error(
+				"You must complete KYC verification before creating pitches.",
+			);
 			router.push("/entrepreneur/dashboard");
 		}
 	}, [userProfile, router]);
@@ -324,7 +336,9 @@ function NewPitchPageInner() {
 					{currentStep === 1 && (
 						<Card>
 							<CardHeader>
-								<CardTitle className="flex items-center gap-2"><ClipboardList className="h-5 w-5" /> Pitch Overview</CardTitle>
+								<CardTitle className="flex items-center gap-2">
+									<ClipboardList className="h-5 w-5" /> Pitch Overview
+								</CardTitle>
 								<CardDescription>
 									Start with the basics of your business pitch
 								</CardDescription>
@@ -410,7 +424,9 @@ function NewPitchPageInner() {
 					{currentStep === 2 && (
 						<Card>
 							<CardHeader>
-								<CardTitle className="flex items-center gap-2"><Search className="h-5 w-5" /> The Problem</CardTitle>
+								<CardTitle className="flex items-center gap-2">
+									<Search className="h-5 w-5" /> The Problem
+								</CardTitle>
 								<CardDescription>
 									Describe the problem your business solves
 								</CardDescription>
@@ -468,7 +484,9 @@ function NewPitchPageInner() {
 					{currentStep === 3 && (
 						<Card>
 							<CardHeader>
-								<CardTitle className="flex items-center gap-2"><Lightbulb className="h-5 w-5" /> Your Solution</CardTitle>
+								<CardTitle className="flex items-center gap-2">
+									<Lightbulb className="h-5 w-5" /> Your Solution
+								</CardTitle>
 								<CardDescription>
 									How does your product or service solve the problem?
 								</CardDescription>
@@ -533,7 +551,9 @@ function NewPitchPageInner() {
 					{currentStep === 4 && (
 						<Card>
 							<CardHeader>
-								<CardTitle className="flex items-center gap-2"><BarChart3 className="h-5 w-5" /> Business Model</CardTitle>
+								<CardTitle className="flex items-center gap-2">
+									<BarChart3 className="h-5 w-5" /> Business Model
+								</CardTitle>
 								<CardDescription>
 									How does your business make money?
 								</CardDescription>
@@ -596,7 +616,9 @@ function NewPitchPageInner() {
 					{currentStep === 5 && (
 						<Card>
 							<CardHeader>
-								<CardTitle className="flex items-center gap-2"><DollarSign className="h-5 w-5" /> Financial Details</CardTitle>
+								<CardTitle className="flex items-center gap-2">
+									<DollarSign className="h-5 w-5" /> Financial Details
+								</CardTitle>
 								<CardDescription>
 									Share your financial metrics and projections
 								</CardDescription>

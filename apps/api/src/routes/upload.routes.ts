@@ -31,7 +31,41 @@ const upload = multer({
 	},
 });
 
-/** POST /api/upload — Upload file to Cloudinary */
+/**
+ * @openapi
+ * tags:
+ *   - name: Upload
+ *     description: File upload and deletion for submission assets
+ */
+
+/**
+ * @openapi
+ * /api/upload:
+ *   post:
+ *     tags: [Upload]
+ *     summary: Upload a file to Cloudinary
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         multipart/form-data:
+ *           schema:
+ *             type: object
+ *             required: [file]
+ *             properties:
+ *               file:
+ *                 type: string
+ *                 format: binary
+ *               type:
+ *                 type: string
+ *                 enum: [pitch_deck, financial_model, legal, other]
+ *     responses:
+ *       200:
+ *         description: File uploaded successfully
+ *       400:
+ *         description: No file provided
+ */
 router.post(
 	"/",
 	authenticate,
@@ -99,7 +133,24 @@ router.post(
 	},
 );
 
-/** DELETE /api/upload/:publicId — Remove file from Cloudinary */
+/**
+ * @openapi
+ * /api/upload/{publicId}:
+ *   delete:
+ *     tags: [Upload]
+ *     summary: Delete an uploaded file from Cloudinary
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: publicId
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: File deleted successfully
+ */
 router.delete(
 	"/:publicId",
 	authenticate,

@@ -64,8 +64,25 @@ router.get(
 );
 
 /**
- * PUT /api/users/me/profile
- * Update profile and submit KYC documents
+ * @openapi
+ * /api/users/me/profile:
+ *   put:
+ *     tags: [Users]
+ *     summary: Update current user role-specific profile and KYC fields
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             additionalProperties: true
+ *     responses:
+ *       200:
+ *         description: Profile updated
+ *       400:
+ *         description: Invalid role for profile
  */
 router.put(
 	"/me/profile",
@@ -90,9 +107,13 @@ router.put(
 				);
 
 				if (
-					updatedProfile.businessLicenseUrl &&
-					updatedProfile.tinNumber &&
-					updatedProfile.nationalIdUrl
+					(updatedProfile.nationalIdUrl &&
+						updatedProfile.businessLicenseUrl &&
+						updatedProfile.tinNumber) ||
+					(updatedProfile.companyRegistrationNumber &&
+						updatedProfile.companyAddress &&
+						updatedProfile.documents &&
+						updatedProfile.documents.length > 0)
 				) {
 					isKycComplete = true;
 				}
@@ -104,8 +125,10 @@ router.put(
 				);
 
 				if (
-					updatedProfile.accreditationDocumentUrl &&
-					updatedProfile.nationalIdUrl
+					(updatedProfile.nationalIdUrl &&
+						updatedProfile.accreditationDocumentUrl) ||
+					(updatedProfile.accreditationDocuments &&
+						updatedProfile.accreditationDocuments.length > 0)
 				) {
 					isKycComplete = true;
 				}

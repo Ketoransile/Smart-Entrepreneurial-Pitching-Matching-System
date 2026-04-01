@@ -3,8 +3,13 @@ import { type Document, model, Schema, type Types } from "mongoose";
 export type AdminActionType =
 	| "ban_user"
 	| "unban_user"
+	| "update_user_status"
 	| "approve_submission"
 	| "reject_submission"
+	| "approve_document"
+	| "reject_document"
+	| "update_system_config"
+	| "view_analytics"
 	| "delete_content"
 	| "flag_content"
 	| "force_close_submission"
@@ -16,7 +21,8 @@ export type AdminActionTargetType =
 	| "submission"
 	| "conversation"
 	| "document"
-	| "message";
+	| "message"
+	| "system_config";
 
 export interface IAdminAction extends Document {
 	adminId: Types.ObjectId;
@@ -43,8 +49,13 @@ const AdminActionSchema = new Schema<IAdminAction>(
 			enum: [
 				"ban_user",
 				"unban_user",
+				"update_user_status",
 				"approve_submission",
 				"reject_submission",
+				"approve_document",
+				"reject_document",
+				"update_system_config",
+				"view_analytics",
 				"delete_content",
 				"flag_content",
 				"force_close_submission",
@@ -65,6 +76,7 @@ const AdminActionSchema = new Schema<IAdminAction>(
 				"conversation",
 				"document",
 				"message",
+				"system_config",
 			] satisfies AdminActionTargetType[],
 			required: true,
 		},

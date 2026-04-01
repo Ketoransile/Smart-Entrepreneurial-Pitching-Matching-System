@@ -7,6 +7,14 @@ export interface IMatchResult extends Document {
 	entrepreneurId: Types.ObjectId;
 	investorId: Types.ObjectId;
 	score: number;
+	rank?: number;
+	aiRationale?: string;
+	scoreBreakdown?: {
+		sector: number;
+		stage: number;
+		budget: number;
+		embedding: number;
+	};
 	status: MatchStatus;
 	matchedAt: Date;
 	expiresAt?: Date;
@@ -39,6 +47,22 @@ const MatchResultSchema = new Schema<IMatchResult>(
 			required: true,
 			min: 0,
 			max: 1,
+		},
+		rank: {
+			type: Number,
+			default: null,
+			min: 1,
+		},
+		aiRationale: {
+			type: String,
+			default: null,
+			maxlength: 1000,
+		},
+		scoreBreakdown: {
+			sector: { type: Number, min: 0, max: 1, default: 0 },
+			stage: { type: Number, min: 0, max: 1, default: 0 },
+			budget: { type: Number, min: 0, max: 1, default: 0 },
+			embedding: { type: Number, min: 0, max: 1, default: 0 },
 		},
 		status: {
 			type: String,

@@ -10,6 +10,9 @@ export interface IEmbeddingEntry extends Document {
 	targetType: EmbeddingTargetType;
 	modelVersion: string;
 	vector: number[];
+	dimensions: number;
+	sourceHash?: string;
+	metadata?: Record<string, unknown>;
 	generatedAt: Date;
 	createdAt: Date;
 	updatedAt: Date;
@@ -38,6 +41,20 @@ const EmbeddingEntrySchema = new Schema<IEmbeddingEntry>(
 		vector: {
 			type: [Number],
 			required: true,
+		},
+		dimensions: {
+			type: Number,
+			required: true,
+			min: 1,
+		},
+		sourceHash: {
+			type: String,
+			default: null,
+			trim: true,
+		},
+		metadata: {
+			type: Schema.Types.Mixed,
+			default: null,
 		},
 		generatedAt: {
 			type: Date,

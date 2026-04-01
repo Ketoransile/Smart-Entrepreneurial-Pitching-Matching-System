@@ -1,8 +1,19 @@
 "use client";
 
-import { BarChart3, FileText, Handshake, Lock, MessageSquare, PenLine, Rocket, Send, User } from "lucide-react";
+import {
+	BarChart3,
+	FileText,
+	Handshake,
+	Lock,
+	MessageSquare,
+	PenLine,
+	Rocket,
+	Send,
+	User,
+} from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useCallback, useEffect, useState } from "react";
+import { toast } from "sonner";
 import DashboardLayout from "@/components/DashboardLayout";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import { Badge } from "@/components/ui/badge";
@@ -11,7 +22,6 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { useAuth } from "@/context/AuthContext";
 import { SECTORS } from "@/lib/validations/submission";
-import { toast } from "sonner";
 
 interface Submission {
 	_id: string;
@@ -24,10 +34,26 @@ interface Submission {
 }
 
 const ENTREPRENEUR_NAV = [
-	{ label: "Dashboard", href: "/entrepreneur/dashboard", icon: <BarChart3 className="h-4 w-4" /> },
-	{ label: "New Pitch", href: "/entrepreneur/pitch/new", icon: <PenLine className="h-4 w-4" /> },
-	{ label: "Messages", href: "/entrepreneur/messages", icon: <MessageSquare className="h-4 w-4" /> },
-	{ label: "Profile", href: "/entrepreneur/profile", icon: <User className="h-4 w-4" /> },
+	{
+		label: "Dashboard",
+		href: "/entrepreneur/dashboard",
+		icon: <BarChart3 className="h-4 w-4" />,
+	},
+	{
+		label: "New Pitch",
+		href: "/entrepreneur/pitch/new",
+		icon: <PenLine className="h-4 w-4" />,
+	},
+	{
+		label: "Messages",
+		href: "/entrepreneur/messages",
+		icon: <MessageSquare className="h-4 w-4" />,
+	},
+	{
+		label: "Profile",
+		href: "/entrepreneur/profile",
+		icon: <User className="h-4 w-4" />,
+	},
 ];
 
 function statusVariant(
@@ -110,19 +136,24 @@ function EntrepreneurDashboardInner() {
 					<Button
 						onClick={() => {
 							if (userProfile?.status !== "verified") {
-								toast.error("Complete your verification first to create pitches.", {
-									action: {
-										label: "Go to Profile",
-										onClick: () => router.push("/entrepreneur/profile"),
+								toast.error(
+									"Complete your verification first to create pitches.",
+									{
+										action: {
+											label: "Go to Profile",
+											onClick: () => router.push("/entrepreneur/profile"),
+										},
 									},
-								});
+								);
 								return;
 							}
 							router.push("/entrepreneur/pitch/new");
 						}}
 						className={userProfile?.status !== "verified" ? "opacity-70" : ""}
 					>
-						{userProfile?.status !== "verified" && <Lock className="h-3.5 w-3.5 mr-1.5" />}
+						{userProfile?.status !== "verified" && (
+							<Lock className="h-3.5 w-3.5 mr-1.5" />
+						)}
 						+ New Pitch
 					</Button>
 				</div>
@@ -131,7 +162,9 @@ function EntrepreneurDashboardInner() {
 				<div className="grid gap-4 sm:grid-cols-3 mb-8">
 					<Card>
 						<CardContent className="p-5">
-							<p className="text-sm text-muted-foreground flex items-center gap-1.5"><FileText className="h-3.5 w-3.5" /> Total Pitches</p>
+							<p className="text-sm text-muted-foreground flex items-center gap-1.5">
+								<FileText className="h-3.5 w-3.5" /> Total Pitches
+							</p>
 							<p className="text-2xl font-bold mt-1">{submissions.length}</p>
 							<p className="text-xs text-muted-foreground mt-0.5">
 								{drafts.length} draft{drafts.length !== 1 ? "s" : ""}
@@ -140,7 +173,9 @@ function EntrepreneurDashboardInner() {
 					</Card>
 					<Card>
 						<CardContent className="p-5">
-							<p className="text-sm text-muted-foreground flex items-center gap-1.5"><Send className="h-3.5 w-3.5" /> Submitted</p>
+							<p className="text-sm text-muted-foreground flex items-center gap-1.5">
+								<Send className="h-3.5 w-3.5" /> Submitted
+							</p>
 							<p className="text-2xl font-bold mt-1">{submitted.length}</p>
 							<p className="text-xs text-muted-foreground mt-0.5">
 								Awaiting review
@@ -149,7 +184,9 @@ function EntrepreneurDashboardInner() {
 					</Card>
 					<Card>
 						<CardContent className="p-5">
-							<p className="text-sm text-muted-foreground flex items-center gap-1.5"><Handshake className="h-3.5 w-3.5" /> Matches</p>
+							<p className="text-sm text-muted-foreground flex items-center gap-1.5">
+								<Handshake className="h-3.5 w-3.5" /> Matches
+							</p>
 							<p className="text-2xl font-bold mt-1">0</p>
 							<p className="text-xs text-muted-foreground mt-0.5">
 								Active investor matches
@@ -177,14 +214,18 @@ function EntrepreneurDashboardInner() {
 									? "Create a compelling pitch and let our AI match you with the right investors."
 									: "Complete your verification to start creating pitches and connecting with investors."}
 							</p>
-							<Button onClick={() => {
-								if (userProfile?.status !== "verified") {
-									router.push("/entrepreneur/profile");
-								} else {
-									router.push("/entrepreneur/pitch/new");
-								}
-							}}>
-								{userProfile?.status === "verified" ? "Create New Pitch" : "Complete Verification"}
+							<Button
+								onClick={() => {
+									if (userProfile?.status !== "verified") {
+										router.push("/entrepreneur/profile");
+									} else {
+										router.push("/entrepreneur/pitch/new");
+									}
+								}}
+							>
+								{userProfile?.status === "verified"
+									? "Create New Pitch"
+									: "Complete Verification"}
 							</Button>
 						</CardContent>
 					</Card>

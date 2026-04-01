@@ -47,9 +47,7 @@ export default function VerificationGate({ children }: VerificationGateProps) {
 					<Button
 						variant="outline"
 						size="sm"
-						onClick={() =>
-							(window.location.href = "mailto:support@sepms.com")
-						}
+						onClick={() => (window.location.href = "mailto:support@sepms.com")}
 					>
 						Contact Support
 					</Button>
@@ -112,19 +110,15 @@ export default function VerificationGate({ children }: VerificationGateProps) {
 									Complete Your Verification
 								</h3>
 								{userProfile?.kycRejectionReason && (
-									<Badge
-										variant="destructive"
-										className="text-[10px] border-0"
-									>
+									<Badge variant="destructive" className="text-[10px] border-0">
 										Action Required
 									</Badge>
 								)}
 							</div>
 							{userProfile?.kycRejectionReason ? (
 								<p className="text-xs text-destructive">
-									<strong>Rejected:</strong>{" "}
-									{userProfile.kycRejectionReason}. Please update your
-									documents in your profile.
+									<strong>Rejected:</strong> {userProfile.kycRejectionReason}.
+									Please update your documents in your profile.
 								</p>
 							) : (
 								<p className="text-xs text-muted-foreground">
@@ -139,8 +133,8 @@ export default function VerificationGate({ children }: VerificationGateProps) {
 							onClick={() => {
 								const basePath =
 									userProfile?.role === "investor"
-										? "/investor/profile"
-										: "/entrepreneur/profile";
+										? "/investor/profile?tab=verification"
+										: "/entrepreneur/profile?tab=verification";
 								router.push(basePath);
 							}}
 						>
