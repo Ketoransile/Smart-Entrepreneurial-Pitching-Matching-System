@@ -59,6 +59,30 @@ router.get("/conversations", authenticate, MessageController.listConversations);
 
 /**
  * @openapi
+ * /api/messages/conversations/{conversationId}:
+ *   get:
+ *     tags: [Communication]
+ *     summary: Get a specific conversation by ID
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: conversationId
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Conversation fetched
+ */
+router.get(
+	"/conversations/:conversationId",
+	authenticate,
+	MessageController.getConversation,
+);
+
+/**
+ * @openapi
  * /api/messages/conversations/{conversationId}/messages:
  *   get:
  *     tags: [Communication]
@@ -186,6 +210,20 @@ router.post(
 	authenticate,
 	MessageController.reportMisconduct,
 );
+
+/**
+ * @openapi
+ * /api/messages/unread-count:
+ *   get:
+ *     tags: [Communication]
+ *     summary: Get total unread message count for the authenticated user
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Unread count fetched
+ */
+router.get("/unread-count", authenticate, MessageController.getUnreadCount);
 
 /**
  * @openapi

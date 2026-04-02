@@ -2,11 +2,21 @@
 
 import { ChevronsUpDown, Layers, LogOut, Settings, User } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
+import { useCallback, useEffect, useState } from "react";
 import { Logo } from "@/components/Logo";
 import NotificationBell from "@/components/NotificationBell";
 import ThemeToggle from "@/components/ThemeToggle";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import {
+	Dialog,
+	DialogContent,
+	DialogDescription,
+	DialogFooter,
+	DialogHeader,
+	DialogTitle,
+} from "@/components/ui/dialog";
 import {
 	DropdownMenu,
 	DropdownMenuContent,
@@ -52,9 +62,37 @@ export default function DashboardLayout({
 	navItems,
 	title,
 }: DashboardLayoutProps) {
-	const { userProfile, signOut } = useAuth();
+	const { userProfile, signOut, user } = useAuth();
 	const router = useRouter();
 	const pathname = usePathname();
+	const [showLogoutDialog, setShowLogoutDialog] = useState(false);
+	const [unreadCount, setUnreadCount] = useState(0);
+
+	const api = (
+		process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api"
+	).replace(/\/+$/, "");
+
+	const fetchUnreadCount = useCallback(async () => {
+		if (!user) return;
+		try {
+			const token = await user.getIdToken();
+			const res = await fetch(`${api}/messages/unread-count`, {
+				headers: { Authorization: `Bearer ${token}` },
+			});
+			if (res.ok) {
+				const data = await res.json();
+				setUnreadCount(data.unreadCount || 0);
+			}
+		} catch (error) {
+			console.error("Failed to fetch unread count", error);
+		}
+	}, [user, api]);
+
+	useEffect(() => {
+		fetchUnreadCount();
+		const interval = setInterval(fetchUnreadCount, 15000);
+		return () => clearInterval(interval);
+	}, [fetchUnreadCount]);
 
 	const initials =
 		userProfile?.displayName
@@ -106,9 +144,24 @@ export default function DashboardLayout({
 												tooltip={item.label}
 												className="cursor-pointer rounded-md transition-all h-9 group-data-[collapsible=icon]:!justify-center group-data-[collapsible=icon]:!p-0"
 											>
-												{item.icon}
-												<span className="font-medium group-data-[collapsible=icon]:hidden">
+												<div className="relative flex items-center justify-center">
+													{item.icon}
+													{item.label === "Messages" && unreadCount > 0 && (
+														<span className="absolute -top-1.5 -right-1.5 hidden h-3.5 w-3.5 items-center justify-center rounded-full bg-destructive text-[9px] font-bold text-destructive-foreground shadow-sm group-data-[collapsible=icon]:flex">
+															{unreadCount > 9 ? "9+" : unreadCount}
+														</span>
+													)}
+												</div>
+												<span className="flex-1 flex items-center justify-between font-medium group-data-[collapsible=icon]:hidden">
 													{item.label}
+													{item.label === "Messages" && unreadCount > 0 && (
+														<Badge
+															variant="destructive"
+															className="ml-2 px-1.5 py-0 h-4 min-w-4 text-[10px] flex items-center justify-center leading-none"
+														>
+															{unreadCount > 9 ? "9+" : unreadCount}
+														</Badge>
+													)}
 												</span>
 											</SidebarMenuButton>
 										</SidebarMenuItem>
@@ -190,7 +243,7 @@ export default function DashboardLayout({
 									</DropdownMenuItem>
 									<DropdownMenuSeparator />
 									<DropdownMenuItem
-										onClick={signOut}
+										onClick={() => setShowLogoutDialog(true)}
 										className="cursor-pointer text-destructive focus:text-destructive"
 									>
 										<LogOut className="mr-2 h-4 w-4" /> Sign Out
@@ -221,6 +274,34 @@ export default function DashboardLayout({
 					<VerificationGate>{children}</VerificationGate>
 				</main>
 			</SidebarInset>
+
+			<Dialog open={showLogoutDialog} onOpenChange={setShowLogoutDialog}>
+				<DialogContent className="max-w-md">
+					<DialogHeader>
+						<DialogTitle>Sign Out</DialogTitle>
+						<DialogDescription>
+							Are you sure you want to sign out of your account?
+						</DialogDescription>
+					</DialogHeader>
+					<DialogFooter className="mt-4 gap-2 sm:justify-end">
+						<Button
+							variant="outline"
+							onClick={() => setShowLogoutDialog(false)}
+						>
+							Cancel
+						</Button>
+						<Button
+							onClick={() => {
+								setShowLogoutDialog(false);
+								signOut();
+							}}
+							variant="destructive"
+						>
+							Sign Out
+						</Button>
+					</DialogFooter>
+				</DialogContent>
+			</Dialog>
 		</SidebarProvider>
 	);
 }

@@ -20,12 +20,7 @@ import DashboardLayout from "@/components/DashboardLayout";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import {
-	Card,
-	CardContent,
-	CardHeader,
-	CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { useAuth } from "@/context/AuthContext";
 import { SECTORS, STAGES } from "@/lib/validations/submission";
@@ -125,7 +120,13 @@ export default function InvestorPitchViewPage() {
 				}),
 			});
 			if (res.ok) {
-				router.push("/investor/messages");
+				const data = await res.json();
+				// Use the open parameter to automatically open the correct tab
+				if (data.conversation && data.conversation._id) {
+					router.push(`/investor/messages?open=${data.conversation._id}`);
+				} else {
+					router.push("/investor/messages");
+				}
 			} else {
 				toast.error("Failed to initiate conversation");
 			}
@@ -137,7 +138,16 @@ export default function InvestorPitchViewPage() {
 	if (loading) {
 		return (
 			<ProtectedRoute allowedRoles={["investor"]}>
-				<DashboardLayout navItems={[{ label: "Back to Feed", href: "/investor/feed", icon: <ArrowLeft className="h-4 w-4" /> }]} title="SEPMS">
+				<DashboardLayout
+					navItems={[
+						{
+							label: "Back to Feed",
+							href: "/investor/feed",
+							icon: <ArrowLeft className="h-4 w-4" />,
+						},
+					]}
+					title="SEPMS"
+				>
 					<div className="flex h-[60vh] items-center justify-center">
 						<Loader2 className="h-8 w-8 animate-spin text-primary" />
 					</div>
@@ -148,38 +158,56 @@ export default function InvestorPitchViewPage() {
 
 	if (!pitch) return null;
 
-	const sectorLabel = SECTORS.find((s) => s.value === pitch.sector)?.label || pitch.sector;
-	const stageLabel = STAGES.find((s) => s.value === pitch.stage)?.label || pitch.stage;
+	const sectorLabel =
+		SECTORS.find((s) => s.value === pitch.sector)?.label || pitch.sector;
+	const stageLabel =
+		STAGES.find((s) => s.value === pitch.stage)?.label || pitch.stage;
 
 	return (
 		<ProtectedRoute allowedRoles={["investor"]}>
-			<DashboardLayout navItems={[{ label: "Back to Feed", href: "/investor/feed", icon: <ArrowLeft className="h-4 w-4" /> }]} title="SEPMS">
-				<div className="mb-6 flex items-center justify-between">
-					<div className="flex items-center gap-4">
+			<DashboardLayout
+				navItems={[
+					{
+						label: "Back to Feed",
+						href: "/investor/feed",
+						icon: <ArrowLeft className="h-4 w-4" />,
+					},
+				]}
+				title="SEPMS"
+			>
+				<div className="mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+					<div className="flex items-start sm:items-center gap-4 pr-2">
 						<Button
 							variant="ghost"
 							size="icon"
 							onClick={() => router.push("/investor/feed")}
-							className="h-10 w-10 shrink-0"
+							className="h-10 w-10 shrink-0 mt-0.5 sm:mt-0"
 						>
 							<ArrowLeft className="h-5 w-5" />
 						</Button>
-						<div>
-							<h1 className="text-2xl font-bold tracking-tight">
+						<div className="min-w-0 flex-1">
+							<h1 className="text-xl sm:text-2xl font-bold tracking-tight break-words">
 								{pitch.title}
 							</h1>
-							<p className="text-sm text-muted-foreground mt-1">
-								By {pitch.entrepreneurId?.fullName || "A Confirmed Entrepreneur"}
+							<p className="text-sm text-muted-foreground mt-1 truncate">
+								By{" "}
+								{pitch.entrepreneurId?.fullName || "A Confirmed Entrepreneur"}
 							</p>
 						</div>
 					</div>
-					<div className="flex items-center gap-3">
+					<div className="flex flex-wrap sm:flex-nowrap items-center gap-3 w-full sm:w-auto">
 						{pitch.aiScore !== undefined && (
-							<Badge variant="outline" className="border-primary/50 text-primary">
+							<Badge
+								variant="outline"
+								className="border-primary/50 text-primary whitespace-nowrap"
+							>
 								AI Market Score: {pitch.aiScore}%
 							</Badge>
 						)}
-						<Button onClick={handleMessageInitiate} className="gap-2 bg-primary">
+						<Button
+							onClick={handleMessageInitiate}
+							className="gap-2 bg-primary flex-1 sm:flex-none whitespace-nowrap"
+						>
 							<MessageSquare className="h-4 w-4" />
 							Message Founder
 						</Button>
@@ -199,13 +227,17 @@ export default function InvestorPitchViewPage() {
 								<p className="text-sm whitespace-pre-wrap leading-relaxed text-muted-foreground">
 									{pitch.summary || "No executive summary provided."}
 								</p>
-								<div className="mt-6 grid grid-cols-2 gap-4">
+								<div className="mt-6 grid grid-cols-1 sm:grid-cols-2 gap-4">
 									<div className="rounded-lg border bg-muted/30 p-3">
-										<p className="text-xs text-muted-foreground font-medium mb-1">Sector</p>
+										<p className="text-xs text-muted-foreground font-medium mb-1">
+											Sector
+										</p>
 										<p className="font-medium text-sm">{sectorLabel}</p>
 									</div>
 									<div className="rounded-lg border bg-muted/30 p-3">
-										<p className="text-xs text-muted-foreground font-medium mb-1">Company Stage</p>
+										<p className="text-xs text-muted-foreground font-medium mb-1">
+											Company Stage
+										</p>
 										<p className="font-medium text-sm">{stageLabel}</p>
 									</div>
 								</div>
@@ -221,17 +253,25 @@ export default function InvestorPitchViewPage() {
 							</CardHeader>
 							<CardContent className="space-y-4">
 								<div>
-									<h4 className="text-sm font-semibold mb-1">Problem Statement</h4>
-									<p className="text-sm text-muted-foreground whitespace-pre-wrap">{pitch.problem?.statement || "Not provided."}</p>
+									<h4 className="text-sm font-semibold mb-1">
+										Problem Statement
+									</h4>
+									<p className="text-sm text-muted-foreground whitespace-pre-wrap">
+										{pitch.problem?.statement || "Not provided."}
+									</p>
 								</div>
 								<div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
 									<div className="rounded-lg border p-3">
 										<p className="text-xs font-medium mb-1">Target Market</p>
-										<p className="text-sm text-muted-foreground">{pitch.problem?.targetMarket || "Not provided."}</p>
+										<p className="text-sm text-muted-foreground">
+											{pitch.problem?.targetMarket || "Not provided."}
+										</p>
 									</div>
 									<div className="rounded-lg border p-3">
 										<p className="text-xs font-medium mb-1">Market Size</p>
-										<p className="text-sm text-muted-foreground">{pitch.problem?.marketSize || "Not provided."}</p>
+										<p className="text-sm text-muted-foreground">
+											{pitch.problem?.marketSize || "Not provided."}
+										</p>
 									</div>
 								</div>
 							</CardContent>
@@ -246,18 +286,30 @@ export default function InvestorPitchViewPage() {
 							</CardHeader>
 							<CardContent className="space-y-4">
 								<div>
-									<h4 className="text-sm font-semibold mb-1">Solution Description</h4>
-									<p className="text-sm text-muted-foreground whitespace-pre-wrap">{pitch.solution?.description || "Not provided."}</p>
+									<h4 className="text-sm font-semibold mb-1">
+										Solution Description
+									</h4>
+									<p className="text-sm text-muted-foreground whitespace-pre-wrap">
+										{pitch.solution?.description || "Not provided."}
+									</p>
 								</div>
 								<Separator />
 								<div>
-									<h4 className="text-sm font-semibold mb-1">Unique Value Proposition</h4>
-									<p className="text-sm text-muted-foreground whitespace-pre-wrap">{pitch.solution?.uniqueValue || "Not provided."}</p>
+									<h4 className="text-sm font-semibold mb-1">
+										Unique Value Proposition
+									</h4>
+									<p className="text-sm text-muted-foreground whitespace-pre-wrap">
+										{pitch.solution?.uniqueValue || "Not provided."}
+									</p>
 								</div>
 								<Separator />
 								<div>
-									<h4 className="text-sm font-semibold mb-1">Competitive Advantage</h4>
-									<p className="text-sm text-muted-foreground whitespace-pre-wrap">{pitch.solution?.competitiveAdvantage || "Not provided."}</p>
+									<h4 className="text-sm font-semibold mb-1">
+										Competitive Advantage
+									</h4>
+									<p className="text-sm text-muted-foreground whitespace-pre-wrap">
+										{pitch.solution?.competitiveAdvantage || "Not provided."}
+									</p>
 								</div>
 							</CardContent>
 						</Card>
@@ -271,18 +323,31 @@ export default function InvestorPitchViewPage() {
 							</CardHeader>
 							<CardContent className="space-y-4">
 								<div>
-									<h4 className="text-sm font-semibold mb-1">Revenue Streams</h4>
-									<p className="text-sm text-muted-foreground whitespace-pre-wrap">{pitch.businessModel?.revenueStreams || "Not provided."}</p>
+									<h4 className="text-sm font-semibold mb-1">
+										Revenue Streams
+									</h4>
+									<p className="text-sm text-muted-foreground whitespace-pre-wrap">
+										{pitch.businessModel?.revenueStreams || "Not provided."}
+									</p>
 								</div>
 								<Separator />
 								<div>
-									<h4 className="text-sm font-semibold mb-1">Pricing Strategy</h4>
-									<p className="text-sm text-muted-foreground whitespace-pre-wrap">{pitch.businessModel?.pricingStrategy || "Not provided."}</p>
+									<h4 className="text-sm font-semibold mb-1">
+										Pricing Strategy
+									</h4>
+									<p className="text-sm text-muted-foreground whitespace-pre-wrap">
+										{pitch.businessModel?.pricingStrategy || "Not provided."}
+									</p>
 								</div>
 								<Separator />
 								<div>
-									<h4 className="text-sm font-semibold mb-1">Customer Acquisition</h4>
-									<p className="text-sm text-muted-foreground whitespace-pre-wrap">{pitch.businessModel?.customerAcquisition || "Not provided."}</p>
+									<h4 className="text-sm font-semibold mb-1">
+										Customer Acquisition
+									</h4>
+									<p className="text-sm text-muted-foreground whitespace-pre-wrap">
+										{pitch.businessModel?.customerAcquisition ||
+											"Not provided."}
+									</p>
 								</div>
 							</CardContent>
 						</Card>
@@ -300,24 +365,38 @@ export default function InvestorPitchViewPage() {
 								<p className="text-3xl font-bold tracking-tight text-primary">
 									${pitch.targetAmount?.toLocaleString() || "0"}
 								</p>
-								<p className="text-xs text-muted-foreground mt-1">Capital required</p>
+								<p className="text-xs text-muted-foreground mt-1">
+									Capital required
+								</p>
 
 								<div className="mt-6 space-y-3">
 									<div className="flex justify-between items-center text-sm border-b border-primary/10 pb-2">
-										<span className="text-muted-foreground">Current Revenue</span>
-										<span className="font-semibold">{pitch.financials?.currentRevenue || "N/A"}</span>
+										<span className="text-muted-foreground">
+											Current Revenue
+										</span>
+										<span className="font-semibold">
+											{pitch.financials?.currentRevenue || "N/A"}
+										</span>
 									</div>
 									<div className="flex justify-between items-center text-sm border-b border-primary/10 pb-2">
-										<span className="text-muted-foreground">Projected Rev.</span>
-										<span className="font-semibold">{pitch.financials?.projectedRevenue || "N/A"}</span>
+										<span className="text-muted-foreground">
+											Projected Rev.
+										</span>
+										<span className="font-semibold">
+											{pitch.financials?.projectedRevenue || "N/A"}
+										</span>
 									</div>
 									<div className="flex justify-between items-center text-sm border-b border-primary/10 pb-2">
 										<span className="text-muted-foreground">Burn Rate</span>
-										<span className="font-semibold">{pitch.financials?.burnRate || "N/A"}</span>
+										<span className="font-semibold">
+											{pitch.financials?.burnRate || "N/A"}
+										</span>
 									</div>
 									<div className="flex justify-between items-center text-sm pb-2">
 										<span className="text-muted-foreground">Runway</span>
-										<span className="font-semibold">{pitch.financials?.runway || "N/A"}</span>
+										<span className="font-semibold">
+											{pitch.financials?.runway || "N/A"}
+										</span>
 									</div>
 								</div>
 							</CardContent>
@@ -338,7 +417,17 @@ export default function InvestorPitchViewPage() {
 								) : (
 									<div className="space-y-3">
 										{pitch.documents.map((doc, i) => {
-											const isPdf = doc.name.toLowerCase().endsWith(".pdf") || doc.url.toLowerCase().endsWith(".pdf") || doc.url.includes("/raw/upload/") || ["pitch_deck", "financial_model", "business_plan", "legal", "legal_doc"].includes(doc.type);
+											const isPdf =
+												doc.name.toLowerCase().endsWith(".pdf") ||
+												doc.url.toLowerCase().endsWith(".pdf") ||
+												doc.url.includes("/raw/upload/") ||
+												[
+													"pitch_deck",
+													"financial_model",
+													"business_plan",
+													"legal",
+													"legal_doc",
+												].includes(doc.type);
 											return (
 												<div
 													key={i}
@@ -349,18 +438,32 @@ export default function InvestorPitchViewPage() {
 															<p className="text-sm font-medium truncate">
 																{doc.name}
 															</p>
-															<Badge variant="secondary" className="mt-1 text-[10px] capitalize">
+															<Badge
+																variant="secondary"
+																className="mt-1 text-[10px] capitalize"
+															>
 																{doc.type.replace("_", " ")}
 															</Badge>
 														</div>
 														<div className="flex items-center gap-2">
 															<a
-																href={doc.url.includes("/upload/") ? doc.url.replace("/upload/", "/upload/fl_attachment/") : doc.url}
+																href={
+																	doc.url.includes("/upload/")
+																		? doc.url.replace(
+																				"/upload/",
+																				"/upload/fl_attachment/",
+																			)
+																		: doc.url
+																}
 																target="_blank"
 																rel="noopener noreferrer"
 																title="Download Document"
 															>
-																<Button size="icon" variant="ghost" className="h-8 w-8 text-muted-foreground hover:text-primary">
+																<Button
+																	size="icon"
+																	variant="ghost"
+																	className="h-8 w-8 text-muted-foreground hover:text-primary"
+																>
 																	<FileUp className="h-4 w-4 rotate-180" />
 																</Button>
 															</a>
@@ -370,51 +473,83 @@ export default function InvestorPitchViewPage() {
 																rel="noopener noreferrer"
 																title="View Document"
 															>
-																<Button size="icon" variant="ghost" className="h-8 w-8 text-muted-foreground hover:text-primary">
+																<Button
+																	size="icon"
+																	variant="ghost"
+																	className="h-8 w-8 text-muted-foreground hover:text-primary"
+																>
 																	<ExternalLink className="h-4 w-4" />
 																</Button>
 															</a>
 														</div>
 													</div>
 													{/* Inline Document Preview */}
-													{isPdf && (() => {
-									const previewUrl = doc.url.includes("/upload/")
-										? doc.url.replace("/upload/", "/upload/pg_1,w_800/").replace(/\.pdf$/i, ".jpg")
-										: null;
-									return previewUrl ? (
-										<div className="relative border-t bg-muted/20 group/preview">
-											<a 
-												href={doc.url.includes("/upload/") ? doc.url.replace("/upload/", "/upload/fl_attachment/").concat(".pdf") : doc.url} 
-												target="_blank" 
-												rel="noopener noreferrer" 
-												className="block"
-											>
-												<img
-													src={previewUrl}
-													alt={`Preview of ${doc.name}`}
-													className="w-full max-h-[500px] object-contain bg-white"
-													loading="lazy"
-												/>
-												<div className="absolute inset-0 bg-black/0 group-hover/preview:bg-black/30 transition-colors flex items-center justify-center opacity-0 group-hover/preview:opacity-100">
-													<Button size="sm" variant="secondary" className="gap-1.5 shadow-lg">
-														<FileUp className="h-3.5 w-3.5 rotate-180" /> Download Full PDF
-													</Button>
-												</div>
-											</a>
-										</div>
-									) : (
-										<div className="flex flex-col items-center justify-center h-32 border-t bg-muted/20 gap-3 p-6">
-											<p className="text-sm text-muted-foreground">Preview unavailable</p>
-											<a 
-												href={doc.url.includes("/upload/") ? doc.url.replace("/upload/", "/upload/fl_attachment/") : doc.url} 
-												target="_blank" 
-												rel="noopener noreferrer"
-											>
-												<Button size="sm" variant="outline">Download PDF</Button>
-											</a>
-										</div>
-									);
-								})()}
+													{isPdf &&
+														(() => {
+															const previewUrl = doc.url.includes("/upload/")
+																? doc.url
+																		.replace("/upload/", "/upload/pg_1,w_800/")
+																		.replace(/\.pdf$/i, ".jpg")
+																: null;
+															return previewUrl ? (
+																<div className="relative border-t bg-muted/20 group/preview">
+																	<a
+																		href={
+																			doc.url.includes("/upload/")
+																				? doc.url
+																						.replace(
+																							"/upload/",
+																							"/upload/fl_attachment/",
+																						)
+																						.concat(".pdf")
+																				: doc.url
+																		}
+																		target="_blank"
+																		rel="noopener noreferrer"
+																		className="block"
+																	>
+																		<img
+																			src={previewUrl}
+																			alt={`Preview of ${doc.name}`}
+																			className="w-full max-h-[500px] object-contain bg-white"
+																			loading="lazy"
+																		/>
+																		<div className="absolute inset-0 bg-black/0 group-hover/preview:bg-black/30 transition-colors flex items-center justify-center opacity-0 group-hover/preview:opacity-100">
+																			<Button
+																				size="sm"
+																				variant="secondary"
+																				className="gap-1.5 shadow-lg"
+																			>
+																				<FileUp className="h-3.5 w-3.5 rotate-180" />{" "}
+																				Download Full PDF
+																			</Button>
+																		</div>
+																	</a>
+																</div>
+															) : (
+																<div className="flex flex-col items-center justify-center h-32 border-t bg-muted/20 gap-3 p-6">
+																	<p className="text-sm text-muted-foreground">
+																		Preview unavailable
+																	</p>
+																	<a
+																		href={
+																			doc.url.includes("/upload/")
+																				? doc.url.replace(
+																						"/upload/",
+																						"/upload/fl_attachment/",
+																					)
+																				: doc.url
+																		}
+																		target="_blank"
+																		rel="noopener noreferrer"
+																	>
+																		<Button size="sm" variant="outline">
+																			Download PDF
+																		</Button>
+																	</a>
+																</div>
+															);
+														})()}
 												</div>
 											);
 										})}

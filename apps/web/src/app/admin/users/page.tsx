@@ -650,7 +650,7 @@ export default function AdminUsersPage() {
 											<Separator />
 											<div className="space-y-3">
 												<h4 className="text-sm font-semibold">Quick Actions</h4>
-												<div className="grid grid-cols-2 gap-3">
+												<div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
 													<Button
 														className="gap-2"
 														onClick={() => handleStatusUpdate("verified")}

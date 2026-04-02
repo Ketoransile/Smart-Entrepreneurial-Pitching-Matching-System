@@ -1,6 +1,12 @@
 "use client";
 
-import { Bell, CheckSquare, ExternalLink, Loader2, MessageSquare } from "lucide-react";
+import {
+	Bell,
+	CheckSquare,
+	ExternalLink,
+	Loader2,
+	MessageSquare,
+} from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
@@ -25,19 +31,27 @@ interface Notification {
 }
 
 /* Map notification types to a redirect path (or null if non-navigable) */
-function getNotificationLink(notif: Notification, role: string | null): string | null {
+function getNotificationLink(
+	notif: Notification,
+	role: string | null,
+): string | null {
 	switch (notif.type) {
-		case "message_received":
+		case "message_received": {
 			// Redirect to the user's messages page
-			if (role === "investor") return "/investor/messages";
+			const urlParams = notif.metadata?.conversationId
+				? `?open=${notif.metadata.conversationId}`
+				: "";
+			if (role === "investor") return `/investor/messages${urlParams}`;
 			if (role === "admin") return "/admin/oversight";
-			return "/entrepreneur/messages";
+			return `/entrepreneur/messages${urlParams}`;
+		}
 		case "misconduct_reported":
 			return "/admin/reports";
 		case "pitch_approved":
 		case "pitch_rejected":
 		case "pitch_suspended":
-			if (role === "admin") return `/admin/pitch/${notif.metadata?.submissionId}`;
+			if (role === "admin")
+				return `/admin/pitch/${notif.metadata?.submissionId}`;
 			return "/entrepreneur/dashboard";
 		default:
 			return null;
@@ -176,7 +190,10 @@ export default function NotificationBell() {
 					) : (
 						<div className="flex flex-col">
 							{notifications.map((notif) => {
-								const link = getNotificationLink(notif, userProfile?.role || null);
+								const link = getNotificationLink(
+									notif,
+									userProfile?.role || null,
+								);
 								return (
 									<div
 										key={notif._id}
@@ -184,7 +201,9 @@ export default function NotificationBell() {
 										className={`p-4 border-b last:border-0 transition-colors ${
 											link ? "cursor-pointer hover:bg-muted/50" : ""
 										} ${
-											notif.isRead ? "bg-background" : "bg-primary/5 border-l-2 border-l-primary"
+											notif.isRead
+												? "bg-background"
+												: "bg-primary/5 border-l-2 border-l-primary"
 										}`}
 									>
 										<div className="flex items-start gap-3">
@@ -192,7 +211,9 @@ export default function NotificationBell() {
 												{getNotificationIcon(notif.type)}
 											</div>
 											<div className="min-w-0 flex-1">
-												<p className={`text-sm tracking-tight ${!notif.isRead ? "font-semibold" : "font-medium"}`}>
+												<p
+													className={`text-sm tracking-tight ${!notif.isRead ? "font-semibold" : "font-medium"}`}
+												>
 													{notif.title}
 												</p>
 												<p className="text-xs text-muted-foreground mt-1 whitespace-pre-wrap line-clamp-3">

@@ -2,6 +2,7 @@ import {
 	Compass,
 	FileText,
 	Gauge,
+	Heart,
 	MessageCircle,
 	PenTool,
 	Settings,
@@ -40,6 +41,11 @@ export const INVESTOR_NAV = [
 		label: "Feed",
 		href: "/investor/feed",
 		icon: <Compass className="h-4 w-4" />,
+	},
+	{
+		label: "Saved",
+		href: "/investor/saved",
+		icon: <Heart className="h-4 w-4" />,
 	},
 	{
 		label: "Messages",

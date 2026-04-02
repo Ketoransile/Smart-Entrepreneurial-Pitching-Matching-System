@@ -1,6 +1,8 @@
+import mongoose from "mongoose";
 import type { Response } from "express";
 import type { AuthRequest } from "../middleware/auth";
 import { ProfileService } from "../services/profile.service";
+import { InvestorProfile } from "../models/InvestorProfile";
 
 export class InvestorController {
 	// Create investor profile
@@ -91,6 +93,76 @@ export class InvestorController {
 				return res.status(404).json({ message: "Profile not found" });
 			}
 			console.error("Update investor profile error:", error);
+			res.status(500).json({ message: "Server error" });
+		}
+	}
+
+	// Toggle saved pitch
+	static async toggleSavedPitch(req: AuthRequest, res: Response) {
+		try {
+			if (!req.user) {
+				return res.status(401).json({ message: "Unauthorized" });
+			}
+
+			const userId = req.user._id;
+			const { id: pitchId } = req.params;
+
+			if (!mongoose.Types.ObjectId.isValid(pitchId)) {
+				return res.status(400).json({ success: false, message: "Invalid pitch ID format" });
+			}
+
+			const profile = await InvestorProfile.findOne({ userId });
+			
+			if (!profile) {
+				return res.status(404).json({ success: false, message: "Investor profile not found. Please complete your profile first." });
+			}
+
+			const savedPitches = profile.savedPitches || [];
+			const index = savedPitches.findIndex((id) => id.toString() === pitchId);
+			const pitchObjectId = new mongoose.Types.ObjectId(pitchId);
+
+			if (index > -1) {
+				await InvestorProfile.updateOne({ _id: profile._id }, { $pull: { savedPitches: pitchObjectId } });
+			} else {
+				await InvestorProfile.updateOne({ _id: profile._id }, { $addToSet: { savedPitches: pitchObjectId } });
+			}
+
+			res.json({
+				success: true,
+				message: index > -1 ? "Pitch removed from saved" : "Pitch saved successfully",
+				isSaved: index === -1,
+				savedPitches: index > -1 ? savedPitches.filter(id => id.toString() !== pitchId) : [...savedPitches, pitchObjectId]
+			});
+		} catch (error) {
+			console.error("Toggle saved pitch error:", error);
+			res.status(500).json({ message: "Server error" });
+		}
+	}
+
+	// Get saved pitches
+	static async getSavedPitches(req: AuthRequest, res: Response) {
+		try {
+			if (!req.user) {
+				return res.status(401).json({ message: "Unauthorized" });
+			}
+
+			const userId = req.user._id;
+
+			const profile = await InvestorProfile.findOne({ userId }).populate({
+				path: 'savedPitches',
+				populate: { path: 'entrepreneurId', select: 'firstName lastName fullName' },
+			});
+			
+			if (!profile) {
+				return res.status(404).json({ success: false, message: "Investor profile not found. Please complete your profile first." });
+			}
+
+			res.json({
+				success: true,
+				data: profile.savedPitches || []
+			});
+		} catch (error) {
+			console.error("Get saved pitches error:", error);
 			res.status(500).json({ message: "Server error" });
 		}
 	}

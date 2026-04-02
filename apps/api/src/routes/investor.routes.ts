@@ -140,4 +140,39 @@ router.put(
 	InvestorController.updateProfile,
 );
 
+/**
+ * @openapi
+ * /api/investor/saved-pitches:
+ *   get:
+ *     tags: [Investor]
+ *     summary: Get all saved pitches for current investor
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Saved pitches fetched successfully
+ */
+router.get("/saved-pitches", InvestorController.getSavedPitches);
+
+/**
+ * @openapi
+ * /api/investor/saved-pitches/{id}:
+ *   post:
+ *     tags: [Investor]
+ *     summary: Toggle a saved pitch
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: The Pitch / Submission ID
+ *     responses:
+ *       200:
+ *         description: Pitch saved/unsaved successfully
+ */
+router.post("/saved-pitches/:id", InvestorController.toggleSavedPitch);
+
 export default router;
