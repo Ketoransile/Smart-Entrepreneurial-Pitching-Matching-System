@@ -9,10 +9,15 @@ if (!MONGODB_URI) {
 }
 
 let isConnected = false;
+let globalPromise: Promise<typeof mongoose> | null = null;
 
 export async function connectDB(): Promise<void> {
-	if (isConnected) {
-		console.log("↩  MongoDB already connected.");
+	if (isConnected || mongoose.connection.readyState >= 1) {
+		return;
+	}
+
+	if (globalPromise) {
+		await globalPromise;
 		return;
 	}
 
@@ -27,8 +32,15 @@ export async function connectDB(): Promise<void> {
 		console.log(`🔗  Connecting to MongoDB: ${maskedUri}`);
 		console.log(`📂  Database name: ${dbName}`);
 
-		await mongoose.connect(MONGODB_URI as string, { dbName });
+		// Set connection options
+		const options = {
+			dbName,
+			bufferCommands: false, // Disable Mongoose buffering; fail properly if not connected
+			serverSelectionTimeoutMS: 5000,
+		};
 
+		globalPromise = mongoose.connect(MONGODB_URI as string, options);
+		await globalPromise;
 		isConnected = true;
 		console.log("✅  MongoDB connected successfully.");
 		console.log(`📍  Connected host: ${mongoose.connection.host}`);
@@ -37,16 +49,19 @@ export async function connectDB(): Promise<void> {
 		mongoose.connection.on("disconnected", () => {
 			console.warn("⚠️  MongoDB disconnected.");
 			isConnected = false;
+			globalPromise = null;
 		});
 
 		mongoose.connection.on("error", (err) => {
 			console.error("❌  MongoDB connection error:", err);
 			isConnected = false;
+			globalPromise = null;
 		});
 	} catch (err) {
 		console.error("❌  Failed to connect to MongoDB:", err);
 		// Let requests fail gracefully rather than crashing the Vercel serverless function
 		isConnected = false;
+		globalPromise = null;
 	}
 }
 
@@ -54,5 +69,6 @@ export async function disconnectDB(): Promise<void> {
 	if (!isConnected) return;
 	await mongoose.disconnect();
 	isConnected = false;
+	globalPromise = null;
 	console.log("🔌  MongoDB disconnected gracefully.");
 }

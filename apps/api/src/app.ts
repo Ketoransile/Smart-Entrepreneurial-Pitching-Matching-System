@@ -26,11 +26,22 @@ import submissionRoutes from "./routes/submission.routes";
 import uploadRoutes from "./routes/upload.routes";
 import userRoutes from "./routes/user.routes";
 
-// Initialize Firebase and DB for serverless environments that execute app.ts directly.
+// Initialize Firebase outside the request lifecycle
 initFirebase();
-connectDB().catch(console.error);
 
 const app = express();
+
+// Ensure DB is connected before handling any requests
+app.use(async (req, res, next) => {
+	try {
+		await connectDB();
+		next();
+	} catch (error) {
+		console.error("Critical error: Database connection failed", error);
+		// Let the request continue; if DB is truly dead, handlers will fail predictably
+		next();
+	}
+});
 
 app.use(
 	helmet({
