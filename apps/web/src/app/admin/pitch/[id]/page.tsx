@@ -160,34 +160,34 @@ export default function AdminPitchViewPage() {
 	return (
 		<ProtectedRoute allowedRoles={["admin"]}>
 			<DashboardLayout navItems={[{ label: "Back to Dashboard", href: "/admin/oversight", icon: <ArrowLeft className="h-4 w-4" /> }]} title="SEPMS">
-				<div className="mb-6 flex items-center justify-between">
-					<div className="flex items-center gap-4">
+				<div className="mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+					<div className="flex items-start sm:items-center gap-4 pr-2">
 						<Button
 							variant="ghost"
 							size="icon"
 							onClick={() => router.push("/admin/oversight")}
-							className="h-10 w-10 shrink-0"
+							className="h-10 w-10 shrink-0 mt-0.5 sm:mt-0"
 						>
 							<ArrowLeft className="h-5 w-5" />
 						</Button>
-						<div>
-							<h1 className="text-2xl font-bold tracking-tight">
+						<div className="min-w-0 flex-1">
+							<h1 className="text-xl sm:text-2xl font-bold tracking-tight break-words">
 								{pitch.title}
 							</h1>
-							<p className="text-sm text-muted-foreground mt-1">
+							<p className="text-sm text-muted-foreground mt-1 truncate">
 								By {pitch.entrepreneurId?.fullName || "Unknown"} ({pitch.entrepreneurId?.email || "No Email"})
 							</p>
 						</div>
 					</div>
-					<div className="flex items-center gap-3">
+					<div className="flex flex-wrap sm:flex-nowrap items-center gap-3 w-full sm:w-auto">
 						<Badge
 							variant={pitch.status === "approved" ? "default" : pitch.status === "suspended" || pitch.status === "rejected" ? "destructive" : "secondary"}
-							className="capitalize"
+							className="capitalize whitespace-nowrap"
 						>
 							{pitch.status.replace("_", " ")}
 						</Badge>
 						{pitch.aiScore !== undefined && (
-							<Badge variant="outline" className="border-primary/50 text-primary">
+							<Badge variant="outline" className="border-primary/50 text-primary whitespace-nowrap">
 								AI Score: {pitch.aiScore}%
 							</Badge>
 						)}
@@ -207,7 +207,7 @@ export default function AdminPitchViewPage() {
 								<p className="text-sm whitespace-pre-wrap leading-relaxed text-muted-foreground">
 									{pitch.summary || "No executive summary provided."}
 								</p>
-								<div className="mt-6 grid grid-cols-2 gap-4">
+								<div className="mt-6 grid grid-cols-1 sm:grid-cols-2 gap-4">
 									<div className="rounded-lg border bg-muted/30 p-3">
 										<p className="text-xs text-muted-foreground font-medium mb-1">Sector</p>
 										<p className="font-medium text-sm">{sectorLabel}</p>
@@ -351,7 +351,7 @@ export default function AdminPitchViewPage() {
 									{actionLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <CheckCircle2 className="mr-2 h-4 w-4" />}
 									Approve & Publish Pitch
 								</Button>
-								<div className="grid grid-cols-2 gap-2">
+								<div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
 									<Button
 										variant="outline"
 										className="w-full text-destructive hover:bg-destructive/10 hover:text-destructive"

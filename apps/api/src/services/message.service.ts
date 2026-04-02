@@ -77,16 +77,94 @@ export class MessageService {
 		return conversation;
 	}
 
+	static async getConversationById(
+		conversationId: string,
+		userId: string,
+	): Promise<any> {
+		const conversation = await Conversation.findOne({
+			_id: conversationId,
+			participants: userId,
+		})
+			.populate("participants", "fullName email role")
+			.populate("submissionId", "title status stage");
+
+		if (!conversation) return null;
+
+		const convoObj = conversation.toObject() as any;
+
+		convoObj.unreadCount = await Message.countDocuments({
+			conversationId: conversation._id,
+			"readBy.userId": { $ne: userId },
+		});
+
+		const lastMsg = await Message.findOne({
+			conversationId: conversation._id,
+		})
+			.sort({ createdAt: -1 })
+			.select("body senderId createdAt type")
+			.lean();
+
+		convoObj.lastMessage = lastMsg || null;
+
+		return convoObj;
+	}
+
 	static async listConversationsForUser(userId: string) {
+		// Only return conversations that have at least one message
 		const conversations = await Conversation.find({
 			participants: userId,
+			lastMessageAt: { $ne: null },
 		})
 			.sort({ isArchived: 1, lastMessageAt: -1, updatedAt: -1 })
 			.populate("participants", "fullName email role")
 			.populate("submissionId", "title status stage")
 			.limit(100);
 
-		return conversations;
+		// Enrich each conversation with unreadCount and lastMessage
+		const enriched = await Promise.all(
+			conversations.map(async (convo) => {
+				const convoObj = convo.toObject() as any;
+
+				// Count unread messages (messages not read by this user)
+				convoObj.unreadCount = await Message.countDocuments({
+					conversationId: convo._id,
+					"readBy.userId": { $ne: userId },
+				});
+
+				// Get last message preview
+				const lastMsg = await Message.findOne({
+					conversationId: convo._id,
+				})
+					.sort({ createdAt: -1 })
+					.select("body senderId createdAt type")
+					.lean();
+
+				convoObj.lastMessage = lastMsg || null;
+
+				return convoObj;
+			}),
+		);
+
+		return enriched;
+	}
+
+	/**
+	 * Get total unread message count for a user across all conversations.
+	 */
+	static async getUnreadCountForUser(userId: string): Promise<number> {
+		const conversations = await Conversation.find({
+			participants: userId,
+			lastMessageAt: { $ne: null },
+			isArchived: false,
+		}).select("_id");
+
+		const conversationIds = conversations.map((c) => c._id);
+		if (conversationIds.length === 0) return 0;
+
+		return Message.countDocuments({
+			conversationId: { $in: conversationIds },
+			"readBy.userId": { $ne: userId },
+		});
 	}
 
 	static async listMessages(payload: {
@@ -272,11 +350,18 @@ export class MessageService {
 		});
 
 		// Fetch names for a clear admin notification
-		const reporter = await User.findById(payload.reporterId).select("fullName email");
-		const reportedUsers = await User.find({ _id: { $in: reportedUserIds } }).select("fullName email");
+		const reporter = await User.findById(payload.reporterId).select(
+			"fullName email",
+		);
+		const reportedUsers = await User.find({
+			_id: { $in: reportedUserIds },
+		}).select("fullName email");
 
-		const reporterName = reporter?.fullName || reporter?.email || "Unknown user";
-		const reportedNames = reportedUsers.map((u) => u.fullName || u.email).join(", ") || "Unknown user";
+		const reporterName =
+			reporter?.fullName || reporter?.email || "Unknown user";
+		const reportedNames =
+			reportedUsers.map((u) => u.fullName || u.email).join(", ") ||
+			"Unknown user";
 
 		const admins = await User.find({ role: "admin", isActive: true }).select(
 			"_id",

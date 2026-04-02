@@ -190,7 +190,7 @@ function SignUpForm() {
 
 						<form onSubmit={handleSubmit} className="space-y-4 pt-2">
 							{/* Top row: Name & Dynamic Role Info */}
-							<div className="grid grid-cols-2 gap-4">
+							<div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
 								<div className="space-y-2">
 									<Label htmlFor="fullName">Full Name</Label>
 									<Input
@@ -261,7 +261,7 @@ function SignUpForm() {
 								/>
 							</div>
 
-							<div className="grid grid-cols-2 gap-4">
+							<div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
 								<div className="space-y-2">
 									<Label htmlFor="password">Password</Label>
 									<Input

@@ -44,6 +44,36 @@ export class MessageController {
 		}
 	}
 
+	static async getConversation(req: Request, res: Response): Promise<void> {
+		try {
+			if (!req.user) {
+				res.status(401).json({ status: "error", message: "Unauthorized" });
+				return;
+			}
+
+			const conversationId = req.params.conversationId;
+			const conversation = await MessageService.getConversationById(
+				conversationId,
+				req.user._id.toString(),
+			);
+
+			if (!conversation) {
+				res.status(404).json({
+					status: "error",
+					message: "Conversation not found",
+				});
+				return;
+			}
+
+			res.status(200).json({
+				status: "success",
+				conversation,
+			});
+		} catch (error) {
+			handleMessageError(res, error, "Failed to get conversation");
+		}
+	}
+
 	static async listConversations(req: Request, res: Response): Promise<void> {
 		try {
 			if (!req.user) {
@@ -162,6 +192,23 @@ export class MessageController {
 		}
 	}
 
+	static async getUnreadCount(req: Request, res: Response): Promise<void> {
+		try {
+			if (!req.user) {
+				res.status(401).json({ status: "error", message: "Unauthorized" });
+				return;
+			}
+
+			const count = await MessageService.getUnreadCountForUser(
+				req.user._id.toString(),
+			);
+
+			res.status(200).json({ status: "success", unreadCount: count });
+		} catch (error) {
+			handleMessageError(res, error, "Failed to get unread count");
+		}
+	}
+
 	static async listNotifications(req: Request, res: Response): Promise<void> {
 		try {
 			if (!req.user) {
@@ -232,10 +279,14 @@ export class MessageController {
 				.sort({ createdAt: -1 })
 				.limit(100);
 
-			res.status(200).json({ status: "success", count: reports.length, reports });
+			res
+				.status(200)
+				.json({ status: "success", count: reports.length, reports });
 		} catch (error) {
 			console.error("Failed to fetch reports", error);
-			res.status(500).json({ status: "error", message: "Failed to fetch reports" });
+			res
+				.status(500)
+				.json({ status: "error", message: "Failed to fetch reports" });
 		}
 	}
 
@@ -253,19 +304,24 @@ export class MessageController {
 
 			// If admin chooses to unfreeze, restore the conversation
 			if (action === "unfreeze") {
-				await Conversation.findByIdAndUpdate(report.conversationId, { isArchived: false });
+				await Conversation.findByIdAndUpdate(report.conversationId, {
+					isArchived: false,
+				});
 			}
 
 			res.status(200).json({
 				status: "success",
-				message: action === "unfreeze"
-					? "Report resolved — conversation has been unfrozen"
-					: "Report resolved — conversation remains frozen",
+				message:
+					action === "unfreeze"
+						? "Report resolved — conversation has been unfrozen"
+						: "Report resolved — conversation remains frozen",
 				report,
 			});
 		} catch (error) {
 			console.error("Failed to resolve report", error);
-			res.status(500).json({ status: "error", message: "Failed to resolve report" });
+			res
+				.status(500)
+				.json({ status: "error", message: "Failed to resolve report" });
 		}
 	}
 }

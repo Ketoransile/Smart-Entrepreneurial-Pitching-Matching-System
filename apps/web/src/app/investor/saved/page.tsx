@@ -1,6 +1,6 @@
 "use client";
 
-import { Briefcase, Compass, Heart, MessageSquare, Star, User } from "lucide-react";
+import { Briefcase, Heart, MessageSquare } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
@@ -15,13 +15,6 @@ import {
 	DialogHeader,
 	DialogTitle,
 } from "@/components/ui/dialog";
-import {
-	Select,
-	SelectContent,
-	SelectItem,
-	SelectTrigger,
-	SelectValue,
-} from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
 import { useAuth } from "@/context/AuthContext";
 import { INVESTOR_NAV } from "@/constants/navigation";
@@ -69,70 +62,50 @@ function statusColor(
 	}
 }
 
-export default function InvestorFeed() {
+export default function SavedPitchesPage() {
 	const { user } = useAuth();
 	const router = useRouter();
 	const [submissions, setSubmissions] = useState<Submission[]>([]);
 	const [loading, setLoading] = useState(true);
-	const [sector, setSector] = useState("all");
-	const [sort, setSort] = useState("newest");
-	const [total, setTotal] = useState(0);
 	const [selectedPitch, setSelectedPitch] = useState<Submission | null>(null);
-	const [savedPitchIds, setSavedPitchIds] = useState<Set<string>>(new Set());
 
-	const fetchFeed = useCallback(async () => {
+	const fetchSavedPitches = useCallback(async () => {
 		if (!user) return;
 		setLoading(true);
 		try {
 			const token = await user.getIdToken();
 			
-			// Fetch saved pitches
-			const savedRes = await fetch(
+			const res = await fetch(
 				`${(process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api").replace(/\/+$/, "")}/investor/saved-pitches`,
 				{ headers: { Authorization: `Bearer ${token}` } },
 			);
-			const savedData = await savedRes.json();
-			if (savedData.success) {
-				setSavedPitchIds(new Set(savedData.data.map((p: any) => p._id)));
-			}
-
-			// Fetch feed
-			const params = new URLSearchParams({ sort });
-			if (sector !== "all") params.set("sector", sector);
-
-			const res = await fetch(
-				`${(process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api").replace(/\/+$/, "")}/submissions/feed/browse?${params}`,
-				{ headers: { Authorization: `Bearer ${token}` } },
-			);
 			const data = await res.json();
-			if (data.status === "success") {
-				setSubmissions(data.submissions);
-				setTotal(data.total);
+			if (data.success) {
+				setSubmissions(data.data);
 			}
 		} catch (err) {
-			console.error("Feed fetch error:", err);
+			console.error("Saved pitches fetch error:", err);
 		} finally {
 			setLoading(false);
 		}
-	}, [user, sector, sort]);
+	}, [user]);
 
 	useEffect(() => {
-		fetchFeed();
-	}, [fetchFeed]);
+		fetchSavedPitches();
+	}, [fetchSavedPitches]);
 
 	const toggleSaved = async (e: React.MouseEvent, pitchId: string) => {
 		e.stopPropagation();
 		if (!user) return;
 
-		const wasSaved = savedPitchIds.has(pitchId);
-
-		// Optimistic Update
-		setSavedPitchIds((prev) => {
-			const next = new Set(prev);
-			if (next.has(pitchId)) next.delete(pitchId);
-			else next.add(pitchId);
-			return next;
-		});
+		// Optimistically remove from view
+		const originalSubmissions = [...submissions];
+		const originalSelected = selectedPitch;
+		
+		setSubmissions(prev => prev.filter(p => p._id !== pitchId));
+		if (selectedPitch?._id === pitchId) {
+			setSelectedPitch(null);
+		}
 
 		try {
 			const token = await user.getIdToken();
@@ -145,28 +118,18 @@ export default function InvestorFeed() {
 			);
 			const data = await res.json();
 			
-			if (data.success) {
-				// toast.success(data.message); // Silenced to avoid spamming on rapid toggling
-			} else {
+			if (!data.success) {
 				// Revert Optimistic Update
-				setSavedPitchIds((prev) => {
-					const next = new Set(prev);
-					if (wasSaved) next.add(pitchId);
-					else next.delete(pitchId);
-					return next;
-				});
-				toast.error(data.message || "Failed to toggle save");
+				setSubmissions(originalSubmissions);
+				setSelectedPitch(originalSelected);
+				toast.error(data.message || "Failed to unsave pitch");
 			}
 		} catch (err) {
 			console.error("Failed to toggle save", err);
 			// Revert Optimistic Update
-			setSavedPitchIds((prev) => {
-				const next = new Set(prev);
-				if (wasSaved) next.add(pitchId);
-				else next.delete(pitchId);
-				return next;
-			});
-			toast.error("An error occurred while saving the pitch");
+			setSubmissions(originalSubmissions);
+			setSelectedPitch(originalSelected);
+			toast.error("An error occurred while unsaving the pitch");
 		}
 	};
 
@@ -174,65 +137,18 @@ export default function InvestorFeed() {
 		<ProtectedRoute allowedRoles={["investor"]}>
 			<DashboardLayout navItems={INVESTOR_NAV} title="SEPMS">
 				{/* Page header */}
-				<div className="mb-8">
-					<h1 className="text-2xl font-bold tracking-tight sm:text-3xl">
-						Discovery Feed
-					</h1>
-					<p className="mt-1 text-muted-foreground">
-						Browse AI-scored pitches tailored to your investment preferences
-					</p>
-				</div>
-
-				{/* Stat cards */}
-				<div className="grid gap-4 sm:grid-cols-3 mb-8">
-					<Card>
-						<CardContent className="p-5">
-							<p className="text-sm text-muted-foreground">Available Pitches</p>
-							<p className="text-2xl font-bold mt-1">{total}</p>
-						</CardContent>
-					</Card>
-					<Card className="cursor-pointer hover:bg-muted/50 transition-colors" onClick={() => router.push("/investor/saved")}>
-						<CardContent className="p-5">
-							<p className="text-sm text-muted-foreground">Saved</p>
-							<p className="text-2xl font-bold mt-1">{savedPitchIds.size}</p>
-						</CardContent>
-					</Card>
-					<Card>
-						<CardContent className="p-5">
-							<p className="text-sm text-muted-foreground">
-								Active Conversations
-							</p>
-							<p className="text-2xl font-bold mt-1">0</p>
-						</CardContent>
-					</Card>
-				</div>
-
-				{/* Filters */}
-				<div className="flex flex-col gap-3 sm:flex-row sm:items-center mb-6">
-					<Select value={sector} onValueChange={setSector}>
-						<SelectTrigger className="w-full sm:w-48">
-							<SelectValue placeholder="Filter by sector" />
-						</SelectTrigger>
-						<SelectContent>
-							{SECTORS.map((s) => (
-								<SelectItem key={s.value} value={s.value}>
-									{s.label}
-								</SelectItem>
-							))}
-						</SelectContent>
-					</Select>
-
-					<Select value={sort} onValueChange={setSort}>
-						<SelectTrigger className="w-full sm:w-44">
-							<SelectValue placeholder="Sort by" />
-						</SelectTrigger>
-						<SelectContent>
-							<SelectItem value="newest">Newest first</SelectItem>
-							<SelectItem value="score">Highest score</SelectItem>
-							<SelectItem value="amount_high">Highest amount</SelectItem>
-							<SelectItem value="amount_low">Lowest amount</SelectItem>
-						</SelectContent>
-					</Select>
+				<div className="mb-8 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                    <div>
+                        <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">
+                            Saved Pitches
+                        </h1>
+                        <p className="mt-1 text-muted-foreground">
+                            Pitches you have bookmarked for later review
+                        </p>
+                    </div>
+                    <Button variant="outline" onClick={() => router.push("/investor/feed")}>
+                        Back to Feed
+                    </Button>
 				</div>
 
 				<Separator className="mb-6" />
@@ -245,13 +161,14 @@ export default function InvestorFeed() {
 				) : submissions.length === 0 ? (
 					<Card className="border-dashed">
 						<CardContent className="flex flex-col items-center justify-center py-16">
-							<Briefcase className="h-10 w-10 text-muted-foreground mb-4" />
-							<h3 className="text-lg font-semibold mb-2">No pitches found</h3>
-							<p className="text-muted-foreground text-center max-w-md text-sm">
-								{sector !== "all"
-									? `No submitted pitches in the ${sectorLabel(sector)} sector yet.`
-									: "No pitches have been submitted yet. Check back soon!"}
+							<Heart className="h-10 w-10 text-muted-foreground mb-4" />
+							<h3 className="text-lg font-semibold mb-2">No saved pitches</h3>
+							<p className="text-muted-foreground text-center max-w-md text-sm mb-4">
+								You haven't bookmarked any pitches yet. Start exploring the feed to find interesting startups!
 							</p>
+                            <Button onClick={() => router.push("/investor/feed")}>
+                                Browse Feed
+                            </Button>
 						</CardContent>
 					</Card>
 				) : (
@@ -259,7 +176,7 @@ export default function InvestorFeed() {
 						{submissions.map((pitch) => (
 							<Card
 								key={pitch._id}
-								className="group hover:border-foreground/20 transition-colors cursor-pointer"
+								className="group hover:border-foreground/20 transition-colors cursor-pointer relative"
 								onClick={() => setSelectedPitch(pitch)}
 							>
 								<CardContent className="p-5">
@@ -283,7 +200,7 @@ export default function InvestorFeed() {
 												onClick={(e) => toggleSaved(e, pitch._id)}
 											>
 												<Heart 
-													className={`h-4 w-4 transition-colors ${savedPitchIds.has(pitch._id) ? "fill-primary text-primary" : "text-muted-foreground"}`} 
+													className="h-4 w-4 fill-primary text-primary transition-colors" 
 												/>
 											</Button>
 										</div>
@@ -343,9 +260,9 @@ export default function InvestorFeed() {
 										onClick={(e) => toggleSaved(e, selectedPitch._id)}
 									>
 										<Heart 
-											className={`h-4 w-4 ${savedPitchIds.has(selectedPitch._id) ? "fill-primary text-primary" : "text-muted-foreground"}`} 
+											className="h-4 w-4 fill-primary text-primary" 
 										/>
-										{savedPitchIds.has(selectedPitch._id) ? "Saved" : "Save"}
+										Saved
 									</Button>
 								)}
 							</div>
