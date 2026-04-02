@@ -34,6 +34,7 @@ export interface IInvestorProfile extends Document {
 	totalInvested: number;
 	meetingsAttended: number;
 	embeddingId?: mongoose.Types.ObjectId;
+	savedPitches?: mongoose.Types.ObjectId[];
 	createdAt: Date;
 	updatedAt: Date;
 }
@@ -115,6 +116,7 @@ const InvestorProfileSchema = new Schema<IInvestorProfile>(
 		meetingsAttended: { type: Number, default: 0 },
 
 		embeddingId: { type: Schema.Types.ObjectId, ref: "EmbeddingEntry" },
+		savedPitches: [{ type: Schema.Types.ObjectId, ref: "Submission" }],
 	},
 	{
 		timestamps: true,
@@ -128,7 +130,7 @@ InvestorProfileSchema.index({
 	"investmentRange.max": 1,
 });
 
-export const InvestorProfile = mongoose.model<IInvestorProfile>(
+export const InvestorProfile = (mongoose.models.InvestorProfile as mongoose.Model<IInvestorProfile>) || mongoose.model<IInvestorProfile>(
 	"InvestorProfile",
 	InvestorProfileSchema,
 );

@@ -425,7 +425,7 @@ export default function AdminSettingsPage() {
 								<Separator />
 								<Button
 									variant="outline"
-									onClick={signOut}
+									onClick={() => setConfirmAction("signout")}
 									className="gap-2 text-destructive hover:text-destructive"
 								>
 									Sign Out of Account
@@ -811,7 +811,9 @@ export default function AdminSettingsPage() {
 							<DialogDescription>
 								{confirmAction === "reset-kyc"
 									? "This will mark ALL verified entrepreneurs and investors as unverified. They will need to re-upload their KYC documents."
-									: "This will suspend all non-admin accounts that haven't completed KYC verification. Suspended users cannot access the platform."}
+									: confirmAction === "signout"
+										? "Are you sure you want to sign out of your account?"
+										: "This will suspend all non-admin accounts that haven't completed KYC verification. Suspended users cannot access the platform."}
 							</DialogDescription>
 						</DialogHeader>
 						<DialogFooter className="gap-2 sm:gap-0">
@@ -820,7 +822,11 @@ export default function AdminSettingsPage() {
 							</Button>
 							<Button
 								variant="destructive"
-								onClick={() => confirmAction && handleBulkAction(confirmAction)}
+								onClick={() =>
+									confirmAction === "signout"
+										? signOut()
+										: confirmAction && handleBulkAction(confirmAction)
+								}
 								disabled={actionLoading}
 								className="gap-2"
 							>
