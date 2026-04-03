@@ -1,4 +1,5 @@
 "use client";
+// Refactoring / Clean Code: Notification UI logic
 
 import {
 	Bell,
