@@ -11,6 +11,7 @@ import swaggerUi from "swagger-ui-express";
 import { connectDB } from "./config/database";
 import { initFirebase } from "./config/firebase";
 import { openApiSpec } from "./config/openapi";
+import recommendationRoutes from "./recommendation/recommendation.routes";
 import adminRoutes from "./routes/admin.routes";
 import authRoutes from "./routes/auth.routes";
 import documentRoutes from "./routes/document.routes";
@@ -32,13 +33,12 @@ initFirebase();
 const app = express();
 
 // Ensure DB is connected before handling any requests
-app.use(async (req, res, next) => {
+app.use(async (_req, _res, next) => {
 	try {
 		await connectDB();
 		next();
 	} catch (error) {
 		console.error("Critical error: Database connection failed", error);
-		// Let the request continue; if DB is truly dead, handlers will fail predictably
 		next();
 	}
 });
@@ -120,6 +120,7 @@ app.use("/api/documents", documentRoutes);
 app.use("/api/entrepreneur", entrepreneurRoutes);
 app.use("/api/investor", investorRoutes);
 app.use("/api/matching", matchingRoutes);
+app.use("/api/recommendation", recommendationRoutes);
 app.use("/api/milestones", milestoneRoutes);
 app.use("/api/invitations", invitationRoutes);
 app.use("/api/feedback", feedbackRoutes);

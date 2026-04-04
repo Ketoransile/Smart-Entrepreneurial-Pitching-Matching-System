@@ -15,25 +15,45 @@ export default function SignInPage() {
 	const [password, setPassword] = useState("");
 	const [loading, setLoading] = useState(false);
 
-	const { signIn, signInWithGoogle, userProfile } = useAuth();
+	const { signIn, signInWithGoogle } = useAuth();
 	const router = useRouter();
 
-	const getRedirect = (role?: string) => {
+	const API = (
+		process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:5000/api"
+	).replace(/\/+$/, "");
+
+	// For investors: check if InvestorProfile exists; if not, send to onboarding
+	const getInvestorRedirect = async (token: string): Promise<string> => {
+		try {
+			const res = await fetch(`${API}/investor/profile`, {
+				headers: { Authorization: `Bearer ${token}` },
+			});
+			return res.ok ? "/investor/matches" : "/investor/onboarding";
+		} catch {
+			return "/investor/onboarding";
+		}
+	};
+
+	const getRedirect = async (
+		role: string | null | undefined,
+		token: string,
+	): Promise<string> => {
+		if (role === "investor") return getInvestorRedirect(token);
 		const redirects: Record<string, string> = {
 			admin: "/admin/oversight",
 			entrepreneur: "/entrepreneur/dashboard",
-			investor: "/investor/feed",
 		};
-		return redirects[role || ""] || "/";
+		return redirects[role ?? ""] ?? "/";
 	};
 
 	const handleSubmit = async (e: React.FormEvent) => {
 		e.preventDefault();
 		setLoading(true);
-
 		try {
 			const profile = await signIn(email, password);
-			router.push(getRedirect(profile.role || ""));
+			const { auth } = await import("@/lib/firebase");
+			const token = (await auth?.currentUser?.getIdToken()) ?? "";
+			router.push(await getRedirect(profile.role, token));
 		} catch (err: unknown) {
 			const message = err instanceof Error ? err.message : "Failed to sign in";
 			toast.error(message);
@@ -44,10 +64,11 @@ export default function SignInPage() {
 
 	const handleGoogleSignIn = async () => {
 		setLoading(true);
-
 		try {
 			const profile = await signInWithGoogle();
-			router.push(getRedirect(profile.role || ""));
+			const { auth } = await import("@/lib/firebase");
+			const token = (await auth?.currentUser?.getIdToken()) ?? "";
+			router.push(await getRedirect(profile.role, token));
 		} catch (err: unknown) {
 			const message =
 				err instanceof Error ? err.message : "Failed to sign in with Google";

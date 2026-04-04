@@ -49,7 +49,12 @@ function SignUpForm() {
 		try {
 			await signUp(email, password, fullName, { role, companyName, fundName });
 			toast.success("Account created! Check your email to verify.");
-			router.push("/verify-email");
+			// Investors go to onboarding after email verification
+			router.push(
+				role === "investor"
+					? "/verify-email?next=/investor/onboarding"
+					: "/verify-email",
+			);
 		} catch (err: unknown) {
 			const message =
 				err instanceof Error ? err.message : "Failed to create account";
@@ -65,10 +70,13 @@ function SignUpForm() {
 		try {
 			const profile = await signInWithGoogle({ role, companyName, fundName });
 
+			if (profile.role === "investor") {
+				router.push("/investor/onboarding");
+				return;
+			}
 			const redirects: Record<string, string> = {
 				admin: "/admin/oversight",
 				entrepreneur: "/entrepreneur/dashboard",
-				investor: "/investor/feed",
 			};
 			router.push(redirects[profile.role || ""] || "/");
 		} catch (err: unknown) {

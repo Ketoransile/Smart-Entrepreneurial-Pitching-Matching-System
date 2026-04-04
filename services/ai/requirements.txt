@@ -1,0 +1,21 @@
+# SEPMS AI Service — unified dependencies
+# Python 3.12 compatible versions (pre-built wheels available)
+# Install from services/ai/:  pip install -r requirements.txt
+
+# API server
+fastapi==0.104.1
+uvicorn==0.24.0
+pydantic==2.5.0
+
+# Recommendation feature (embeddings + Rocchio)
+sentence-transformers==2.7.0
+numpy==1.26.4
+ 
+# Classification feature (trust scoring)
+scikit-learn==1.4.2
+joblib==1.4.2
+
+# Shared utilities
+pandas==2.2.2
+python-dotenv==1.0.0
+requests==2.31.0
