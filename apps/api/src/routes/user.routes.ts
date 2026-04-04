@@ -9,6 +9,13 @@ import { User } from "../models/User";
 
 const router = Router();
 
+/**
+ * @openapi
+ * tags:
+ *   - name: Users
+ *     description: Authenticated user profile and account management
+ */
+
 // Multer config for avatar uploads — 2MB limit, images only
 const avatarUpload = multer({
 	storage: multer.memoryStorage(),
@@ -23,8 +30,18 @@ const avatarUpload = multer({
 });
 
 /**
- * GET /api/users/me/profile
- * Get the current user's profile and KYC status
+ * @openapi
+ * /api/users/me/profile:
+ *   get:
+ *     tags: [Users]
+ *     summary: Get current user's role profile and KYC status
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Profile fetched
+ *       404:
+ *         description: User not found
  */
 router.get(
 	"/me/profile",
@@ -165,8 +182,32 @@ router.put(
 );
 
 /**
- * PATCH /api/users/me
- * Update basic user info (fullName, photoURL — role/status/adminLevel are protected)
+ * @openapi
+ * /api/users/me:
+ *   patch:
+ *     tags: [Users]
+ *     summary: Update current user's basic account fields
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               fullName:
+ *                 type: string
+ *               photoURL:
+ *                 type: string
+ *                 nullable: true
+ *     responses:
+ *       200:
+ *         description: User profile updated
+ *       400:
+ *         description: Invalid payload
+ *       404:
+ *         description: User not found
  */
 router.patch(
 	"/me",
@@ -233,8 +274,31 @@ router.patch(
 );
 
 /**
- * POST /api/users/me/avatar
- * Upload a profile picture (max 2MB, images only)
+ * @openapi
+ * /api/users/me/avatar:
+ *   post:
+ *     tags: [Users]
+ *     summary: Upload or replace current user's avatar image
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         multipart/form-data:
+ *           schema:
+ *             type: object
+ *             required: [avatar]
+ *             properties:
+ *               avatar:
+ *                 type: string
+ *                 format: binary
+ *     responses:
+ *       200:
+ *         description: Avatar uploaded
+ *       400:
+ *         description: Missing or invalid file
+ *       413:
+ *         description: File too large
  */
 router.post(
 	"/me/avatar",

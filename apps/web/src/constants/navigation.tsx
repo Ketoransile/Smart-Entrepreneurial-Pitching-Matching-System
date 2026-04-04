@@ -7,6 +7,7 @@ import {
 	PenTool,
 	Settings,
 	ShieldAlert,
+	Sparkles,
 	UserCircle,
 	Users,
 } from "lucide-react";
@@ -41,6 +42,11 @@ export const INVESTOR_NAV = [
 		label: "Feed",
 		href: "/investor/feed",
 		icon: <Compass className="h-4 w-4" />,
+	},
+	{
+		label: "My Matches",
+		href: "/investor/matches",
+		icon: <Sparkles className="h-4 w-4" />,
 	},
 	{
 		label: "Saved",
