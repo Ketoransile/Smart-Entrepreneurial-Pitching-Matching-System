@@ -79,9 +79,9 @@ export default function SignInPage() {
 	};
 
 	return (
-		<div className="flex min-h-screen w-full bg-background flex-col lg:flex-row-reverse">
-			{/* Right Split - Branding */}
-			<div className="relative hidden w-1/2 flex-col justify-center border-l border-border/50 p-12 lg:flex xl:p-24 overflow-hidden">
+		<div className="flex min-h-screen w-full bg-background flex-col lg:flex-row">
+			{/* Left Split - Branding */}
+			<div className="relative hidden w-1/2 flex-col justify-center border-r border-border/50 p-12 lg:flex xl:p-24 overflow-hidden">
 				<div className="pointer-events-none absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.02)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.02)_1px,transparent_1px)] bg-[size:64px_64px] dark:block hidden" />
 				<div className="pointer-events-none absolute inset-0 bg-[linear-gradient(rgba(0,0,0,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(0,0,0,0.03)_1px,transparent_1px)] bg-[size:64px_64px] dark:hidden block" />
 
@@ -103,9 +103,9 @@ export default function SignInPage() {
 				</div>
 			</div>
 
-			{/* Left Split - Form */}
-			<div className="flex w-full flex-col justify-center p-8 sm:p-12 lg:w-1/2">
-				<div className="mx-auto w-full max-w-sm space-y-8">
+			{/* Right Split - Form */}
+			<div className="flex w-full flex-col justify-center p-8 sm:p-12 lg:w-1/2 lg:px-16 xl:px-24">
+				<div className="mx-auto lg:mx-0 w-full max-w-sm space-y-8">
 					<div className="space-y-2 text-center lg:text-left">
 						<div className="mx-auto mb-6 flex h-12 w-12 lg:hidden">
 							<Logo className="h-12 w-12" />
