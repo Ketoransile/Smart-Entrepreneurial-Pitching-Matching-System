@@ -20,10 +20,34 @@ import { applyRocchioUpdate } from "./rocchio.service";
 
 const router = Router();
 
+/**
+ * @openapi
+ * tags:
+ *   - name: Recommendation
+ *     description: AI matching queue and investor match response actions
+ */
+
 // ── GET /api/recommendation/matches ─────────────────────────────────────────
 /**
- * Returns the authenticated investor's AI match queue.
- * Supports optional ?status= filter (pending | accepted | declined | expired).
+ * @openapi
+ * /api/recommendation/matches:
+ *   get:
+ *     tags: [Recommendation]
+ *     summary: Get authenticated investor's recommendation matches
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: status
+ *         required: false
+ *         schema:
+ *           type: string
+ *           enum: [pending, accepted, declined, expired]
+ *     responses:
+ *       200:
+ *         description: Matches fetched
+ *       500:
+ *         description: Failed to fetch matches
  */
 router.get(
 	"/matches",
@@ -59,10 +83,39 @@ router.get(
 
 // ── PATCH /api/recommendation/matches/:matchId/respond ───────────────────────
 /**
- * Investor responds to a match (accepted | declined).
- *
- * 1. Delegates status update + invitation + notification to MatchingService
- * 2. Fires Rocchio profile update in the background (non-blocking)
+ * @openapi
+ * /api/recommendation/matches/{matchId}/respond:
+ *   patch:
+ *     tags: [Recommendation]
+ *     summary: Accept or decline a recommendation match
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: matchId
+ *         required: true
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [status]
+ *             properties:
+ *               status:
+ *                 type: string
+ *                 enum: [accepted, declined]
+ *     responses:
+ *       200:
+ *         description: Match response recorded
+ *       400:
+ *         description: Invalid status
+ *       404:
+ *         description: Match not found
+ *       500:
+ *         description: Failed to update match
  */
 router.patch(
 	"/matches/:matchId/respond",
