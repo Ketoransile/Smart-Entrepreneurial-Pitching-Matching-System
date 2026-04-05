@@ -1,4 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/app_spacing.dart';
+import '../../../../core/widgets/widgets.dart';
+import '../../domain/entities/user_entity.dart';
+import '../bloc/auth_bloc.dart';
+import '../bloc/auth_event.dart';
+import '../bloc/auth_state.dart';
+import 'login_page.dart';
+import 'verify_email_page.dart';
 
 class RegistrationPage extends StatefulWidget {
   const RegistrationPage({super.key});
@@ -8,147 +18,269 @@ class RegistrationPage extends StatefulWidget {
 }
 
 class _RegistrationPageState extends State<RegistrationPage> {
-  final _nameController = TextEditingController();
+  final _formKey = GlobalKey<FormState>();
+  final _fullNameController = TextEditingController();
+  final _companyController = TextEditingController();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
-  bool _obscurePassword = true;
-  bool _obscureConfirmPassword = true;
+
+  UserRole _selectedRole = UserRole.entrepreneur;
+  bool _isLoading = false;
 
   @override
   void dispose() {
-    _nameController.dispose();
+    _fullNameController.dispose();
+    _companyController.dispose();
     _emailController.dispose();
     _passwordController.dispose();
     _confirmPasswordController.dispose();
     super.dispose();
   }
 
+  void _onRoleChanged(UserRole role) {
+    setState(() {
+      _selectedRole = role;
+      _companyController.clear();
+    });
+  }
+
+  String? _validatePassword(String? value) {
+    if (value == null || value.isEmpty) {
+      return 'Password is required';
+    }
+    if (value.length < 6) {
+      return 'Password must be at least 6 characters';
+    }
+    return null;
+  }
+
+  String? _validateConfirmPassword(String? value) {
+    if (value != _passwordController.text) {
+      return 'Passwords do not match';
+    }
+    return null;
+  }
+
+  void _onSignUp() {
+    if (_formKey.currentState?.validate() ?? false) {
+      context.read<AuthBloc>().add(SignUpRequested(
+            email: _emailController.text.trim(),
+            password: _passwordController.text,
+            fullName: _fullNameController.text.trim(),
+            role: _selectedRole,
+            companyName: _selectedRole == UserRole.entrepreneur
+                ? _companyController.text.trim()
+                : null,
+            fundName: _selectedRole == UserRole.investor
+                ? _companyController.text.trim()
+                : null,
+          ));
+    }
+  }
+
+  void _onGoogleSignUp() {
+    context.read<AuthBloc>().add(GoogleSignInRequested(
+          role: _selectedRole,
+          companyName: _selectedRole == UserRole.entrepreneur
+              ? _companyController.text.trim()
+              : null,
+          fundName: _selectedRole == UserRole.investor
+              ? _companyController.text.trim()
+              : null,
+        ));
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Register'),
-        centerTitle: true,
-      ),
-      body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(24.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              const SizedBox(height: 24),
-              const Icon(
-                Icons.person_add_alt_1_outlined,
-                size: 80,
-                color: Colors.blue,
+    return BlocListener<AuthBloc, AuthState>(
+      listener: (context, state) {
+        setState(() => _isLoading = state.isLoading);
+
+        if (state.hasError && state.errorMessage != null) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(state.errorMessage!),
+              backgroundColor: AppColors.destructive,
+            ),
+          );
+        }
+
+        if (state.needsEmailVerification) {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(
+              builder: (context) => VerifyEmailPage(
+                email: _emailController.text.trim(),
               ),
-              const SizedBox(height: 32),
-              Text(
-                'Create Account',
-                style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 8),
-              Text(
-                'Sign up to get started',
-                style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                      color: Colors.grey,
-                    ),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 32),
-              TextField(
-                controller: _nameController,
-                textCapitalization: TextCapitalization.words,
-                decoration: const InputDecoration(
-                  labelText: 'Full Name',
-                  prefixIcon: Icon(Icons.person_outline),
-                  border: OutlineInputBorder(),
-                ),
-              ),
-              const SizedBox(height: 16),
-              TextField(
-                controller: _emailController,
-                keyboardType: TextInputType.emailAddress,
-                decoration: const InputDecoration(
-                  labelText: 'Email',
-                  prefixIcon: Icon(Icons.email_outlined),
-                  border: OutlineInputBorder(),
-                ),
-              ),
-              const SizedBox(height: 16),
-              TextField(
-                controller: _passwordController,
-                obscureText: _obscurePassword,
-                decoration: InputDecoration(
-                  labelText: 'Password',
-                  prefixIcon: const Icon(Icons.lock_outline),
-                  border: const OutlineInputBorder(),
-                  suffixIcon: IconButton(
-                    icon: Icon(
-                      _obscurePassword ? Icons.visibility_off : Icons.visibility,
-                    ),
-                    onPressed: () {
-                      setState(() {
-                        _obscurePassword = !_obscurePassword;
-                      });
-                    },
-                  ),
-                ),
-              ),
-              const SizedBox(height: 16),
-              TextField(
-                controller: _confirmPasswordController,
-                obscureText: _obscureConfirmPassword,
-                decoration: InputDecoration(
-                  labelText: 'Confirm Password',
-                  prefixIcon: const Icon(Icons.lock_outline),
-                  border: const OutlineInputBorder(),
-                  suffixIcon: IconButton(
-                    icon: Icon(
-                      _obscureConfirmPassword ? Icons.visibility_off : Icons.visibility,
-                    ),
-                    onPressed: () {
-                      setState(() {
-                        _obscureConfirmPassword = !_obscureConfirmPassword;
-                      });
-                    },
-                  ),
-                ),
-              ),
-              const SizedBox(height: 32),
-              ElevatedButton(
-                onPressed: () {
-                  // TODO: Implement registration logic
-                },
-                style: ElevatedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                ),
-                child: const Text(
-                  'SIGN UP',
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                ),
-              ),
-              const SizedBox(height: 24),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
+            ),
+          );
+        }
+
+        if (state.isAuthenticated) {
+          Navigator.of(context).popUntil((route) => route.isFirst);
+        }
+      },
+      child: Scaffold(
+        body: SafeArea(
+          child: SingleChildScrollView(
+            padding: AppSpacing.screenPadding,
+            child: Form(
+              key: _formKey,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  const Text('Already have an account?'),
-                  TextButton(
-                    onPressed: () {
-                      Navigator.pop(context);
-                    },
-                    child: const Text('Login'),
+                  AppSpacing.gapLg,
+                  const Center(child: AppLogo(size: 56)),
+                  AppSpacing.gapXl,
+                  Text(
+                    'Create an account',
+                    style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                          fontWeight: FontWeight.bold,
+                        ),
+                    textAlign: TextAlign.center,
                   ),
+                  AppSpacing.gapSm,
+                  Text(
+                    'Select your role and enter your details',
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                          color: AppColors.mutedForeground,
+                        ),
+                    textAlign: TextAlign.center,
+                  ),
+                  AppSpacing.gapLg,
+                  RoleSelector(
+                    selectedRole: _selectedRole,
+                    onRoleChanged: _onRoleChanged,
+                    enabled: !_isLoading,
+                  ),
+                  AppSpacing.gapLg,
+                  GoogleSignInButton(
+                    onPressed: _isLoading ? null : _onGoogleSignUp,
+                    isLoading: _isLoading,
+                  ),
+                  AppSpacing.gapLg,
+                  const AppDividerWithText(text: 'Or continue with email'),
+                  AppSpacing.gapLg,
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Expanded(
+                        child: AppTextField(
+                          label: 'Full Name',
+                          hint: 'Abebe Kebede',
+                          controller: _fullNameController,
+                          prefixIcon: Icons.person_outline,
+                          textCapitalization: TextCapitalization.words,
+                          enabled: !_isLoading,
+                          validator: (value) {
+                            if (value == null || value.isEmpty) {
+                              return 'Name is required';
+                            }
+                            return null;
+                          },
+                        ),
+                      ),
+                      AppSpacing.hGapMd,
+                      Expanded(
+                        child: AppTextField(
+                          label: _selectedRole == UserRole.entrepreneur
+                              ? 'Company'
+                              : 'Org / Fund',
+                          hint: _selectedRole == UserRole.entrepreneur
+                              ? 'Ethio Tech PLC'
+                              : 'Addis Capital Group',
+                          controller: _companyController,
+                          prefixIcon: Icons.business_outlined,
+                          textCapitalization: TextCapitalization.words,
+                          enabled: !_isLoading,
+                        ),
+                      ),
+                    ],
+                  ),
+                  AppSpacing.gapMd,
+                  AppTextField(
+                    label: 'Email',
+                    hint: 'you@example.com',
+                    controller: _emailController,
+                    prefixIcon: Icons.email_outlined,
+                    keyboardType: TextInputType.emailAddress,
+                    enabled: !_isLoading,
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'Email is required';
+                      }
+                      if (!value.contains('@')) {
+                        return 'Enter a valid email';
+                      }
+                      return null;
+                    },
+                  ),
+                  AppSpacing.gapMd,
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Expanded(
+                        child: AppPasswordField(
+                          label: 'Password',
+                          controller: _passwordController,
+                          enabled: !_isLoading,
+                          validator: _validatePassword,
+                        ),
+                      ),
+                      AppSpacing.hGapMd,
+                      Expanded(
+                        child: AppPasswordField(
+                          label: 'Confirm',
+                          controller: _confirmPasswordController,
+                          enabled: !_isLoading,
+                          validator: _validateConfirmPassword,
+                        ),
+                      ),
+                    ],
+                  ),
+                  AppSpacing.gapLg,
+                  AppButton(
+                    text: _isLoading ? 'Creating account...' : 'Create Account',
+                    onPressed: _isLoading ? null : _onSignUp,
+                    isLoading: _isLoading,
+                  ),
+                  AppSpacing.gapLg,
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        'Already have an account? ',
+                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                              color: AppColors.mutedForeground,
+                            ),
+                      ),
+                      GestureDetector(
+                        onTap: _isLoading
+                            ? null
+                            : () {
+                                Navigator.pushReplacement(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => const LoginPage(),
+                                  ),
+                                );
+                              },
+                        child: Text(
+                          'Sign in',
+                          style:
+                              Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                    color: AppColors.primary,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  AppSpacing.gapXl,
                 ],
               ),
-            ],
+            ),
           ),
         ),
       ),
