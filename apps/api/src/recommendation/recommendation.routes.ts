@@ -15,6 +15,8 @@
 
 import { type Request, type Response, Router } from "express";
 import { authenticate, authorize } from "../middleware/auth";
+import { MatchResult } from "../models/MatchResult";
+import { AIService } from "../services/ai.service";
 import { MatchingService } from "../services/matching.service";
 import { applyRocchioUpdate } from "./rocchio.service";
 
@@ -26,6 +28,100 @@ const router = Router();
  *   - name: Recommendation
  *     description: AI matching queue and investor match response actions
  */
+
+// ── POST /api/recommendation/classify ────────────────────────────────────────
+// Admin-only proxy to the Python /classify-pitch endpoint.
+// Keeps the AI service off the public internet — browser calls Node, Node calls Python.
+router.post(
+	"/classify",
+	authenticate,
+	authorize("admin"),
+	async (req: Request, res: Response): Promise<void> => {
+		try {
+			const { pitchText } = req.body as { pitchText: string };
+			if (!pitchText?.trim()) {
+				res
+					.status(400)
+					.json({ status: "error", message: "pitchText is required" });
+				return;
+			}
+			const result = await AIService.classifyPitch(pitchText);
+			res.status(200).json({ status: "success", ...result });
+		} catch (err) {
+			console.error("Failed to classify pitch", err);
+			res
+				.status(500)
+				.json({ status: "error", message: "Classification failed" });
+		}
+	},
+);
+
+// ── GET /api/recommendation/matches/count ────────────────────────────────────
+// Returns accepted match count for the authenticated entrepreneur's submissions.
+// Used by the entrepreneur dashboard stat card.
+router.get(
+	"/matches/count",
+	authenticate,
+	authorize("entrepreneur"),
+	async (req: Request, res: Response): Promise<void> => {
+		try {
+			const count = await MatchResult.countDocuments({
+				entrepreneurId: req.user?._id,
+				status: "accepted",
+			});
+			res.status(200).json({ status: "success", count });
+		} catch (err) {
+			console.error("Failed to fetch match count", err);
+			res
+				.status(500)
+				.json({ status: "error", message: "Failed to fetch match count" });
+		}
+	},
+);
+
+// ── POST /api/recommendation/matches/click/:submissionId ─────────────────────
+// Records an implicit "click" Rocchio signal (+0.05) when an investor opens
+// a pitch detail page. Also returns the match context (score, breakdown,
+// status) so the pitch page can display it without a separate fetch.
+router.post(
+	"/matches/click/:submissionId",
+	authenticate,
+	authorize("investor"),
+	async (req: Request, res: Response): Promise<void> => {
+		try {
+			const investorUserId = req.user?._id.toString() ?? "";
+			const { submissionId } = req.params;
+
+			const match = await MatchResult.findOne({
+				submissionId,
+				investorId: req.user?._id,
+			}).lean();
+
+			if (!match) {
+				res.status(200).json({ status: "success", match: null });
+				return;
+			}
+
+			// Fire Rocchio click update in background — never block the response
+			setImmediate(() => {
+				applyRocchioUpdate({
+					investorUserId,
+					submissionId,
+					action: "click",
+				}).catch(() => {
+					// Silently ignore — click signal is best-effort
+				});
+			});
+
+			res.status(200).json({ status: "success", match });
+		} catch (err) {
+			console.error("Failed to record click signal", err);
+			res
+				.status(500)
+				.json({ status: "error", message: "Failed to record click" });
+		}
+	},
+);
 
 // ── GET /api/recommendation/matches ─────────────────────────────────────────
 /**

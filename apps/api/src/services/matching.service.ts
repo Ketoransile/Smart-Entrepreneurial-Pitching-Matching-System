@@ -191,6 +191,14 @@ export class MatchingService {
 			.sort({ updatedAt: -1 })
 			.limit(250);
 
+		console.log(
+			`[MATCHING] Starting for submission "${submission.title}" (${submissionId})`,
+		);
+		console.log(
+			`[MATCHING] sector=${submission.sector} stage=${submission.stage} minScore=${minScore}`,
+		);
+		console.log(`[MATCHING] Found ${investors.length} eligible investors`);
+
 		const scored: Array<{
 			investorId: string;
 			score: number;
@@ -248,9 +256,15 @@ export class MatchingService {
 			});
 
 			if (scoredResult.score < minScore) {
+				console.log(
+					`[MATCHING] ❌ investor ${investor.userId} score=${scoredResult.score.toFixed(4)} below minScore=${minScore} — skipped`,
+				);
 				continue;
 			}
 
+			console.log(
+				`[MATCHING] ✅ investor ${investor.userId} score=${scoredResult.score.toFixed(4)} breakdown=${JSON.stringify(scoredResult.breakdown)}`,
+			);
 			scored.push({
 				investorId: investor.userId.toString(),
 				score: scoredResult.score,
@@ -325,10 +339,10 @@ export class MatchingService {
 			persistedMatches.push(created);
 		}
 
-		if (persistedMatches.length > 0 && submission.status === "under_review") {
-			submission.status = "approved";
-			await submission.save();
-		}
+		console.log(
+			`[MATCHING] Done: ${persistedMatches.length} matches persisted for "${submission.title}"`,
+		);
+		// Note: submission status stays "under_review" — admin must explicitly approve via /submissions/:id/status
 
 		return {
 			submissionId: submission._id.toString(),
