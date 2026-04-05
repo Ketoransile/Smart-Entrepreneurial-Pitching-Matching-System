@@ -62,8 +62,8 @@ import {
 } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
-import { useAuth } from "@/context/AuthContext";
 import { ADMIN_NAV } from "@/constants/navigation";
+import { useAuth } from "@/context/AuthContext";
 
 interface UserRecord {
 	_id: string;
@@ -89,8 +89,6 @@ interface Stats {
 	total: number;
 	[key: string]: number;
 }
-
-
 
 function roleBadge(role: string) {
 	switch (role) {
@@ -214,6 +212,14 @@ export default function AdminOversight() {
 	const [showInviteDialog, setShowInviteDialog] = useState(false);
 	const [inviteLink, setInviteLink] = useState("");
 	const [inviting, setInviting] = useState(false);
+
+	const [userPage, setUserPage] = useState(1);
+	const [submissionPage, setSubmissionPage] = useState(1);
+	const ITEMS_PER_PAGE = 10;
+	const [adminToRemove, setAdminToRemove] = useState<{
+		id: string;
+		name: string;
+	} | null>(null);
 
 	// Add admin by email (super admin only)
 	const [addByEmail, setAddByEmail] = useState("");
@@ -475,13 +481,11 @@ export default function AdminOversight() {
 		}
 	};
 
-	const handleRemoveAdmin = async (adminId: string, adminName: string) => {
-		if (!user) return;
-		if (!confirm(`Are you sure you want to remove ${adminName} as admin?`))
-			return;
+	const handleRemoveAdmin = async () => {
+		if (!user || !adminToRemove) return;
 		try {
 			const token = await user.getIdToken();
-			const res = await fetch(`${api}/auth/admin/admins/${adminId}`, {
+			const res = await fetch(`${api}/auth/admin/admins/${adminToRemove.id}`, {
 				method: "DELETE",
 				headers: { Authorization: `Bearer ${token}` },
 			});
@@ -495,8 +499,22 @@ export default function AdminOversight() {
 			}
 		} catch (err) {
 			toast.error("Failed to remove admin");
+		} finally {
+			setAdminToRemove(null);
 		}
 	};
+
+	const paginatedUsers = users.slice(
+		(userPage - 1) * ITEMS_PER_PAGE,
+		userPage * ITEMS_PER_PAGE,
+	);
+	const totalUserPages = Math.ceil(users.length / ITEMS_PER_PAGE);
+
+	const paginatedSubmissions = submissions.slice(
+		(submissionPage - 1) * ITEMS_PER_PAGE,
+		submissionPage * ITEMS_PER_PAGE,
+	);
+	const totalSubmissionPages = Math.ceil(submissions.length / ITEMS_PER_PAGE);
 
 	return (
 		<ProtectedRoute allowedRoles={["admin"]}>
@@ -665,7 +683,13 @@ export default function AdminOversight() {
 					{/* ─── Users Tab ─── */}
 					<TabsContent value="users">
 						<div className="flex gap-3 mb-4">
-							<Select value={roleFilter} onValueChange={setRoleFilter}>
+							<Select
+								value={roleFilter}
+								onValueChange={(v) => {
+									setRoleFilter(v);
+									setUserPage(1);
+								}}
+							>
 								<SelectTrigger className="w-40">
 									<SelectValue placeholder="Filter role" />
 								</SelectTrigger>
@@ -710,7 +734,7 @@ export default function AdminOversight() {
 											</TableCell>
 										</TableRow>
 									) : (
-										users.map((u) => (
+										paginatedUsers.map((u) => (
 											<TableRow key={u._id}>
 												<TableCell className="font-medium">
 													{u.fullName}
@@ -766,13 +790,44 @@ export default function AdminOversight() {
 									)}
 								</TableBody>
 							</Table>
+							{totalUserPages > 1 && (
+								<div className="flex items-center justify-end space-x-2 p-4 border-t border-border/50">
+									<Button
+										variant="outline"
+										size="sm"
+										onClick={() => setUserPage((p) => Math.max(1, p - 1))}
+										disabled={userPage === 1}
+									>
+										Previous
+									</Button>
+									<span className="text-sm text-muted-foreground bg-muted/20 px-3 py-1 rounded-md border border-border/50">
+										Page {userPage} of {totalUserPages}
+									</span>
+									<Button
+										variant="outline"
+										size="sm"
+										onClick={() =>
+											setUserPage((p) => Math.min(totalUserPages, p + 1))
+										}
+										disabled={userPage === totalUserPages}
+									>
+										Next
+									</Button>
+								</div>
+							)}
 						</Card>
 					</TabsContent>
 
 					{/* ─── Submissions Tab ─── */}
 					<TabsContent value="submissions">
 						<div className="flex gap-3 mb-4">
-							<Select value={statusFilter} onValueChange={setStatusFilter}>
+							<Select
+								value={statusFilter}
+								onValueChange={(v) => {
+									setStatusFilter(v);
+									setSubmissionPage(1);
+								}}
+							>
 								<SelectTrigger className="w-44">
 									<SelectValue placeholder="Filter status" />
 								</SelectTrigger>
@@ -821,7 +876,7 @@ export default function AdminOversight() {
 											</TableCell>
 										</TableRow>
 									) : (
-										submissions.map((s) => (
+										paginatedSubmissions.map((s) => (
 											<TableRow key={s._id}>
 												<TableCell className="font-medium max-w-[200px] truncate">
 													{s.title}
@@ -866,6 +921,33 @@ export default function AdminOversight() {
 									)}
 								</TableBody>
 							</Table>
+							{totalSubmissionPages > 1 && (
+								<div className="flex items-center justify-end space-x-2 p-4 border-t border-border/50">
+									<Button
+										variant="outline"
+										size="sm"
+										onClick={() => setSubmissionPage((p) => Math.max(1, p - 1))}
+										disabled={submissionPage === 1}
+									>
+										Previous
+									</Button>
+									<span className="text-sm text-muted-foreground bg-muted/20 px-3 py-1 rounded-md border border-border/50">
+										Page {submissionPage} of {totalSubmissionPages}
+									</span>
+									<Button
+										variant="outline"
+										size="sm"
+										onClick={() =>
+											setSubmissionPage((p) =>
+												Math.min(totalSubmissionPages, p + 1),
+											)
+										}
+										disabled={submissionPage === totalSubmissionPages}
+									>
+										Next
+									</Button>
+								</div>
+							)}
 						</Card>
 					</TabsContent>
 
@@ -945,7 +1027,10 @@ export default function AdminOversight() {
 																variant="ghost"
 																className="text-destructive hover:text-destructive hover:bg-destructive/10 gap-1.5"
 																onClick={() =>
-																	handleRemoveAdmin(a._id, a.fullName)
+																	setAdminToRemove({
+																		id: a._id,
+																		name: a.fullName,
+																	})
 																}
 															>
 																<Trash2 className="h-3.5 w-3.5" />
@@ -1107,6 +1192,39 @@ export default function AdminOversight() {
 											)}
 										</TabsContent>
 									</Tabs>
+								</DialogContent>
+							</Dialog>
+
+							{/* Remove Admin Confirm Dialog */}
+							<Dialog
+								open={!!adminToRemove}
+								onOpenChange={(open) => {
+									if (!open) setAdminToRemove(null);
+								}}
+							>
+								<DialogContent className="sm:max-w-md">
+									<DialogHeader>
+										<DialogTitle className="flex items-center gap-2 text-destructive">
+											<ShieldAlert className="h-5 w-5" />
+											Remove Admin Access
+										</DialogTitle>
+										<DialogDescription>
+											Are you sure you want to remove{" "}
+											<strong>{adminToRemove?.name}</strong> from the admin
+											team? They will lose all administrative privileges.
+										</DialogDescription>
+									</DialogHeader>
+									<DialogFooter className="mt-4">
+										<Button
+											variant="outline"
+											onClick={() => setAdminToRemove(null)}
+										>
+											Cancel
+										</Button>
+										<Button variant="destructive" onClick={handleRemoveAdmin}>
+											Remove Admin
+										</Button>
+									</DialogFooter>
 								</DialogContent>
 							</Dialog>
 						</TabsContent>
