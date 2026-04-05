@@ -106,7 +106,7 @@ function SignUpForm() {
 							Join Ethiopia's future <br /> of start-up funding.
 						</h1>
 						<p className="text-lg text-muted-foreground max-w-md leading-relaxed">
-							Create your account to start pitching your ideas or discovering
+							Create your account to start pitching your startup or discovering
 							high-potential investment opportunities in the Ethiopian startup
 							ecosystem through our AI-matching engine.
 						</p>
