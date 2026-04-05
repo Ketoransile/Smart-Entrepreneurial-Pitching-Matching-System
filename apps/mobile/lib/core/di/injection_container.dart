@@ -53,6 +53,8 @@ Future<void> initDependencies() async {
   sl.registerLazySingleton(() => SignOutUseCase(sl<AuthRepository>()));
   sl.registerLazySingleton(() => GetCurrentUserUseCase(sl<AuthRepository>()));
   sl.registerLazySingleton(() => ResendVerificationUseCase(sl<AuthRepository>()));
+  sl.registerLazySingleton(() => RefreshUserProfileUseCase(sl<AuthRepository>()));
+  sl.registerLazySingleton(() => SendPasswordResetEmailUseCase(sl<AuthRepository>()));
 
   // BLoCs
   sl.registerFactory<AuthBloc>(
@@ -63,6 +65,9 @@ Future<void> initDependencies() async {
       signOut: sl<SignOutUseCase>(),
       getCurrentUser: sl<GetCurrentUserUseCase>(),
       resendVerification: sl<ResendVerificationUseCase>(),
+      refreshUserProfile: sl<RefreshUserProfileUseCase>(),
+      sendPasswordResetEmail: sl<SendPasswordResetEmailUseCase>(),
+      authStateChanges: sl<AuthRepository>().authStateChanges,
     ),
   );
 }

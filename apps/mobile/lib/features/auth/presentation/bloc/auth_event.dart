@@ -90,3 +90,7 @@ class PasswordResetRequested extends AuthEvent {
   @override
   List<Object?> get props => [email];
 }
+
+class ClearFeedbackRequested extends AuthEvent {
+  const ClearFeedbackRequested();
+}

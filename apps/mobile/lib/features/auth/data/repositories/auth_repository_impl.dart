@@ -112,6 +112,8 @@ class AuthRepositoryImpl implements AuthRepository {
       }
 
       return const Left(AuthFailure(message: 'No user found'));
+    } on Failure catch (e) {
+      return Left(e);
     } catch (e) {
       final cachedUser = await _localDataSource.getCachedUser();
       if (cachedUser != null) {

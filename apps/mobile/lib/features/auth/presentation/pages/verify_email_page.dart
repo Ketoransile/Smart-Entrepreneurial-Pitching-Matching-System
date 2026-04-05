@@ -69,7 +69,14 @@ class _VerifyEmailPageState extends State<VerifyEmailPage> {
         if (_isChecking && !state.isLoading) {
           setState(() => _isChecking = false);
 
-          if (state.isAuthenticated) {
+          if (state.errorMessage != null) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(state.errorMessage!),
+                backgroundColor: AppColors.destructive,
+              ),
+            );
+          } else if (state.isAuthenticated) {
             Navigator.of(context).popUntil((route) => route.isFirst);
           } else if (state.needsEmailVerification) {
             ScaffoldMessenger.of(context).showSnackBar(

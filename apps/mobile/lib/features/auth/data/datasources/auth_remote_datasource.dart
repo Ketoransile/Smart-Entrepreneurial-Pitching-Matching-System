@@ -1,3 +1,4 @@
+import 'package:dio/dio.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import '../../../../core/config/api_config.dart';
@@ -105,12 +106,11 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
         password: password,
       );
 
-      final userProfile = await _fetchUserProfile();
-      if (userProfile == null) {
+      final profile = await _fetchUserProfile();
+      if (profile == null) {
         throw const AuthFailure(message: 'User profile not found');
       }
-
-      return userProfile;
+      return profile;
     } on FirebaseAuthException catch (e) {
       throw AuthFailure.fromFirebaseCode(e.code);
     } catch (e) {
@@ -209,7 +209,6 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
       if (profile == null) {
         throw const AuthFailure(message: 'User profile not found');
       }
-
       return profile;
     } catch (e) {
       if (e is AuthFailure) rethrow;
@@ -228,6 +227,8 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
     }
   }
 
+  /// Returns null if the backend has no profile yet (HTTP 404), for flows such
+  /// as first-time Google sign-in that then call [_registerWithBackend].
   Future<UserModel?> _fetchUserProfile() async {
     try {
       final response = await _dioClient.get(ApiConfig.me);
@@ -237,9 +238,37 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
         return UserModel.fromJson(data['user'] as Map<String, dynamic>);
       }
 
-      return null;
+      if (response.statusCode == 404) {
+        return null;
+      }
+
+      throw ServerFailure(
+        message: 'Failed to load profile (HTTP ${response.statusCode})',
+      );
+    } on DioException catch (e) {
+      if (e.type == DioExceptionType.connectionTimeout ||
+          e.type == DioExceptionType.sendTimeout ||
+          e.type == DioExceptionType.receiveTimeout ||
+          e.type == DioExceptionType.connectionError) {
+        throw const NetworkFailure();
+      }
+      final status = e.response?.statusCode;
+      if (status == 404) {
+        return null;
+      }
+      if (status == 401 || status == 403) {
+        throw const AuthFailure(
+          message: 'Session expired or not authorized. Please sign in again.',
+        );
+      }
+      throw ServerFailure(
+        message: e.message ?? 'Could not reach the server',
+      );
     } catch (e) {
-      return null;
+      if (e is AuthFailure || e is NetworkFailure || e is ServerFailure) {
+        rethrow;
+      }
+      throw ServerFailure(message: e.toString());
     }
   }
 

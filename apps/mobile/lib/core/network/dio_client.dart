@@ -1,5 +1,7 @@
 import 'package:dio/dio.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/foundation.dart';
+
 import '../config/api_config.dart';
 
 class DioClient {
@@ -35,13 +37,23 @@ class DioClient {
       ),
     );
 
-    _dio.interceptors.add(
-      LogInterceptor(
-        requestBody: true,
-        responseBody: true,
-        error: true,
-      ),
-    );
+    if (kDebugMode) {
+      _dio.interceptors.add(
+        LogInterceptor(
+          requestBody: true,
+          responseBody: true,
+          error: true,
+          logPrint: (obj) {
+            var line = obj.toString();
+            line = line.replaceAll(
+              RegExp(r'Bearer\s+[^\s]+', caseSensitive: false),
+              'Bearer [REDACTED]',
+            );
+            debugPrint(line);
+          },
+        ),
+      );
+    }
   }
 
   Future<String?> _getFirebaseToken() async {

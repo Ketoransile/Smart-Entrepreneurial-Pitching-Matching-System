@@ -1,4 +1,5 @@
 import 'dart:async';
+
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../domain/entities/user_entity.dart';
 import '../../domain/usecases/usecases.dart';
@@ -12,6 +13,8 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   final SignOutUseCase _signOut;
   final GetCurrentUserUseCase _getCurrentUser;
   final ResendVerificationUseCase _resendVerification;
+  final RefreshUserProfileUseCase _refreshUserProfile;
+  final SendPasswordResetEmailUseCase _sendPasswordResetEmail;
 
   StreamSubscription<UserEntity?>? _authStateSubscription;
 
@@ -22,13 +25,21 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     required SignOutUseCase signOut,
     required GetCurrentUserUseCase getCurrentUser,
     required ResendVerificationUseCase resendVerification,
+    required RefreshUserProfileUseCase refreshUserProfile,
+    required SendPasswordResetEmailUseCase sendPasswordResetEmail,
+    required Stream<UserEntity?> authStateChanges,
   })  : _signIn = signIn,
         _signUp = signUp,
         _signInWithGoogle = signInWithGoogle,
         _signOut = signOut,
         _getCurrentUser = getCurrentUser,
         _resendVerification = resendVerification,
+        _refreshUserProfile = refreshUserProfile,
+        _sendPasswordResetEmail = sendPasswordResetEmail,
         super(const AuthState.initial()) {
+    _authStateSubscription = authStateChanges.listen((user) {
+      add(AuthStateChanged(user));
+    });
     on<AuthCheckRequested>(_onAuthCheckRequested);
     on<AuthStateChanged>(_onAuthStateChanged);
     on<SignUpRequested>(_onSignUpRequested);
@@ -37,6 +48,25 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     on<SignOutRequested>(_onSignOutRequested);
     on<ResendVerificationRequested>(_onResendVerificationRequested);
     on<RefreshUserRequested>(_onRefreshUserRequested);
+    on<PasswordResetRequested>(_onPasswordResetRequested);
+    on<ClearFeedbackRequested>(_onClearFeedbackRequested);
+  }
+
+  @override
+  Future<void> close() {
+    _authStateSubscription?.cancel();
+    return super.close();
+  }
+
+  /// Clears stale feedback and marks a pending auth call without switching to
+  /// [AuthStatus.loading] (so [AuthWrapper] does not show the splash screen).
+  void _emitPendingAuthAction(Emitter<AuthState> emit) {
+    emit(state.copyWith(
+      isLoading: true,
+      errorMessage: null,
+      successMessage: null,
+      status: state.status == AuthStatus.error ? AuthStatus.unauthenticated : state.status,
+    ));
   }
 
   Future<void> _onAuthCheckRequested(
@@ -76,7 +106,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     SignUpRequested event,
     Emitter<AuthState> emit,
   ) async {
-    emit(state.copyWith(isLoading: true));
+    _emitPendingAuthAction(emit);
 
     final result = await _signUp(SignUpParams(
       email: event.email,
@@ -97,7 +127,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     SignInRequested event,
     Emitter<AuthState> emit,
   ) async {
-    emit(state.copyWith(isLoading: true));
+    _emitPendingAuthAction(emit);
 
     final result = await _signIn(SignInParams(
       email: event.email,
@@ -120,7 +150,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     GoogleSignInRequested event,
     Emitter<AuthState> emit,
   ) async {
-    emit(state.copyWith(isLoading: true));
+    _emitPendingAuthAction(emit);
 
     final result = await _signInWithGoogle(SignInWithGoogleParams(
       role: event.role,
@@ -138,7 +168,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     SignOutRequested event,
     Emitter<AuthState> emit,
   ) async {
-    emit(state.copyWith(isLoading: true));
+    _emitPendingAuthAction(emit);
 
     final result = await _signOut();
 
@@ -152,7 +182,10 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     ResendVerificationRequested event,
     Emitter<AuthState> emit,
   ) async {
-    emit(state.copyWith(isLoading: true));
+    emit(state.copyWith(
+      isLoading: true,
+      errorMessage: null,
+    ));
 
     final result = await _resendVerification();
 
@@ -161,7 +194,10 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
         isLoading: false,
         errorMessage: failure.message,
       )),
-      (_) => emit(state.copyWith(isLoading: false)),
+      (_) => emit(state.copyWith(
+        isLoading: false,
+        errorMessage: null,
+      )),
     );
   }
 
@@ -169,9 +205,12 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     RefreshUserRequested event,
     Emitter<AuthState> emit,
   ) async {
-    emit(state.copyWith(isLoading: true));
+    emit(state.copyWith(
+      isLoading: true,
+      errorMessage: null,
+    ));
 
-    final result = await _getCurrentUser();
+    final result = await _refreshUserProfile();
 
     result.fold(
       (failure) => emit(state.copyWith(
@@ -188,9 +227,34 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     );
   }
 
-  @override
-  Future<void> close() {
-    _authStateSubscription?.cancel();
-    return super.close();
+  Future<void> _onPasswordResetRequested(
+    PasswordResetRequested event,
+    Emitter<AuthState> emit,
+  ) async {
+    _emitPendingAuthAction(emit);
+
+    final result = await _sendPasswordResetEmail(event.email);
+
+    result.fold(
+      (failure) => emit(AuthState.error(failure.message)),
+      (_) => emit(const AuthState.unauthenticated(
+        successMessage:
+            'Password reset email sent. Check your inbox.',
+      )),
+    );
+  }
+
+  void _onClearFeedbackRequested(
+    ClearFeedbackRequested event,
+    Emitter<AuthState> emit,
+  ) {
+    if (state.status == AuthStatus.error) {
+      emit(const AuthState.unauthenticated());
+    } else {
+      emit(state.copyWith(
+        errorMessage: null,
+        successMessage: null,
+      ));
+    }
   }
 }

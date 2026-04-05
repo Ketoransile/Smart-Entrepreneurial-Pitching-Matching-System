@@ -23,6 +23,7 @@ class _LoginPageState extends State<LoginPage> {
   final _passwordController = TextEditingController();
 
   bool _isLoading = false;
+  bool _awaitingPasswordReset = false;
 
   @override
   void dispose() {
@@ -56,7 +57,32 @@ class _LoginPageState extends State<LoginPage> {
       listener: (context, state) {
         setState(() => _isLoading = state.isLoading);
 
-        if (state.hasError && state.errorMessage != null) {
+        if (_awaitingPasswordReset && !state.isLoading) {
+          setState(() => _awaitingPasswordReset = false);
+          if (Navigator.of(context).canPop()) {
+            Navigator.of(context).pop();
+          }
+          if (state.successMessage != null) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(state.successMessage!),
+                backgroundColor: AppColors.success,
+              ),
+            );
+            context.read<AuthBloc>().add(const ClearFeedbackRequested());
+          } else if (state.hasError && state.errorMessage != null) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(state.errorMessage!),
+                backgroundColor: AppColors.destructive,
+              ),
+            );
+            context.read<AuthBloc>().add(const ClearFeedbackRequested());
+          }
+          return;
+        }
+
+        if (state.hasError && state.errorMessage != null && !_awaitingPasswordReset) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(state.errorMessage!),
@@ -245,15 +271,12 @@ class _LoginPageState extends State<LoginPage> {
           ),
           ElevatedButton(
             onPressed: () {
-              if (emailController.text.isNotEmpty) {
-                Navigator.pop(context);
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Password reset email sent!'),
-                    backgroundColor: AppColors.success,
-                  ),
-                );
+              final email = emailController.text.trim();
+              if (email.isEmpty) {
+                return;
               }
+              setState(() => _awaitingPasswordReset = true);
+              context.read<AuthBloc>().add(PasswordResetRequested(email: email));
             },
             child: const Text('Send Reset Link'),
           ),
