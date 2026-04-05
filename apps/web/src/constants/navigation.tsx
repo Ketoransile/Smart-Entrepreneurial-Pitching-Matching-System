@@ -88,6 +88,11 @@ export const ADMIN_NAV = [
 		icon: <ShieldAlert className="h-4 w-4" />,
 	},
 	{
+		label: "Messages",
+		href: "/admin/messages",
+		icon: <MessageCircle className="h-4 w-4" />,
+	},
+	{
 		label: "Settings",
 		href: "/admin/settings",
 		icon: <Settings className="h-4 w-4" />,

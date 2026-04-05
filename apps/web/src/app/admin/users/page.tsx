@@ -23,6 +23,7 @@ import {
 	XCircle,
 } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import DashboardLayout from "@/components/DashboardLayout";
 import ProtectedRoute from "@/components/ProtectedRoute";
@@ -170,6 +171,7 @@ function DocLink({
 
 export default function AdminUsersPage() {
 	const { user, userProfile } = useAuth();
+	const router = useRouter();
 	const isSuperAdmin = userProfile?.adminLevel === "super_admin";
 
 	const [users, setUsers] = useState<UserRecord[]>([]);
@@ -277,6 +279,33 @@ export default function AdminUsersPage() {
 			fetchUsers();
 		} catch {
 			toast.error("Failed to update status");
+		}
+	};
+
+	const handleMessageUser = async (otherUserId: string) => {
+		if (!user) return;
+		try {
+			const token = await user.getIdToken();
+			const res = await fetch(`${api}/messages/conversations`, {
+				method: "POST",
+				headers: {
+					Authorization: `Bearer ${token}`,
+					"Content-Type": "application/json",
+				},
+				body: JSON.stringify({ otherUserId }),
+			});
+			if (res.ok) {
+				const data = await res.json();
+				if (data.conversation && data.conversation._id) {
+					router.push(`/admin/messages?open=${data.conversation._id}`);
+				} else {
+					toast.error("Failed to start conversation");
+				}
+			} else {
+				toast.error("Failed to start conversation");
+			}
+		} catch {
+			toast.error("Failed to start conversation");
 		}
 	};
 
@@ -457,22 +486,50 @@ export default function AdminUsersPage() {
 											</TableCell>
 											<TableCell className="text-right">
 												{isProtected ? (
-													<span className="text-xs text-muted-foreground">
-														Protected
-													</span>
+													<div className="flex items-center justify-end gap-3">
+														<span className="text-xs text-muted-foreground">
+															Protected
+														</span>
+														<Button
+															size="sm"
+															variant="outline"
+															className="gap-1.5"
+															onClick={(e) => {
+																e.stopPropagation();
+																handleMessageUser(u._id);
+															}}
+														>
+															<MessageSquare className="h-3.5 w-3.5" />
+															<span className="hidden sm:inline">Message</span>
+														</Button>
+													</div>
 												) : (
-													<Button
-														size="sm"
-														variant="outline"
-														onClick={(e) => {
-															e.stopPropagation();
-															setActionUser(u);
-															setNewStatus(u.status);
-															fetchUserProfile(u._id);
-														}}
-													>
-														Manage
-													</Button>
+													<div className="flex justify-end gap-2">
+														<Button
+															size="sm"
+															variant="outline"
+															className="gap-1.5"
+															onClick={(e) => {
+																e.stopPropagation();
+																handleMessageUser(u._id);
+															}}
+														>
+															<MessageSquare className="h-3.5 w-3.5" />
+															<span className="hidden sm:inline">Message</span>
+														</Button>
+														<Button
+															size="sm"
+															variant="outline"
+															onClick={(e) => {
+																e.stopPropagation();
+																setActionUser(u);
+																setNewStatus(u.status);
+																fetchUserProfile(u._id);
+															}}
+														>
+															Manage
+														</Button>
+													</div>
 												)}
 											</TableCell>
 										</TableRow>
