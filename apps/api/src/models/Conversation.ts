@@ -2,6 +2,8 @@ import { type Document, model, Schema, type Types } from "mongoose";
 
 export interface IConversation extends Document {
 	participants: Types.ObjectId[];
+	title?: string;
+	isGroup?: boolean;
 	matchResultId?: Types.ObjectId;
 	submissionId?: Types.ObjectId;
 	lastMessageAt?: Date;
@@ -20,6 +22,14 @@ const ConversationSchema = new Schema<IConversation>(
 				validator: (arr: Types.ObjectId[]) => arr.length >= 2,
 				message: "A conversation must have at least 2 participants.",
 			},
+		},
+		title: {
+			type: String,
+			default: null,
+		},
+		isGroup: {
+			type: Boolean,
+			default: false,
 		},
 		matchResultId: {
 			type: Schema.Types.ObjectId,

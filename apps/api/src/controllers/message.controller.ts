@@ -145,6 +145,48 @@ export class MessageController {
 		}
 	}
 
+	static async addParticipant(req: Request, res: Response): Promise<void> {
+		try {
+			if (!req.user) {
+				res.status(401).json({ status: "error", message: "Unauthorized" });
+				return;
+			}
+			const conversation = await MessageService.addParticipant(
+				req.params.conversationId,
+				req.user._id.toString(),
+				req.body.targetUserId,
+			);
+			res.status(200).json({
+				status: "success",
+				message: "Participant added",
+				data: conversation,
+			});
+		} catch (error) {
+			handleMessageError(res, error, "Failed to add participant");
+		}
+	}
+
+	static async removeParticipant(req: Request, res: Response): Promise<void> {
+		try {
+			if (!req.user) {
+				res.status(401).json({ status: "error", message: "Unauthorized" });
+				return;
+			}
+			const conversation = await MessageService.removeParticipant(
+				req.params.conversationId,
+				req.user._id.toString(),
+				req.params.userId,
+			);
+			res.status(200).json({
+				status: "success",
+				message: "Participant removed",
+				data: conversation,
+			});
+		} catch (error) {
+			handleMessageError(res, error, "Failed to remove participant");
+		}
+	}
+
 	static async markConversationRead(
 		req: Request,
 		res: Response,

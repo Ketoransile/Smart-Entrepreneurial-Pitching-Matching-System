@@ -151,6 +151,20 @@ router.post(
 	MessageController.sendMessage,
 );
 
+router.post(
+	"/conversations/:conversationId/participants",
+	authenticate,
+	authorize("admin", "super_admin"),
+	MessageController.addParticipant,
+);
+
+router.delete(
+	"/conversations/:conversationId/participants/:userId",
+	authenticate,
+	authorize("admin", "super_admin"),
+	MessageController.removeParticipant,
+);
+
 /**
  * @openapi
  * /api/messages/conversations/{conversationId}/read:

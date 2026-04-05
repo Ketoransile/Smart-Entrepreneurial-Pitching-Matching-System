@@ -110,10 +110,34 @@ export class MessageService {
 	}
 
 	static async listConversationsForUser(userId: string) {
-		// Only return conversations that have at least one message
+		const userRecord = await User.findById(userId);
+		if (userRecord && userRecord.role === "admin") {
+			const allAdmins = await User.find({ role: "admin" }).select("_id");
+			const adminIds = allAdmins.map((a) => a._id.toString());
+
+			let adminGroup = await Conversation.findOne({
+				isGroup: true,
+			});
+			if (!adminGroup) {
+				adminGroup = await Conversation.create({
+					participants: adminIds,
+					title: "Global Admins Chat",
+					isGroup: true,
+					isArchived: false,
+				});
+			} else {
+				if (adminGroup.title !== "Global Admins Chat") {
+					adminGroup.title = "Global Admins Chat";
+					await adminGroup.save();
+				}
+				// Auto-sync is intentionally removed here so Super Admins can manage participants
+			}
+		}
+
+		// Return conversations with messages OR group chats
 		const conversations = await Conversation.find({
 			participants: userId,
-			lastMessageAt: { $ne: null },
+			$or: [{ lastMessageAt: { $ne: null } }, { isGroup: true }],
 		})
 			.sort({ isArchived: 1, lastMessageAt: -1, updatedAt: -1 })
 			.populate("participants", "fullName email role")
@@ -154,7 +178,7 @@ export class MessageService {
 	static async getUnreadCountForUser(userId: string): Promise<number> {
 		const conversations = await Conversation.find({
 			participants: userId,
-			lastMessageAt: { $ne: null },
+			$or: [{ lastMessageAt: { $ne: null } }, { isGroup: true }],
 			isArchived: false,
 		}).select("_id");
 
@@ -207,6 +231,59 @@ export class MessageService {
 			page,
 			totalPages: Math.ceil(total / limit),
 		};
+	}
+
+	static async addParticipant(
+		conversationId: string,
+		authorUserId: string,
+		targetUserId: string,
+	) {
+		const conversation = await Conversation.findById(conversationId);
+		if (!conversation || !conversation.isGroup) {
+			throw MessageService.createError("Group conversation not found", 404);
+		}
+		const authorUser = await User.findById(authorUserId);
+		if (!authorUser || authorUser.adminLevel !== "super_admin") {
+			throw MessageService.createError(
+				"Only super admins can manage group participants",
+				403,
+			);
+		}
+
+		const targetIdStr = targetUserId.toString();
+		const exists = conversation.participants.some(
+			(p) => p.toString() === targetIdStr,
+		);
+		if (!exists) {
+			conversation.participants.push(targetUserId as any);
+			await conversation.save();
+		}
+		return conversation;
+	}
+
+	static async removeParticipant(
+		conversationId: string,
+		authorUserId: string,
+		targetUserId: string,
+	) {
+		const conversation = await Conversation.findById(conversationId);
+		if (!conversation || !conversation.isGroup) {
+			throw MessageService.createError("Group conversation not found", 404);
+		}
+		const authorUser = await User.findById(authorUserId);
+		if (!authorUser || authorUser.adminLevel !== "super_admin") {
+			throw MessageService.createError(
+				"Only super admins can manage group participants",
+				403,
+			);
+		}
+
+		const targetIdStr = targetUserId.toString();
+		conversation.participants = conversation.participants.filter(
+			(p) => p.toString() !== targetIdStr,
+		) as any;
+		await conversation.save();
+		return conversation;
 	}
 
 	static async sendMessage(payload: {

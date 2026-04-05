@@ -9,6 +9,10 @@ import {
 	Paperclip,
 	Send,
 	ShieldAlert,
+	Trash2,
+	User as UserIcon,
+	UserPlus,
+	Users,
 } from "lucide-react";
 import { useSearchParams } from "next/navigation";
 import { Suspense, useCallback, useEffect, useRef, useState } from "react";
@@ -29,7 +33,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { ENTREPRENEUR_NAV, INVESTOR_NAV } from "@/constants/navigation";
+import { ADMIN_NAV } from "@/constants/navigation";
 import { useAuth } from "@/context/AuthContext";
 
 /* ── Types ── */
@@ -50,6 +54,8 @@ interface LastMessagePreview {
 interface Conversation {
 	_id: string;
 	participants: Participant[];
+	title?: string;
+	isGroup?: boolean;
 	lastMessageAt?: string;
 	isArchived: boolean;
 	createdAt: string;
@@ -155,6 +161,15 @@ function MessagesContent() {
 	const [reportReason, setReportReason] = useState("");
 	const [reportDetails, setReportDetails] = useState("");
 	const [reportLoading, setReportLoading] = useState(false);
+
+	// Group management state
+	const [showGroupDialog, setShowGroupDialog] = useState(false);
+	const [allAdmins, setAllAdmins] = useState<any[]>([]);
+	const [fetchingAdmins, setFetchingAdmins] = useState(false);
+	const [manageParticipantLoading, setManageParticipantLoading] = useState<
+		string | null
+	>(null);
+
 	const messagesEndRef = useRef<HTMLDivElement>(null);
 	const inputRef = useRef<HTMLInputElement>(null);
 	const hasAutoOpenedRef = useRef(false);
@@ -505,6 +520,82 @@ function MessagesContent() {
 		return d.toLocaleDateString(undefined, { month: "short", day: "numeric" });
 	};
 
+	/* ── Admin Group Management ── */
+	const fetchAllAdmins = async () => {
+		if (!user) return;
+		setFetchingAdmins(true);
+		try {
+			const token = await getToken();
+			const res = await fetch(`${api}/admin/users?role=admin&limit=100`, {
+				headers: { Authorization: `Bearer ${token}` },
+			});
+			if (res.ok) {
+				const data = await res.json();
+				setAllAdmins(data.users || []);
+			}
+		} catch (err) {
+			console.error("Failed to fetch admins", err);
+		} finally {
+			setFetchingAdmins(false);
+		}
+	};
+
+	const handleAddParticipant = async (targetId: string) => {
+		if (!user || !activeConvo) return;
+		setManageParticipantLoading(targetId);
+		try {
+			const token = await getToken();
+			const res = await fetch(
+				`${api}/messages/conversations/${activeConvo._id}/participants`,
+				{
+					method: "POST",
+					headers: {
+						Authorization: `Bearer ${token}`,
+						"Content-Type": "application/json",
+					},
+					body: JSON.stringify({ targetUserId: targetId }),
+				},
+			);
+			if (res.ok) {
+				toast.success("Admin added to group");
+				loadConversations(false);
+			} else {
+				const err = await res.json();
+				toast.error(err.message || "Failed to add admin");
+			}
+		} catch (_err) {
+			toast.error("Failed to add admin");
+		} finally {
+			setManageParticipantLoading(null);
+		}
+	};
+
+	const handleRemoveParticipant = async (targetId: string) => {
+		if (!user || !activeConvo) return;
+		setManageParticipantLoading(targetId);
+		try {
+			const token = await getToken();
+			const res = await fetch(
+				`${api}/messages/conversations/${activeConvo._id}/participants/${targetId}`,
+				{
+					method: "DELETE",
+					headers: { Authorization: `Bearer ${token}` },
+				},
+			);
+			if (res.ok) {
+				toast.success("Admin removed from group");
+				loadConversations(false);
+			} else {
+				const err = await res.json();
+				toast.error(err.message || "Failed to remove admin");
+			}
+		} catch (_err) {
+			toast.error("Failed to remove admin");
+		} finally {
+			setManageParticipantLoading(null);
+		}
+	};
+
 	/* ── Build date-grouped messages ── */
 	const groupedMessages: { date: string; msgs: Message[] }[] = [];
 	let currentDate = "";
@@ -518,12 +609,11 @@ function MessagesContent() {
 		}
 	}
 
-	const navItems =
-		(userProfile as any)?.role === "investor" ? INVESTOR_NAV : ENTREPRENEUR_NAV;
+	const navItems = ADMIN_NAV;
 
 	return (
-		<ProtectedRoute allowedRoles={["entrepreneur", "investor"]}>
-			<DashboardLayout navItems={navItems} title="SEPMS">
+		<ProtectedRoute allowedRoles={["admin"]}>
+			<DashboardLayout navItems={navItems} title="SEPMS Admin">
 				<div className="flex flex-col h-[calc(100vh-120px)]">
 					{/* Header */}
 					<div className="mb-4">
@@ -577,10 +667,16 @@ function MessagesContent() {
 											>
 												<div className="relative">
 													<Avatar
-														className={`h-11 w-11 shrink-0 ${avatarColor(other?._id || "")}`}
+														className={`h-11 w-11 shrink-0 ${
+															convo.isGroup
+																? "bg-primary/10 text-primary"
+																: avatarColor(other?._id || "")
+														}`}
 													>
 														<AvatarFallback className="text-xs font-bold">
-															{getInitials(other?.fullName)}
+															{convo.isGroup
+																? "AG"
+																: getInitials(other?.fullName)}
 														</AvatarFallback>
 													</Avatar>
 													{unread > 0 && (
@@ -592,22 +688,36 @@ function MessagesContent() {
 												<div className="min-w-0 flex-1">
 													<div className="flex items-center justify-between gap-2">
 														<p
-															className={`text-sm truncate flex items-center gap-2 ${unread > 0 ? "font-bold" : "font-medium"}`}
+															className={`text-sm truncate flex items-center gap-2 ${
+																unread > 0 ? "font-bold" : "font-medium"
+															}`}
 														>
 															<span className="truncate">
-																{other?.fullName || "Unknown"}
+																{convo.isGroup
+																	? convo.title || "Group Chat"
+																	: other?.fullName || "Unknown"}
 															</span>
-															<RoleBadge role={other?.role} />
+															{!convo.isGroup && (
+																<RoleBadge role={other?.role} />
+															)}
 														</p>
 														<span
-															className={`text-[11px] shrink-0 ${unread > 0 ? "text-primary font-semibold" : "text-muted-foreground"}`}
+															className={`text-[11px] shrink-0 ${
+																unread > 0
+																	? "text-primary font-semibold"
+																	: "text-muted-foreground"
+															}`}
 														>
 															{getLastMessageTime(convo)}
 														</span>
 													</div>
 													<div className="flex items-center justify-between gap-2 mt-0.5">
 														<p
-															className={`text-xs truncate ${unread > 0 ? "text-foreground font-medium" : "text-muted-foreground"}`}
+															className={`text-xs truncate ${
+																unread > 0
+																	? "text-foreground font-medium"
+																	: "text-muted-foreground"
+															}`}
 														>
 															{getLastMessagePreview(convo)}
 														</p>
@@ -661,40 +771,70 @@ function MessagesContent() {
 												<ArrowLeft className="h-4 w-4" />
 											</Button>
 											<Avatar
-												className={`h-9 w-9 ${avatarColor(getOtherParticipant(activeConvo)?._id || "")}`}
+												className={`h-9 w-9 ${
+													activeConvo.isGroup
+														? "bg-primary/10 text-primary"
+														: avatarColor(
+																getOtherParticipant(activeConvo)?._id || "",
+															)
+												}`}
 											>
 												<AvatarFallback className="text-xs font-bold">
-													{getInitials(
-														getOtherParticipant(activeConvo)?.fullName,
-													)}
+													{activeConvo.isGroup
+														? "AG"
+														: getInitials(
+																getOtherParticipant(activeConvo)?.fullName,
+															)}
 												</AvatarFallback>
 											</Avatar>
 											<div>
 												<div className="flex items-center gap-2">
 													<p className="text-sm font-semibold leading-tight truncate">
-														{getOtherParticipant(activeConvo)?.fullName ||
-															"Unknown"}
+														{activeConvo.isGroup
+															? activeConvo.title || "Group Chat"
+															: getOtherParticipant(activeConvo)?.fullName ||
+																"Unknown"}
 													</p>
-													<RoleBadge
-														role={getOtherParticipant(activeConvo)?.role}
-													/>
+													{!activeConvo.isGroup && (
+														<RoleBadge
+															role={getOtherParticipant(activeConvo)?.role}
+														/>
+													)}
 												</div>
 												<p className="text-[11px] text-muted-foreground leading-tight">
-													{getOtherParticipant(activeConvo)?.email}
+													{activeConvo.isGroup
+														? `${activeConvo.participants.length} Participants`
+														: getOtherParticipant(activeConvo)?.email}
 												</p>
 											</div>
 										</div>
-										{!activeConvo.isArchived && (
-											<Button
-												variant="ghost"
-												size="sm"
-												className="text-destructive hover:text-destructive hover:bg-destructive/10 gap-1.5"
-												onClick={() => setShowReportDialog(true)}
-											>
-												<ShieldAlert className="h-4 w-4" />
-												<span className="hidden sm:inline">Report</span>
-											</Button>
-										)}
+										<div className="flex items-center gap-2">
+											{activeConvo.isGroup && (
+												<Button
+													variant="outline"
+													size="sm"
+													className="gap-2 h-8"
+													onClick={() => {
+														fetchAllAdmins();
+														setShowGroupDialog(true);
+													}}
+												>
+													<Users className="h-3.5 w-3.5" />
+													<span className="hidden sm:inline">Participants</span>
+												</Button>
+											)}
+											{!activeConvo.isArchived && (
+												<Button
+													variant="ghost"
+													size="sm"
+													className="text-destructive hover:text-destructive hover:bg-destructive/10 gap-1.5 h-8"
+													onClick={() => setShowReportDialog(true)}
+												>
+													<ShieldAlert className="h-4 w-4" />
+													<span className="hidden sm:inline">Report</span>
+												</Button>
+											)}
+										</div>
 									</div>
 
 									{/* Messages */}
@@ -744,12 +884,19 @@ function MessagesContent() {
 																className={`flex mb-1.5 ${isMine ? "justify-end" : "justify-start"}`}
 															>
 																<div
-																	className={`relative max-w-[80%] sm:max-w-[65%] rounded-2xl px-3.5 py-2 shadow-sm transition-all ${
+																	className={`relative max-w-[80%] sm:max-w-[65%] rounded-2xl px-3.5 py-2 shadow-sm transition-all flex flex-col ${
 																		isMine
 																			? "bg-primary text-primary-foreground rounded-br-md"
 																			: "bg-card border border-border/50 rounded-bl-md"
 																	}`}
 																>
+																	{activeConvo.isGroup && !isMine && (
+																		<span className="text-[10px] font-semibold opacity-60 mb-0.5 leading-none">
+																			{typeof msg.senderId === "string"
+																				? "Unknown Admin"
+																				: msg.senderId.fullName}
+																		</span>
+																	)}
 																	<p className="text-[13.5px] leading-relaxed whitespace-pre-wrap break-words">
 																		{msg.body}
 																	</p>
@@ -901,6 +1048,126 @@ function MessagesContent() {
 								Submit Report
 							</Button>
 						</DialogFooter>
+					</DialogContent>
+				</Dialog>
+
+				{/* Group Participants Dialog */}
+				<Dialog open={showGroupDialog} onOpenChange={setShowGroupDialog}>
+					<DialogContent className="sm:max-w-[450px]">
+						<DialogHeader>
+							<DialogTitle>Group Participants</DialogTitle>
+							<DialogDescription>
+								View members of the Global Admins Chat.
+							</DialogDescription>
+						</DialogHeader>
+						<div className="space-y-4 py-2 mt-2">
+							<p className="text-sm font-semibold mb-2 text-muted-foreground">
+								Current Members
+							</p>
+							<div className="flex flex-col gap-2 max-h-48 overflow-y-auto pr-2 border rounded-md p-2 shadow-inner">
+								{activeConvo?.participants.map((p) => (
+									<div
+										key={p._id}
+										className="flex items-center justify-between p-2 flex-wrap border rounded border-border/60 bg-muted/20"
+									>
+										<div className="flex items-center gap-2">
+											<UserIcon className="h-4 w-4 text-primary" />
+											<div>
+												<p className="text-sm font-medium leading-none">
+													{p.fullName}
+												</p>
+												<p className="text-xs text-muted-foreground mt-1">
+													{p.email}
+												</p>
+											</div>
+										</div>
+										{(userProfile as any)?.adminLevel === "super_admin" &&
+											p._id !== (userProfile as any)._id && (
+												<Button
+													variant="ghost"
+													size="sm"
+													className="h-7 px-2 text-destructive hover:bg-destructive/10"
+													onClick={() => handleRemoveParticipant(p._id)}
+													disabled={manageParticipantLoading === p._id}
+												>
+													{manageParticipantLoading === p._id ? (
+														<Loader2 className="h-3 w-3 animate-spin" />
+													) : (
+														<Trash2 className="h-3.5 w-3.5" />
+													)}
+												</Button>
+											)}
+									</div>
+								))}
+							</div>
+
+							{(userProfile as any)?.adminLevel === "super_admin" && (
+								<div className="mt-6 pt-4 border-t">
+									<p className="text-sm font-semibold mb-3 text-muted-foreground">
+										Add Admins
+									</p>
+									{fetchingAdmins ? (
+										<div className="flex justify-center p-4">
+											<Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+										</div>
+									) : (
+										<div className="flex flex-col gap-2 max-h-48 overflow-y-auto pr-2">
+											{allAdmins.filter(
+												(a) =>
+													!activeConvo?.participants.some(
+														(p) => p._id === a._id,
+													),
+											).length === 0 ? (
+												<p className="text-sm text-center italic text-muted-foreground border border-dashed rounded-md p-4">
+													All admins are already in this group.
+												</p>
+											) : (
+												allAdmins
+													.filter(
+														(a) =>
+															!activeConvo?.participants.some(
+																(p) => p._id === a._id,
+															),
+													)
+													.map((adminUser) => (
+														<div
+															key={adminUser._id}
+															className="flex items-center justify-between p-2 border rounded"
+														>
+															<div>
+																<p className="text-sm font-medium">
+																	{adminUser.fullName}
+																</p>
+																<p className="text-[11px] text-muted-foreground">
+																	{adminUser.email}
+																</p>
+															</div>
+															<Button
+																variant="outline"
+																size="sm"
+																className="h-7"
+																onClick={() =>
+																	handleAddParticipant(adminUser._id)
+																}
+																disabled={
+																	manageParticipantLoading === adminUser._id
+																}
+															>
+																{manageParticipantLoading === adminUser._id ? (
+																	<Loader2 className="h-3 w-3 animate-spin mr-1.5" />
+																) : (
+																	<UserPlus className="h-3 w-3 mr-1.5" />
+																)}
+																Add
+															</Button>
+														</div>
+													))
+											)}
+										</div>
+									)}
+								</div>
+							)}
+						</div>
 					</DialogContent>
 				</Dialog>
 			</DashboardLayout>
