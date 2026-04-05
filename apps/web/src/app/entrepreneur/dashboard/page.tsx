@@ -5,11 +5,8 @@ import {
 	FileText,
 	Handshake,
 	Lock,
-	MessageSquare,
-	PenLine,
 	Rocket,
 	Send,
-	User,
 } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useCallback, useEffect, useState } from "react";
@@ -20,9 +17,9 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
+import { ENTREPRENEUR_NAV } from "@/constants/navigation";
 import { useAuth } from "@/context/AuthContext";
 import { SECTORS } from "@/lib/validations/submission";
-import { ENTREPRENEUR_NAV } from "@/constants/navigation";
 
 interface Submission {
 	_id: string;
@@ -33,8 +30,6 @@ interface Submission {
 	updatedAt: string;
 	aiScore?: number;
 }
-
-
 
 function statusVariant(
 	status: string,
@@ -60,27 +55,38 @@ function EntrepreneurDashboardInner() {
 
 	const [submissions, setSubmissions] = useState<Submission[]>([]);
 	const [loading, setLoading] = useState(true);
+	const [acceptedMatchCount, setAcceptedMatchCount] = useState(0);
+
+	const API = (
+		process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api"
+	).replace(/\/+$/, "");
 
 	const loadSubmissions = useCallback(async () => {
 		if (!user) return;
 		try {
 			const token = await user.getIdToken();
-			const res = await fetch(
-				`${(process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api").replace(/\/+$/, "")}/submissions`,
-				{
+			const [subRes, matchRes] = await Promise.all([
+				fetch(`${API}/submissions`, {
 					headers: { Authorization: `Bearer ${token}` },
-				},
-			);
-			if (res.ok) {
-				const data = await res.json();
+				}),
+				fetch(`${API}/recommendation/matches/count`, {
+					headers: { Authorization: `Bearer ${token}` },
+				}),
+			]);
+			if (subRes.ok) {
+				const data = await subRes.json();
 				setSubmissions(data.submissions);
+			}
+			if (matchRes.ok) {
+				const data = await matchRes.json();
+				setAcceptedMatchCount(data.count ?? 0);
 			}
 		} catch (err) {
 			console.error("Failed to load submissions:", err);
 		} finally {
 			setLoading(false);
 		}
-	}, [user]);
+	}, [user, API]);
 
 	useEffect(() => {
 		loadSubmissions();
@@ -167,9 +173,9 @@ function EntrepreneurDashboardInner() {
 							<p className="text-sm text-muted-foreground flex items-center gap-1.5">
 								<Handshake className="h-3.5 w-3.5" /> Matches
 							</p>
-							<p className="text-2xl font-bold mt-1">0</p>
+							<p className="text-2xl font-bold mt-1">{acceptedMatchCount}</p>
 							<p className="text-xs text-muted-foreground mt-0.5">
-								Active investor matches
+								Accepted investor matches
 							</p>
 						</CardContent>
 					</Card>

@@ -73,6 +73,11 @@ export interface ComputeMatchResponse {
 	};
 }
 
+export interface ClassifyPitchResponse {
+	trust_score_percentage: number;
+	ai_flag: string;
+}
+
 const client = axios.create({
 	baseURL: process.env.AI_SERVICE_URL || "http://localhost:8000",
 	timeout: 30_000,
@@ -291,6 +296,23 @@ export class AIService {
 		const norm =
 			Math.sqrt(vector.reduce((acc, value) => acc + value * value, 0)) || 1;
 		return vector.map((value) => value / norm);
+	}
+
+	static async classifyPitch(
+		pitchText: string,
+	): Promise<ClassifyPitchResponse> {
+		try {
+			const response = await client.post<ClassifyPitchResponse>(
+				"/classify-pitch",
+				{
+					pitch_text: pitchText,
+				},
+			);
+			return response.data;
+		} catch {
+			// AI service unavailable — return neutral score
+			return { trust_score_percentage: 50, ai_flag: "Pending Admin Review" };
+		}
 	}
 
 	private static cosineSimilarity(a: number[], b: number[]): number {

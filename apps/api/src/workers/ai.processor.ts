@@ -14,7 +14,7 @@ export const processSubmissionAI = async (
 	try {
 		await MatchingService.runMatchingForSubmission(submissionId, {
 			limit: 10,
-			minScore: 0.45,
+			minScore: 0.3,
 		});
 	} catch (error) {
 		const message =
