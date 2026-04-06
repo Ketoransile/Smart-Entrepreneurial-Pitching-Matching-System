@@ -13,6 +13,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useRef } from "react";
+import { Logo } from "@/components/Logo";
 import Navbar from "@/components/Navbar";
 import {
 	Accordion,
@@ -32,32 +33,44 @@ import { useAuth } from "@/context/AuthContext";
 
 const FEATURES = [
 	{
-		icon: <Zap className="w-5 h-5 text-primary" />,
+		icon: (
+			<Zap className="w-5 h-5 text-foreground drop-shadow-[0_0_8px_rgba(0,0,0,0.1)] dark:drop-shadow-[0_0_8px_rgba(255,255,255,0.2)]" />
+		),
 		title: "Secure Document Uploads",
 		desc: "Easily upload and manage your supporting documents, financial models, and business plans in one safe place.",
 	},
 	{
-		icon: <LinkIcon className="w-5 h-5 text-blue-500" />,
+		icon: (
+			<LinkIcon className="w-5 h-5 text-foreground drop-shadow-[0_0_8px_rgba(0,0,0,0.1)] dark:drop-shadow-[0_0_8px_rgba(255,255,255,0.2)]" />
+		),
 		title: "Smart Investor Matching",
 		desc: "Our matching engine understands the context of your pitch and connects you with investors whose interests and focus align with your startup.",
 	},
 	{
-		icon: <ShieldCheck className="w-5 h-5 text-green-500" />,
+		icon: (
+			<ShieldCheck className="w-5 h-5 text-foreground drop-shadow-[0_0_8px_rgba(0,0,0,0.1)] dark:drop-shadow-[0_0_8px_rgba(255,255,255,0.2)]" />
+		),
 		title: "Verified Profiles",
 		desc: "Every profile goes through verification so you can trust who you are connecting with on the platform.",
 	},
 	{
-		icon: <BarChart3 className="w-5 h-5 text-purple-500" />,
+		icon: (
+			<BarChart3 className="w-5 h-5 text-foreground drop-shadow-[0_0_8px_rgba(0,0,0,0.1)] dark:drop-shadow-[0_0_8px_rgba(255,255,255,0.2)]" />
+		),
 		title: "Dashboard Overview",
 		desc: "Monitor your pitch status, see how you match with investors, and manage your connections from a centralized hub.",
 	},
 	{
-		icon: <Radio className="w-5 h-5 text-rose-500" />,
+		icon: (
+			<Radio className="w-5 h-5 text-foreground drop-shadow-[0_0_8px_rgba(0,0,0,0.1)] dark:drop-shadow-[0_0_8px_rgba(255,255,255,0.2)]" />
+		),
 		title: "Saved Pitches",
 		desc: "Investors can easily save promising pitches to their personal watchlists to review them later.",
 	},
 	{
-		icon: <MessageSquare className="w-5 h-5 text-cyan-500" />,
+		icon: (
+			<MessageSquare className="w-5 h-5 text-foreground drop-shadow-[0_0_8px_rgba(0,0,0,0.1)] dark:drop-shadow-[0_0_8px_rgba(255,255,255,0.2)]" />
+		),
 		title: "Direct Conversations",
 		desc: "Once a match is made, start a secure private conversation directly on the platform.",
 	},
@@ -136,19 +149,6 @@ const FAQ = [
 	},
 ];
 
-const DOTS = [
-	{ top: "65%", left: "15%", duration: 4, delay: 0 },
-	{ top: "72%", left: "85%", duration: 3.5, delay: 1 },
-	{ top: "52%", left: "75%", duration: 4.5, delay: 0.5 },
-	{ top: "82%", left: "30%", duration: 5, delay: 2 },
-	{ top: "68%", left: "65%", duration: 3, delay: 1.5 },
-	{ top: "78%", left: "45%", duration: 4.2, delay: 0.2 },
-	{ top: "52%", left: "82%", duration: 5.5, delay: 1.2 },
-	{ top: "88%", left: "20%", duration: 4.8, delay: 0.8 },
-	{ top: "60%", left: "10%", duration: 4.1, delay: 1.1 },
-	{ top: "85%", left: "75%", duration: 3.8, delay: 0.4 },
-];
-
 /* ──────────────────────────────────────────────
    COMPONENT
    ────────────────────────────────────────────── */
@@ -165,9 +165,8 @@ export default function Home() {
 	});
 
 	const rotateX = useTransform(scrollYProgress, [0, 1], [35, 0]);
-	const scale = useTransform(scrollYProgress, [0, 1], [0.8, 1]);
-	const opacity = useTransform(scrollYProgress, [0, 1], [0.2, 1]);
-	const glowOpacity = useTransform(scrollYProgress, [0, 1], [0, 1]);
+	const scale = useTransform(scrollYProgress, [0, 1], [0.85, 1]);
+	const opacity = useTransform(scrollYProgress, [0, 1], [0.3, 1]);
 
 	const getDashboardRoute = () => {
 		if (userProfile?.role) {
@@ -182,12 +181,62 @@ export default function Home() {
 	};
 
 	return (
-		<div className="flex min-h-screen flex-col">
+		<div className="flex min-h-screen flex-col relative">
+			{/* Premium Fancy Vertical Lines */}
+			<div className="pointer-events-none fixed inset-0 flex justify-center z-[-1] overflow-hidden">
+				<div className="w-full max-w-7xl h-full flex justify-between border-x border-foreground/[0.04] dark:border-white/[0.04] relative">
+					{/* Animated particle on left border */}
+					<motion.div
+						className="absolute top-0 left-0 w-px h-[30vh] bg-gradient-to-b from-transparent via-foreground/20 dark:via-white/20 to-transparent"
+						animate={{ y: ["-100vh", "100vh"] }}
+						transition={{ duration: 8, repeat: Infinity, ease: "linear" }}
+					/>
+					{/* Animated particle on right border */}
+					<motion.div
+						className="absolute top-0 right-0 w-px h-[35vh] bg-gradient-to-b from-transparent via-foreground/20 dark:via-white/20 to-transparent"
+						animate={{ y: ["-100vh", "100vh"] }}
+						transition={{
+							duration: 10,
+							repeat: Infinity,
+							ease: "linear",
+							delay: 2,
+						}}
+					/>
+
+					{/* Left inner line */}
+					<div className="w-px h-full bg-gradient-to-b from-transparent via-foreground/[0.08] dark:via-white/[0.08] to-transparent mr-auto ml-[25%] relative">
+						<motion.div
+							className="absolute top-0 left-0 w-px h-[20vh] bg-gradient-to-b from-transparent via-foreground/30 dark:via-white/30 to-transparent"
+							animate={{ y: ["-100vh", "100vh"] }}
+							transition={{
+								duration: 7,
+								repeat: Infinity,
+								ease: "linear",
+								delay: 1,
+							}}
+						/>
+					</div>
+					{/* Right inner line */}
+					<div className="w-px h-full bg-gradient-to-b from-transparent via-foreground/[0.08] dark:via-white/[0.08] to-transparent ml-auto mr-[25%] relative">
+						<motion.div
+							className="absolute top-0 left-0 w-px h-[25vh] bg-gradient-to-b from-transparent via-foreground/30 dark:via-white/30 to-transparent"
+							animate={{ y: ["-100vh", "100vh"] }}
+							transition={{
+								duration: 9,
+								repeat: Infinity,
+								ease: "linear",
+								delay: 3,
+							}}
+						/>
+					</div>
+				</div>
+			</div>
+
 			<Navbar />
 			{/* ─── Hero ─── */}
 			<section className="relative overflow-hidden">
-				<div className="pointer-events-none absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.03)_1px,transparent_1px)] bg-[size:64px_64px] dark:block hidden" />
-				<div className="pointer-events-none absolute inset-0 bg-[linear-gradient(rgba(0,0,0,0.04)_1px,transparent_1px),linear-gradient(90deg,rgba(0,0,0,0.04)_1px,transparent_1px)] bg-[size:64px_64px] dark:hidden block" />
+				<div className="pointer-events-none absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.01)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.01)_1px,transparent_1px)] bg-[size:64px_64px] dark:block hidden" />
+				<div className="pointer-events-none absolute inset-0 bg-[linear-gradient(rgba(0,0,0,0.015)_1px,transparent_1px),linear-gradient(90deg,rgba(0,0,0,0.015)_1px,transparent_1px)] bg-[size:64px_64px] dark:hidden block" />
 
 				{/* Centered Ambient Lighting (Responsive for Light/Dark Mode) */}
 				<motion.div
@@ -198,28 +247,6 @@ export default function Home() {
 					}}
 					transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
 				/>
-
-				{/* Dispersed Random Dots Below Title */}
-				<div className="pointer-events-none absolute inset-0 z-0 overflow-hidden">
-					{DOTS.map((dot) => (
-						<motion.div
-							key={`${dot.top}-${dot.left}`}
-							className="absolute w-[2px] h-[2px] rounded-full bg-black dark:bg-white"
-							style={{ top: dot.top, left: dot.left }}
-							animate={{
-								y: [0, -15, 0],
-								opacity: [0.2, 0.8, 0.2],
-								scale: [1, 1.5, 1],
-							}}
-							transition={{
-								duration: dot.duration,
-								repeat: Infinity,
-								ease: "easeInOut",
-								delay: dot.delay,
-							}}
-						/>
-					))}
-				</div>
 
 				<div className="relative w-full px-4 sm:px-8 lg:px-16 pt-44 pb-20 sm:pt-40 sm:pb-32 lg:pt-52 lg:pb-40">
 					<motion.div
@@ -281,7 +308,7 @@ export default function Home() {
 								Where growing startups
 							</motion.span>
 							<motion.span
-								className="block relative bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent pb-4 inline-block mx-auto"
+								className="block relative bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-500 bg-clip-text text-transparent pb-4 inline-block mx-auto"
 								variants={{
 									hidden: {
 										opacity: 0,
@@ -424,16 +451,20 @@ export default function Home() {
 					</motion.div>
 				</div>
 
-				{/* ─── 3D Dashboard Mockup Reveal ─── */}
+				{/* ─── Modern 3D Dashboard Mockup Reveal ─── */}
 				<div
 					ref={dashboardRef}
 					className="relative mx-auto max-w-6xl px-4 sm:px-8 pb-32 pt-10"
 					style={{ perspective: "2000px" }}
 				>
-					{/* Elegant Aurora Glow Behind Dashboard */}
+					{/* Elegant Pulsating Aurora Glow Behind Dashboard */}
 					<motion.div
-						style={{ opacity: glowOpacity, scale }}
-						className="absolute left-1/2 top-1/3 -translate-x-1/2 w-[90%] sm:w-[70%] h-[40%] sm:h-[50%] bg-gradient-to-r from-blue-500/20 via-indigo-500/20 to-purple-500/20 dark:from-blue-500/30 dark:via-indigo-500/30 dark:to-purple-500/30 blur-[60px] sm:blur-[100px] rounded-full pointer-events-none"
+						style={{ opacity }}
+						animate={{
+							scale: [0.95, 1.05, 0.95],
+						}}
+						transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
+						className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[95%] sm:w-[80%] h-[70%] bg-gradient-to-r from-blue-500/30 via-indigo-500/30 to-purple-500/30 dark:from-blue-500/40 dark:via-indigo-500/40 dark:to-purple-500/40 blur-[80px] sm:blur-[100px] rounded-full pointer-events-none"
 					/>
 
 					<motion.div
@@ -442,15 +473,8 @@ export default function Home() {
 							scale,
 							opacity,
 						}}
-						className="w-full relative rounded-xl border border-white/20 dark:border-white/10 bg-white/5 dark:bg-black/20 shadow-[0_0_50px_-12px_rgba(0,0,0,0.5)] p-2 sm:p-4 backdrop-blur-xl z-10"
+						className="w-full relative rounded-[1.5rem] border border-white/40 dark:border-white/10 bg-white/40 dark:bg-black/40 shadow-[0_0_80px_-15px_rgba(0,0,0,0.3)] p-2 sm:p-4 backdrop-blur-xl z-10"
 					>
-						{/* Mockup Top Bar (Dots) */}
-						<div className="flex items-center gap-2 mb-3 pl-2 opacity-50">
-							<div className="w-2.5 h-2.5 rounded-full bg-red-500/80" />
-							<div className="w-2.5 h-2.5 rounded-full bg-yellow-500/80" />
-							<div className="w-2.5 h-2.5 rounded-full bg-green-500/80" />
-						</div>
-
 						{/* The Image */}
 						<div className="relative w-full aspect-[16/9] overflow-hidden rounded-lg border border-border/50">
 							{/* Light Mode Mockup */}
@@ -504,8 +528,9 @@ export default function Home() {
 								viewport={{ once: true }}
 								transition={{ duration: 0.5, delay: i * 0.1 }}
 							>
-								<Card className="h-full group border-border/50 bg-background hover:bg-muted/10 hover:border-border transition-all duration-300">
-									<CardContent className="p-6">
+								<Card className="relative h-full group border-border/30 bg-background/40 backdrop-blur-md overflow-hidden hover:shadow-[0_0_40px_-10px_rgba(99,102,241,0.15)] dark:hover:shadow-[0_0_40px_-10px_rgba(99,102,241,0.2)] hover:-translate-y-1 hover:border-indigo-500/30 transition-all duration-500">
+									<div className="absolute inset-0 bg-gradient-to-br from-indigo-500/5 via-purple-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
+									<CardContent className="p-6 relative z-10">
 										<div className="mb-4 flex h-10 w-10 items-center justify-center rounded-lg bg-muted text-xl group-hover:scale-110 group-hover:bg-primary/10 transition-all duration-300">
 											{feature.icon}
 										</div>
@@ -524,8 +549,9 @@ export default function Home() {
 			{/* ─── Platform Features (3 columns) ─── */}
 			<section
 				id="platform"
-				className="border-y border-border/50 py-20 sm:py-28 bg-background"
+				className="border-y border-border/30 py-20 sm:py-28 relative bg-background/50 backdrop-blur-sm"
 			>
+				<div className="absolute inset-0 bg-gradient-to-b from-indigo-500/5 to-transparent pointer-events-none" />
 				<div className="w-full px-4 sm:px-8 lg:px-16">
 					<motion.div
 						className="mx-auto max-w-2xl text-center mb-16"
@@ -554,8 +580,9 @@ export default function Home() {
 								viewport={{ once: true }}
 								transition={{ duration: 0.5, delay: i * 0.1 }}
 							>
-								<Card className="h-full border-border/50 bg-background hover:border-indigo-500/30 dark:hover:border-indigo-500/50 hover:shadow-xl hover:shadow-indigo-500/10 hover:-translate-y-1 transition-all duration-300">
-									<CardContent className="p-6 h-full flex flex-col">
+								<Card className="relative h-full border-border/30 bg-background/40 backdrop-blur-md overflow-hidden hover:border-indigo-500/40 dark:hover:border-indigo-500/40 hover:shadow-[0_0_50px_-12px_rgba(99,102,241,0.2)] hover:-translate-y-2 transition-all duration-500">
+									<div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 via-indigo-500/5 to-purple-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
+									<CardContent className="p-6 h-full flex flex-col relative z-10">
 										<h3 className="font-bold text-lg mb-1">{role.title}</h3>
 										<p className="text-sm text-muted-foreground mb-5">
 											{role.subtitle}
@@ -610,7 +637,7 @@ export default function Home() {
 								viewport={{ once: true }}
 								transition={{ duration: 0.5, delay: i * 0.15 }}
 							>
-								<div className="text-5xl font-bold text-muted-foreground/15 mb-4">
+								<div className="text-5xl font-bold bg-gradient-to-b from-muted-foreground/30 to-muted-foreground/5 bg-clip-text text-transparent mb-4">
 									{step.step}
 								</div>
 								<h3 className="font-semibold mb-2">{step.title}</h3>
@@ -651,7 +678,7 @@ export default function Home() {
 							<AccordionItem
 								key={item.q}
 								value={`item-${i}`}
-								className="border-border/50 border rounded-lg px-5 bg-background"
+								className="border-border/30 border rounded-lg px-5 bg-background/40 backdrop-blur-md hover:border-indigo-500/30 transition-all duration-300 shadow-sm hover:shadow-md"
 							>
 								<AccordionTrigger className="text-left font-medium text-sm py-5 hover:no-underline">
 									{item.q}
@@ -674,8 +701,9 @@ export default function Home() {
 						viewport={{ once: true }}
 						transition={{ duration: 0.6, type: "spring" }}
 					>
-						<Card className="overflow-hidden border-border/50 bg-background/50 backdrop-blur-xl relative">
-							<CardContent className="relative p-8 sm:p-12 lg:p-16 text-center">
+						<Card className="overflow-hidden border-border/30 bg-background/40 backdrop-blur-xl relative shadow-[0_0_50px_-10px_rgba(0,0,0,0.1)] dark:shadow-[0_0_50px_-10px_rgba(255,255,255,0.05)]">
+							<div className="absolute inset-0 bg-gradient-to-tr from-foreground/5 via-transparent to-foreground/5" />
+							<CardContent className="relative p-8 sm:p-12 lg:p-16 text-center z-10">
 								<div className="relative">
 									<h2 className="text-3xl font-bold tracking-tight sm:text-4xl mb-4">
 										Ready to accelerate your funding?
@@ -697,10 +725,18 @@ export default function Home() {
 											<>
 												<Button
 													size="lg"
-													className="h-12 px-8 font-semibold hover:scale-105 transition-transform duration-300"
+													className="h-12 px-8 font-semibold hover:scale-105 transition-transform duration-300 group relative overflow-hidden"
 													onClick={() => router.push("/sign-up")}
 												>
-													Create free account
+													<span className="relative z-10">
+														Create free account
+													</span>
+													<motion.div
+														className="absolute inset-0 bg-white/20"
+														initial={{ x: "-100%" }}
+														whileHover={{ x: "100%" }}
+														transition={{ duration: 0.5, ease: "easeInOut" }}
+													/>
 												</Button>
 												<Button
 													size="lg"
@@ -727,9 +763,7 @@ export default function Home() {
 						{/* Brand */}
 						<div className="lg:col-span-1">
 							<div className="flex items-center gap-2 mb-4">
-								<div className="flex h-7 w-7 items-center justify-center rounded-lg bg-foreground text-background font-bold text-xs">
-									S
-								</div>
+								<Logo className="h-7 w-7" />
 								<span className="font-semibold text-sm">SEPMS</span>
 							</div>
 							<p className="text-sm text-muted-foreground leading-relaxed max-w-xs">
