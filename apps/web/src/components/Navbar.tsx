@@ -1,4 +1,5 @@
 "use client";
+// Component Ideation: Refined navigation structure
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";

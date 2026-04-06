@@ -30,43 +30,36 @@ import { useAuth } from "@/context/AuthContext";
    DATA
    ────────────────────────────────────────────── */
 
-const STATS = [
-	{ value: "98%", label: "Match accuracy" },
-	{ value: "<30s", label: "Pitch analysis" },
-	{ value: "3x", label: "Faster funding" },
-	{ value: "500+", label: "Active investors" },
-];
-
 const FEATURES = [
 	{
 		icon: <Zap className="w-5 h-5 text-primary" />,
-		title: "AI-Powered Scoring",
-		desc: "Our ML engine evaluates pitch completeness, market viability, and financial projections — generating an actionable quality score in seconds.",
+		title: "Secure Document Uploads",
+		desc: "Easily upload and manage your supporting documents, financial models, and business plans in one safe place.",
 	},
 	{
 		icon: <LinkIcon className="w-5 h-5 text-blue-500" />,
-		title: "Semantic Matching",
-		desc: "384-dimensional vector embeddings map your pitch against investor preferences for high-precision, context-aware matching.",
+		title: "Smart Investor Matching",
+		desc: "Our matching engine understands the context of your pitch and connects you with investors whose interests and focus align with your startup.",
 	},
 	{
 		icon: <ShieldCheck className="w-5 h-5 text-green-500" />,
-		title: "KYC Verification",
-		desc: "Automated document verification ensures every participant is authenticated before entering the ecosystem.",
+		title: "Verified Profiles",
+		desc: "Every profile goes through verification so you can trust who you are connecting with on the platform.",
 	},
 	{
 		icon: <BarChart3 className="w-5 h-5 text-purple-500" />,
-		title: "Live Analytics",
-		desc: "Real-time dashboards track pitch performance, investor engagement, view counts, and match quality metrics.",
+		title: "Dashboard Overview",
+		desc: "Monitor your pitch status, see how you match with investors, and manage your connections from a centralized hub.",
 	},
 	{
 		icon: <Radio className="w-5 h-5 text-rose-500" />,
-		title: "Audio Summaries",
-		desc: "AI-generated voice summaries let investors preview pitches on the go — no reading required.",
+		title: "Saved Pitches",
+		desc: "Investors can easily save promising pitches to their personal watchlists to review them later.",
 	},
 	{
 		icon: <MessageSquare className="w-5 h-5 text-cyan-500" />,
-		title: "Secure Messaging",
-		desc: "Once matched, communicate directly with investors through encrypted, in-platform conversations.",
+		title: "Direct Conversations",
+		desc: "Once a match is made, start a secure private conversation directly on the platform.",
 	},
 ];
 
@@ -75,36 +68,24 @@ const PLATFORM_FEATURES = [
 		title: "For Entrepreneurs",
 		subtitle: "Everything you need to get funded",
 		items: [
-			"Guided multi-step pitch submission wizard",
-			"Real-time AI feedback on pitch quality",
-			"Document upload with OCR text extraction",
-			"Investor match notifications",
-			"Progress tracking dashboard",
-			"Pitch revision and versioning",
+			"Guided pitch submission process",
+			"AI feedback to strengthen your pitch",
+			"Secure document uploads",
+			"Investor match insights",
+			"Track your pitch status",
+			"Manage pitches easily",
 		],
 	},
 	{
 		title: "For Investors",
 		subtitle: "Discover high-quality deal flow",
 		items: [
-			"AI-curated pitch feed based on preferences",
-			"Sector, stage, and amount filters",
-			"Pitch quality scores at a glance",
-			"Audio pitch previews",
-			"Saved pitches and watchlist",
-			"Direct messaging with founders",
-		],
-	},
-	{
-		title: "For Administrators",
-		subtitle: "Full platform control and oversight",
-		items: [
-			"User verification and management",
-			"Submission review and moderation",
-			"AI audit logs and transparency",
-			"Platform health monitoring",
-			"Role-based access control",
-			"Bulk user status management",
+			"Personalized pitch feed",
+			"Filter by sector and stage",
+			"See pitch quality scores",
+			"Track your investments",
+			"Save promising pitches",
+			"Message founders directly",
 		],
 	},
 ];
@@ -112,59 +93,46 @@ const PLATFORM_FEATURES = [
 const STEPS = [
 	{
 		step: "01",
-		title: "Submit your pitch",
-		desc: "Fill out our guided 5-step form covering problem, solution, business model, financials, and supporting documents.",
+		title: "Register & create profile",
+		desc: "Create an account and set up your profile to tell us a bit about yourself and your goals.",
 	},
 	{
 		step: "02",
-		title: "AI analyzes & scores",
-		desc: "Our scoring engine evaluates completeness and quality. Low-confidence scores trigger Gemini LLM for deeper qualitative analysis.",
+		title: "Submit your pitch",
+		desc: "Walk through our step-by-step form to describe your problem, solution, business model, and upload documents.",
 	},
 	{
 		step: "03",
-		title: "Semantic matching",
-		desc: "Your pitch embedding is compared against investor preference vectors to find the highest-relevance matches.",
+		title: "Smart Matching",
+		desc: "The platform intelligently matches your pitch with verified investors whose sector focus and preferences align with yours.",
 	},
 	{
 		step: "04",
-		title: "Connect & fund",
-		desc: "Matched investors review your pitch, listen to audio summaries, and initiate direct conversations to move forward.",
+		title: "Connect and grow",
+		desc: "Matched investors can review your pitch and start a direct conversation with you.",
 	},
-];
-
-const TECH_STACK = [
-	{ name: "Next.js 16", category: "Frontend" },
-	{ name: "TypeScript", category: "Language" },
-	{ name: "shadcn/ui", category: "Components" },
-	{ name: "FastAPI", category: "AI Service" },
-	{ name: "Node.js", category: "Backend" },
-	{ name: "MongoDB", category: "Database" },
-	{ name: "Firebase Auth", category: "Authentication" },
-	{ name: "Gemini API", category: "LLM" },
-	{ name: "sentence-transformers", category: "Embeddings" },
-	{ name: "Tesseract OCR", category: "Document AI" },
 ];
 
 const FAQ = [
 	{
-		q: "How does the AI scoring work?",
-		a: "Our scoring engine analyzes 14 weighted fields across your pitch — from problem statement to financial projections. Each field is scored on completeness and quality. If the overall confidence is below 75%, the pitch is escalated to Google Gemini for deeper qualitative analysis.",
+		q: "How does the registration process work?",
+		a: "Simply sign up, verify your email, and fill out your profile details. Once your profile is complete, you can start submitting pitches or discovering startups.",
 	},
 	{
-		q: "What is semantic matching?",
-		a: "We convert both your pitch text and investor preferences into 384-dimensional vector embeddings using sentence-transformers. Cosine similarity between these vectors identifies the most relevant matches — going beyond simple keyword matching to understand context and intent.",
+		q: "How does investor matching work?",
+		a: "Our matching engine compares the context of your pitch against the preferences set by our investors to find the most relevant connections.",
 	},
 	{
 		q: "Is my data secure?",
-		a: "Absolutely. We use Firebase Authentication for secure login (including Google SSO), role-based access control for data isolation, and all communications are encrypted. KYC verification ensures every user is authenticated.",
+		a: "Yes. We use standard authentication and secure storage so that your interactions, documents, and pitches are protected.",
 	},
 	{
 		q: "What does it cost?",
-		a: "SEPMS is free to join for both entrepreneurs and investors. Premium features like priority matching and advanced analytics are available on paid tiers.",
+		a: "The platform is currently free to join for both entrepreneurs and investors. You can submit pitches, get matched, and start conversations.",
 	},
 	{
-		q: "How long does pitch analysis take?",
-		a: "The automated scoring engine processes pitches in under 30 seconds. If Gemini LLM deep analysis is triggered, it adds approximately 10–15 seconds. Audio summary generation takes about 5 seconds.",
+		q: "How long does it take to get matches?",
+		a: "Once your pitch is submitted and approved, our system automatically finds relevant investors and you will be notified of any strong matches.",
 	},
 ];
 
@@ -310,7 +278,7 @@ export default function Home() {
 									},
 								}}
 							>
-								Where great ideas
+								Where growing startups
 							</motion.span>
 							<motion.span
 								className="block relative bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent pb-4 inline-block mx-auto"
@@ -383,9 +351,8 @@ export default function Home() {
 								},
 							}}
 						>
-							SEPMS uses machine learning to score your pitch, verify your
-							documents, and semantically match you with investors who align
-							with your vision.
+							Submit your pitch and connect with verified investors who are
+							actively looking for startups like yours all in one platform.
 						</motion.p>
 
 						<motion.div
@@ -424,7 +391,7 @@ export default function Home() {
 										onClick={() => router.push("/sign-up?role=entrepreneur")}
 									>
 										<span className="relative z-10 transition-transform duration-300 group-hover:scale-105 inline-block">
-											Start pitching — it&apos;s free
+											Start pitching for free
 										</span>
 										<motion.div
 											className="absolute inset-0 bg-white/20"
@@ -507,31 +474,6 @@ export default function Home() {
 				</div>
 			</section>
 
-			{/* ─── Stats ─── */}
-			<section id="stats" className="border-y border-border/50">
-				<div className="w-full px-4 sm:px-8 lg:px-16 py-12">
-					<div className="grid grid-cols-2 gap-8 sm:grid-cols-4">
-						{STATS.map((stat, i) => (
-							<motion.div
-								key={stat.label}
-								className="text-center"
-								initial={{ opacity: 0, y: 20 }}
-								whileInView={{ opacity: 1, y: 0 }}
-								viewport={{ once: true, margin: "-50px" }}
-								transition={{ duration: 0.5, delay: i * 0.1 }}
-							>
-								<p className="text-3xl sm:text-4xl font-bold tracking-tight">
-									{stat.value}
-								</p>
-								<p className="mt-1 text-sm text-muted-foreground">
-									{stat.label}
-								</p>
-							</motion.div>
-						))}
-					</div>
-				</div>
-			</section>
-
 			{/* ─── Core Features ─── */}
 			<section id="features" className="py-20 sm:py-28">
 				<div className="w-full px-4 sm:px-8 lg:px-16">
@@ -596,14 +538,14 @@ export default function Home() {
 							Platform
 						</Badge>
 						<h2 className="text-3xl font-bold tracking-tight sm:text-4xl">
-							Built for every stakeholder
+							Built for founders & investors
 						</h2>
 						<p className="mt-4 text-muted-foreground">
-							Three roles, one seamless experience — tailored dashboards for
-							entrepreneurs, investors, and admins.
+							Tailored tools and dashboards for both entrepreneurs seeking
+							capital and investors searching for opportunities.
 						</p>
 					</motion.div>
-					<div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+					<div className="grid gap-6 sm:grid-cols-2 max-w-4xl mx-auto">
 						{PLATFORM_FEATURES.map((role, i) => (
 							<motion.div
 								key={role.title}
@@ -654,8 +596,8 @@ export default function Home() {
 							From pitch to partnership in four steps
 						</h2>
 						<p className="mt-4 text-muted-foreground">
-							Our intelligent pipeline takes your raw pitch and transforms it
-							into a funded opportunity.
+							A clear path from submitting your pitch to a funded partnership
+							with the right investor.
 						</p>
 					</motion.div>
 					<div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
@@ -681,35 +623,6 @@ export default function Home() {
 									</div>
 								)}
 							</motion.div>
-						))}
-					</div>
-				</div>
-			</section>
-
-			{/* ─── Tech Stack ─── */}
-			<section className="border-y border-border/50 py-16 bg-background">
-				<div className="w-full px-4 sm:px-8 lg:px-16">
-					<div className="text-center mb-10">
-						<h2 className="text-xl font-bold tracking-tight sm:text-2xl">
-							Powered by modern technology
-						</h2>
-						<p className="mt-2 text-sm text-muted-foreground">
-							Enterprise-grade stack built for performance, security, and
-							scalability.
-						</p>
-					</div>
-					<div className="flex flex-wrap justify-center gap-3">
-						{TECH_STACK.map((tech) => (
-							<Badge
-								key={tech.name}
-								variant="outline"
-								className="px-4 py-2 text-xs font-medium"
-							>
-								{tech.name}
-								<span className="ml-2 text-muted-foreground font-normal">
-									{tech.category}
-								</span>
-							</Badge>
 						))}
 					</div>
 				</div>
@@ -820,8 +733,8 @@ export default function Home() {
 								<span className="font-semibold text-sm">SEPMS</span>
 							</div>
 							<p className="text-sm text-muted-foreground leading-relaxed max-w-xs">
-								Smart Entrepreneurial Pitching & Matching System — connecting
-								founders with capital through AI-powered analysis and semantic
+								Smart Entrepreneurial Pitching & Matching System helping
+								founders connect with the right investors through intelligent
 								matching.
 							</p>
 						</div>
@@ -831,11 +744,11 @@ export default function Home() {
 							<h4 className="font-semibold text-sm mb-4">Product</h4>
 							<ul className="space-y-2.5">
 								{[
-									"AI Scoring",
-									"Semantic Matching",
-									"Document Verification",
-									"Audio Summaries",
-									"Analytics Dashboard",
+									"Investor Matching",
+									"Profile Verification",
+									"Saved Pitches",
+									"Direct Messaging",
+									"Performance Dashboard",
 								].map((item) => (
 									<li key={item}>
 										<Link
@@ -856,8 +769,8 @@ export default function Home() {
 								{[
 									"How it Works",
 									"FAQ",
-									"API Documentation",
-									"System Architecture",
+									"Getting Started Guide",
+									"Help Center",
 									"Privacy Policy",
 								].map((item) => (
 									<li key={item}>
@@ -900,8 +813,8 @@ export default function Home() {
 
 					<div className="flex flex-col items-center justify-between gap-4 sm:flex-row">
 						<p className="text-xs text-muted-foreground">
-							© {new Date().getFullYear()} SEPMS — Smart Entrepreneurial
-							Pitching & Matching System. All rights reserved.
+							© {new Date().getFullYear()} SEPMS Smart Entrepreneurial Pitching
+							& Matching System. All rights reserved.
 						</p>
 						<div className="flex items-center gap-4">
 							<Link

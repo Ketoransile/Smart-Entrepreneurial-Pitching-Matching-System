@@ -45,10 +45,10 @@ def generate(payload: EmbeddingRequest) -> EmbeddingResponse:
     Generate a 384-dim L2-normalised embedding.
     Stored by Node backend in EmbeddingEntry.vector / modelVersion.
     """
-    return EmbeddingResponse(
-        vector=generate_embedding(payload.text),
-        modelVersion=MODEL_VERSION,
-    )
+    print(f"[EMBEDDING] targetType={payload.targetType} targetId={payload.targetId} text_len={len(payload.text)}")
+    vec = generate_embedding(payload.text)
+    print(f"[EMBEDDING] ✅ generated {len(vec)}-dim vector for {payload.targetType}")
+    return EmbeddingResponse(vector=vec, modelVersion=MODEL_VERSION)
 
 
 # ─── Submission analysis ──────────────────────────────────────────────────────
@@ -81,6 +81,8 @@ def analyze_submission(payload: AnalyzeSubmissionRequest) -> AnalyzeSubmissionRe
     filled = sum(1 for f in fields if isinstance(f, str) and len(f.strip()) > 10)
     score = round(min(1.0, 0.35 + (filled / len(fields)) * 0.50 +
                       (0.15 if payload.targetAmount and payload.targetAmount > 0 else 0.0)), 4)
+
+    print(f"[ANALYZE] submissionId={payload.submissionId} sector={payload.sector} stage={payload.stage} filled={filled}/4 score={score}")
 
     highlights = [label for label, val in [
         ("Problem statement captured",    payload.problemStatement),
@@ -176,6 +178,11 @@ def compute_match_score(payload: MatchScoreRequest) -> MatchScoreResponse:
     score = round(max(0.0, min(1.0,
         sector_score * 0.35 + stage_score * 0.20 +
         budget_score * 0.25 + embedding_score * 0.20)), 4)
+
+    print(f"[MATCH] sub={payload.submissionId[:8]} inv={payload.investorId[:8]} "
+          f"sector={sector_score:.2f} stage={stage_score:.2f} budget={budget_score:.2f} "
+          f"embedding={embedding_score:.2f} TOTAL={score:.4f} "
+          f"(sub_sector={payload.submissionSector} pref={payload.preferredSectors})")
 
     rationale = (
         "Strong alignment across sector, stage, and investment profile" if score >= 0.75

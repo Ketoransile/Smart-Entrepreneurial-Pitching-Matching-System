@@ -1,4 +1,5 @@
 "use client";
+// Architectural Unit: Initial Dashboard structure setup
 
 import { ChevronsUpDown, Layers, LogOut, Settings, User } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";

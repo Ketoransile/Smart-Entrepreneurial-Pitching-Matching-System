@@ -1,6 +1,13 @@
 "use client";
 
-import { Briefcase, Compass, Heart, MessageSquare, Star, User } from "lucide-react";
+import {
+	Briefcase,
+	Compass,
+	Heart,
+	MessageSquare,
+	Star,
+	User,
+} from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
@@ -23,8 +30,8 @@ import {
 	SelectValue,
 } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
-import { useAuth } from "@/context/AuthContext";
 import { INVESTOR_NAV } from "@/constants/navigation";
+import { useAuth } from "@/context/AuthContext";
 
 interface Submission {
 	_id: string;
@@ -80,30 +87,44 @@ export default function InvestorFeed() {
 	const [selectedPitch, setSelectedPitch] = useState<Submission | null>(null);
 	const [savedPitchIds, setSavedPitchIds] = useState<Set<string>>(new Set());
 
+	const API = (
+		process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api"
+	).replace(/\/+$/, "");
+
+	// Guard: redirect to onboarding if investor has no profile yet
+	useEffect(() => {
+		if (!user) return;
+		(async () => {
+			const token = await user.getIdToken();
+			const res = await fetch(`${API}/investor/profile`, {
+				headers: { Authorization: `Bearer ${token}` },
+			});
+			if (!res.ok) router.replace("/investor/onboarding");
+		})();
+	}, [user, router, API]);
+
 	const fetchFeed = useCallback(async () => {
 		if (!user) return;
 		setLoading(true);
 		try {
 			const token = await user.getIdToken();
-			
-			// Fetch saved pitches
-			const savedRes = await fetch(
-				`${(process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api").replace(/\/+$/, "")}/investor/saved-pitches`,
-				{ headers: { Authorization: `Bearer ${token}` } },
-			);
+
+			const savedRes = await fetch(`${API}/investor/saved-pitches`, {
+				headers: { Authorization: `Bearer ${token}` },
+			});
 			const savedData = await savedRes.json();
 			if (savedData.success) {
-				setSavedPitchIds(new Set(savedData.data.map((p: any) => p._id)));
+				setSavedPitchIds(
+					new Set(savedData.data.map((p: { _id: string }) => p._id)),
+				);
 			}
 
-			// Fetch feed
 			const params = new URLSearchParams({ sort });
 			if (sector !== "all") params.set("sector", sector);
 
-			const res = await fetch(
-				`${(process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api").replace(/\/+$/, "")}/submissions/feed/browse?${params}`,
-				{ headers: { Authorization: `Bearer ${token}` } },
-			);
+			const res = await fetch(`${API}/submissions/feed/browse?${params}`, {
+				headers: { Authorization: `Bearer ${token}` },
+			});
 			const data = await res.json();
 			if (data.status === "success") {
 				setSubmissions(data.submissions);
@@ -114,7 +135,7 @@ export default function InvestorFeed() {
 		} finally {
 			setLoading(false);
 		}
-	}, [user, sector, sort]);
+	}, [user, sector, sort, API]);
 
 	useEffect(() => {
 		fetchFeed();
@@ -125,8 +146,6 @@ export default function InvestorFeed() {
 		if (!user) return;
 
 		const wasSaved = savedPitchIds.has(pitchId);
-
-		// Optimistic Update
 		setSavedPitchIds((prev) => {
 			const next = new Set(prev);
 			if (next.has(pitchId)) next.delete(pitchId);
@@ -136,19 +155,12 @@ export default function InvestorFeed() {
 
 		try {
 			const token = await user.getIdToken();
-			const res = await fetch(
-				`${(process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api").replace(/\/+$/, "")}/investor/saved-pitches/${pitchId}`,
-				{ 
-					method: "POST",
-					headers: { Authorization: `Bearer ${token}` }
-				},
-			);
+			const res = await fetch(`${API}/investor/saved-pitches/${pitchId}`, {
+				method: "POST",
+				headers: { Authorization: `Bearer ${token}` },
+			});
 			const data = await res.json();
-			
-			if (data.success) {
-				// toast.success(data.message); // Silenced to avoid spamming on rapid toggling
-			} else {
-				// Revert Optimistic Update
+			if (!data.success) {
 				setSavedPitchIds((prev) => {
 					const next = new Set(prev);
 					if (wasSaved) next.add(pitchId);
@@ -157,9 +169,7 @@ export default function InvestorFeed() {
 				});
 				toast.error(data.message || "Failed to toggle save");
 			}
-		} catch (err) {
-			console.error("Failed to toggle save", err);
-			// Revert Optimistic Update
+		} catch {
 			setSavedPitchIds((prev) => {
 				const next = new Set(prev);
 				if (wasSaved) next.add(pitchId);
@@ -168,6 +178,19 @@ export default function InvestorFeed() {
 			});
 			toast.error("An error occurred while saving the pitch");
 		}
+	};
+
+	// Send implicit click signal to Rocchio then navigate to pitch detail
+	const openPitch = async (pitchId: string) => {
+		if (user) {
+			const token = await user.getIdToken();
+			// fire-and-forget — don't await, don't block navigation
+			fetch(`${API}/recommendation/matches/click/${pitchId}`, {
+				method: "POST",
+				headers: { Authorization: `Bearer ${token}` },
+			}).catch(() => {});
+		}
+		router.push(`/investor/pitch/${pitchId}`);
 	};
 
 	return (
@@ -191,7 +214,10 @@ export default function InvestorFeed() {
 							<p className="text-2xl font-bold mt-1">{total}</p>
 						</CardContent>
 					</Card>
-					<Card className="cursor-pointer hover:bg-muted/50 transition-colors" onClick={() => router.push("/investor/saved")}>
+					<Card
+						className="cursor-pointer hover:bg-muted/50 transition-colors"
+						onClick={() => router.push("/investor/saved")}
+					>
 						<CardContent className="p-5">
 							<p className="text-sm text-muted-foreground">Saved</p>
 							<p className="text-2xl font-bold mt-1">{savedPitchIds.size}</p>
@@ -282,8 +308,8 @@ export default function InvestorFeed() {
 												className="h-7 w-7 rounded-full -mr-2 hover:bg-muted"
 												onClick={(e) => toggleSaved(e, pitch._id)}
 											>
-												<Heart 
-													className={`h-4 w-4 transition-colors ${savedPitchIds.has(pitch._id) ? "fill-primary text-primary" : "text-muted-foreground"}`} 
+												<Heart
+													className={`h-4 w-4 transition-colors ${savedPitchIds.has(pitch._id) ? "fill-primary text-primary" : "text-muted-foreground"}`}
 												/>
 											</Button>
 										</div>
@@ -342,8 +368,8 @@ export default function InvestorFeed() {
 										className="gap-1.5"
 										onClick={(e) => toggleSaved(e, selectedPitch._id)}
 									>
-										<Heart 
-											className={`h-4 w-4 ${savedPitchIds.has(selectedPitch._id) ? "fill-primary text-primary" : "text-muted-foreground"}`} 
+										<Heart
+											className={`h-4 w-4 ${savedPitchIds.has(selectedPitch._id) ? "fill-primary text-primary" : "text-muted-foreground"}`}
 										/>
 										{savedPitchIds.has(selectedPitch._id) ? "Saved" : "Save"}
 									</Button>
@@ -373,7 +399,7 @@ export default function InvestorFeed() {
 								onClick={() => {
 									const pitchId = selectedPitch?._id;
 									setSelectedPitch(null);
-									router.push(`/investor/pitch/${pitchId}`);
+									if (pitchId) openPitch(pitchId);
 								}}
 							>
 								View Full Pitch

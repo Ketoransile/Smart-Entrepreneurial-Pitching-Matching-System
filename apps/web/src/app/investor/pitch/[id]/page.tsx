@@ -2,8 +2,10 @@
 
 import {
 	ArrowLeft,
+	BadgeCheck,
 	BarChart3,
-	ClipboardList,
+	ChevronDown,
+	ChevronUp,
 	DollarSign,
 	ExternalLink,
 	FileUp,
@@ -13,6 +15,7 @@ import {
 	Search,
 	XCircle,
 } from "lucide-react";
+import Image from "next/image";
 import { useParams, useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
@@ -24,6 +27,150 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { useAuth } from "@/context/AuthContext";
 import { SECTORS, STAGES } from "@/lib/validations/submission";
+
+// ── Match context types & banner component ────────────────────────────────────
+
+interface MatchContext {
+	_id: string;
+	score: number;
+	aiRationale?: string;
+	scoreBreakdown?: {
+		sector: number;
+		stage: number;
+		budget: number;
+		embedding: number;
+	};
+	status: string;
+}
+
+function BreakdownBar({ label, value }: { label: string; value: number }) {
+	const pct = Math.round(value * 100);
+	return (
+		<div className="space-y-1">
+			<div className="flex justify-between text-xs text-muted-foreground">
+				<span>{label}</span>
+				<span className="font-medium">{pct}%</span>
+			</div>
+			<div className="h-1.5 w-full rounded-full bg-muted overflow-hidden">
+				<div
+					className="h-full rounded-full bg-primary transition-all"
+					style={{ width: `${pct}%` }}
+				/>
+			</div>
+		</div>
+	);
+}
+
+function MatchContextBanner({
+	match,
+	onRespond,
+	responding,
+}: {
+	match: MatchContext;
+	onRespond: (status: "accepted" | "declined") => void;
+	responding: boolean;
+}) {
+	const [showBreakdown, setShowBreakdown] = useState(false);
+	const isPending = match.status === "pending";
+
+	return (
+		<Card className="mb-6 border-primary/20 bg-primary/5">
+			<CardContent className="p-4">
+				<div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+					<div className="flex items-center gap-4">
+						<div className="flex flex-col items-center justify-center h-14 w-14 rounded-full border-4 border-primary/30 shrink-0">
+							<span className="text-sm font-bold text-primary">
+								{Math.round(match.score * 100)}%
+							</span>
+						</div>
+						<div>
+							<p className="text-sm font-semibold">AI Match Score</p>
+							{match.aiRationale && (
+								<p className="text-xs text-muted-foreground mt-0.5 max-w-sm">
+									{match.aiRationale}
+								</p>
+							)}
+							{match.scoreBreakdown && (
+								<button
+									type="button"
+									className="flex items-center gap-1 text-xs text-primary mt-1 hover:underline"
+									onClick={() => setShowBreakdown((v) => !v)}
+								>
+									{showBreakdown ? (
+										<ChevronUp className="h-3 w-3" />
+									) : (
+										<ChevronDown className="h-3 w-3" />
+									)}
+									{showBreakdown ? "Hide" : "Show"} breakdown
+								</button>
+							)}
+						</div>
+					</div>
+
+					{isPending ? (
+						<div className="flex gap-2 shrink-0">
+							<Button
+								variant="destructive"
+								size="sm"
+								disabled={responding}
+								onClick={() => onRespond("declined")}
+							>
+								{responding ? (
+									<Loader2 className="h-3.5 w-3.5 animate-spin" />
+								) : (
+									<XCircle className="h-3.5 w-3.5 mr-1" />
+								)}
+								Decline
+							</Button>
+							<Button
+								size="sm"
+								disabled={responding}
+								onClick={() => onRespond("accepted")}
+							>
+								{responding ? (
+									<Loader2 className="h-3.5 w-3.5 animate-spin" />
+								) : (
+									<BadgeCheck className="h-3.5 w-3.5 mr-1" />
+								)}
+								Accept Match
+							</Button>
+						</div>
+					) : (
+						<Badge
+							variant={match.status === "accepted" ? "default" : "outline"}
+							className="capitalize shrink-0"
+						>
+							{match.status}
+						</Badge>
+					)}
+				</div>
+
+				{showBreakdown && match.scoreBreakdown && (
+					<div className="mt-4 grid gap-2 sm:grid-cols-2 border-t border-primary/10 pt-4">
+						<BreakdownBar
+							label="Sector fit"
+							value={match.scoreBreakdown.sector}
+						/>
+						<BreakdownBar
+							label="Stage fit"
+							value={match.scoreBreakdown.stage}
+						/>
+						<BreakdownBar
+							label="Budget fit"
+							value={match.scoreBreakdown.budget}
+						/>
+						<BreakdownBar
+							label="Semantic (AI)"
+							value={match.scoreBreakdown.embedding}
+						/>
+					</div>
+				)}
+			</CardContent>
+		</Card>
+	);
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 
 interface SubmissionDoc {
 	name: string;
@@ -73,6 +220,8 @@ export default function InvestorPitchViewPage() {
 
 	const [pitch, setPitch] = useState<Submission | null>(null);
 	const [loading, setLoading] = useState(true);
+	const [matchContext, setMatchContext] = useState<MatchContext | null>(null);
+	const [responding, setResponding] = useState(false);
 
 	const api = (
 		process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api"
@@ -82,15 +231,27 @@ export default function InvestorPitchViewPage() {
 		if (!user || !pitchId) return;
 		try {
 			const token = await user.getIdToken();
-			const res = await fetch(`${api}/submissions/${pitchId}`, {
-				headers: { Authorization: `Bearer ${token}` },
-			});
-			if (res.ok) {
-				const data = await res.json();
+			const [pitchRes, clickRes] = await Promise.all([
+				fetch(`${api}/submissions/${pitchId}`, {
+					headers: { Authorization: `Bearer ${token}` },
+				}),
+				fetch(`${api}/recommendation/matches/click/${pitchId}`, {
+					method: "POST",
+					headers: { Authorization: `Bearer ${token}` },
+				}),
+			]);
+
+			if (pitchRes.ok) {
+				const data = await pitchRes.json();
 				setPitch(data.submission);
 			} else {
 				toast.error("You don't have access to this pitch yet.");
 				router.push("/investor/feed");
+			}
+
+			if (clickRes.ok) {
+				const data = await clickRes.json();
+				if (data.match) setMatchContext(data.match);
 			}
 		} catch (err) {
 			console.error("Failed to load pitch:", err);
@@ -99,6 +260,40 @@ export default function InvestorPitchViewPage() {
 			setLoading(false);
 		}
 	}, [user, pitchId, api, router]);
+
+	const handleRespond = async (status: "accepted" | "declined") => {
+		if (!user || !matchContext) return;
+		setResponding(true);
+		try {
+			const token = await user.getIdToken();
+			const res = await fetch(
+				`${api}/recommendation/matches/${matchContext._id}/respond`,
+				{
+					method: "PATCH",
+					headers: {
+						Authorization: `Bearer ${token}`,
+						"Content-Type": "application/json",
+					},
+					body: JSON.stringify({ status }),
+				},
+			);
+			const data = await res.json();
+			if (data.status === "success") {
+				toast.success(
+					status === "accepted"
+						? "Match accepted — invitation sent"
+						: "Match declined",
+				);
+				setMatchContext((prev) => (prev ? { ...prev, status } : prev));
+			} else {
+				toast.error(data.message ?? "Failed to respond");
+			}
+		} catch {
+			toast.error("Network error");
+		} finally {
+			setResponding(false);
+		}
+	};
 
 	useEffect(() => {
 		fetchPitch();
@@ -122,7 +317,7 @@ export default function InvestorPitchViewPage() {
 			if (res.ok) {
 				const data = await res.json();
 				// Use the open parameter to automatically open the correct tab
-				if (data.conversation && data.conversation._id) {
+				if (data.conversation?._id) {
 					router.push(`/investor/messages?open=${data.conversation._id}`);
 				} else {
 					router.push("/investor/messages");
@@ -130,7 +325,7 @@ export default function InvestorPitchViewPage() {
 			} else {
 				toast.error("Failed to initiate conversation");
 			}
-		} catch (err) {
+		} catch {
 			toast.error("Network error starting conversation");
 		}
 	};
@@ -213,6 +408,15 @@ export default function InvestorPitchViewPage() {
 						</Button>
 					</div>
 				</div>
+
+				{/* AI match context — shown when a MatchResult exists for this investor */}
+				{matchContext && (
+					<MatchContextBanner
+						match={matchContext}
+						onRespond={handleRespond}
+						responding={responding}
+					/>
+				)}
 
 				<div className="grid gap-6 md:grid-cols-3">
 					<div className="md:col-span-2 space-y-6">
@@ -416,7 +620,7 @@ export default function InvestorPitchViewPage() {
 									</p>
 								) : (
 									<div className="space-y-3">
-										{pitch.documents.map((doc, i) => {
+										{pitch.documents.map((doc) => {
 											const isPdf =
 												doc.name.toLowerCase().endsWith(".pdf") ||
 												doc.url.toLowerCase().endsWith(".pdf") ||
@@ -430,7 +634,7 @@ export default function InvestorPitchViewPage() {
 												].includes(doc.type);
 											return (
 												<div
-													key={i}
+													key={doc.name}
 													className="flex flex-col rounded-lg border overflow-hidden group"
 												>
 													<div className="flex items-center justify-between p-3 bg-card hover:bg-muted/50 transition-colors">
@@ -508,9 +712,11 @@ export default function InvestorPitchViewPage() {
 																		rel="noopener noreferrer"
 																		className="block"
 																	>
-																		<img
+																		<Image
 																			src={previewUrl}
 																			alt={`Preview of ${doc.name}`}
+																			width={800}
+																			height={500}
 																			className="w-full max-h-[500px] object-contain bg-white"
 																			loading="lazy"
 																		/>
