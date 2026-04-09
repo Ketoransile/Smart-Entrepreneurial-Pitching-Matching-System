@@ -5,7 +5,8 @@
 	"main": "dist/server.js",
 	"scripts": {
 		"dev": "tsx watch src/server.ts",
-		"build": "tsup src/server.ts --format cjs,esm",
+		"generate:openapi": "tsx scripts/generate-openapi.ts",
+		"build": "tsx scripts/generate-openapi.ts && tsup src/server.ts --format cjs,esm",
 		"start": "node dist/server.js",
 		"test": "jest --coverage"
 	},
