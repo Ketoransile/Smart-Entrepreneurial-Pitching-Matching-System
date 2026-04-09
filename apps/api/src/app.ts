@@ -44,30 +44,14 @@ app.use(async (_req, _res, next) => {
 	}
 });
 
-// Apply relaxed Helmet CSP for /api/docs so CDN assets load
-app.use(
-	"/api/docs",
-	helmet({
+// Global strict Helmet — skips /api/docs so the relaxed CSP below can take effect
+app.use((req: Request, res: Response, next: NextFunction) => {
+	if (req.path === "/api/docs" || req.path === "/api/docs/") return next();
+	return helmet({
 		crossOriginOpenerPolicy: false,
 		crossOriginResourcePolicy: { policy: "cross-origin" },
-		contentSecurityPolicy: {
-			directives: {
-				defaultSrc: ["'self'"],
-				scriptSrc: ["'self'", "https://unpkg.com", "'unsafe-inline'"],
-				styleSrc: ["'self'", "https://unpkg.com", "'unsafe-inline'"],
-				imgSrc: ["'self'", "data:", "https:"],
-				connectSrc: ["'self'", "https://sepms-backend.vercel.app"],
-			},
-		},
-	}),
-);
-
-app.use(
-	helmet({
-		crossOriginOpenerPolicy: false,
-		crossOriginResourcePolicy: { policy: "cross-origin" },
-	}),
-);
+	})(req, res, next);
+});
 
 const allowedOrigins = [
 	process.env.CLIENT_URL,
@@ -157,7 +141,17 @@ app.get("/api/docs.json", (_req: Request, res: Response) => {
 });
 
 // Serve Swagger UI via CDN (works on Vercel serverless)
+// Override CSP here to ensure unpkg CDN scripts/styles are always allowed,
+// regardless of any upstream Helmet middleware that may have set a strict policy.
 app.get("/api/docs", (_req: Request, res: Response) => {
+	res.setHeader(
+		"Content-Security-Policy",
+		"default-src 'self'; " +
+			"script-src 'self' https://unpkg.com 'unsafe-inline'; " +
+			"style-src 'self' https://unpkg.com 'unsafe-inline'; " +
+			"img-src 'self' data: https:; " +
+			"connect-src 'self' https://unpkg.com https://sepms-backend.vercel.app;",
+	);
 	res.setHeader("Content-Type", "text/html");
 	res.send(`<!DOCTYPE html>
 <html lang="en">
