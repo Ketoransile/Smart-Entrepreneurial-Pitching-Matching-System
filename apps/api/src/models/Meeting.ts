@@ -10,6 +10,7 @@ export interface IMeeting extends Document {
 	scheduledAt: Date;
 	durationMinutes: number;
 	meetingUrl?: string;
+	livekitRoomName?: string;
 	status: MeetingStatus;
 	notes?: string;
 	createdAt: Date;
@@ -51,6 +52,10 @@ const MeetingSchema = new Schema<IMeeting>(
 			default: 30,
 		},
 		meetingUrl: {
+			type: String,
+			default: null,
+		},
+		livekitRoomName: {
 			type: String,
 			default: null,
 		},

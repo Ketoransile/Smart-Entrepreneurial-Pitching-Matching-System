@@ -4,6 +4,7 @@ import {
 	ArrowLeft,
 	BadgeCheck,
 	BarChart3,
+	CalendarDays,
 	ChevronDown,
 	ChevronUp,
 	DollarSign,
@@ -13,6 +14,7 @@ import {
 	Loader2,
 	MessageSquare,
 	Search,
+	Video,
 	XCircle,
 } from "lucide-react";
 import Image from "next/image";
@@ -21,6 +23,9 @@ import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 import DashboardLayout from "@/components/DashboardLayout";
 import ProtectedRoute from "@/components/ProtectedRoute";
+import ScheduleMeetingModal, {
+	type ScheduledMeeting,
+} from "@/components/ScheduleMeetingModal";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -222,6 +227,9 @@ export default function InvestorPitchViewPage() {
 	const [loading, setLoading] = useState(true);
 	const [matchContext, setMatchContext] = useState<MatchContext | null>(null);
 	const [responding, setResponding] = useState(false);
+	const [showScheduleModal, setShowScheduleModal] = useState(false);
+	const [scheduledMeeting, setScheduledMeeting] =
+		useState<ScheduledMeeting | null>(null);
 
 	const api = (
 		process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api"
@@ -285,6 +293,10 @@ export default function InvestorPitchViewPage() {
 						: "Match declined",
 				);
 				setMatchContext((prev) => (prev ? { ...prev, status } : prev));
+				// After accepting, prompt investor to schedule a meeting
+				if (status === "accepted") {
+					setShowScheduleModal(true);
+				}
 			} else {
 				toast.error(data.message ?? "Failed to respond");
 			}
@@ -406,6 +418,29 @@ export default function InvestorPitchViewPage() {
 							<MessageSquare className="h-4 w-4" />
 							Message Founder
 						</Button>
+						{/* Show Schedule button if match is accepted but no meeting yet */}
+						{matchContext?.status === "accepted" && !scheduledMeeting && (
+							<Button
+								variant="outline"
+								onClick={() => setShowScheduleModal(true)}
+								className="gap-2 flex-1 sm:flex-none whitespace-nowrap"
+							>
+								<CalendarDays className="h-4 w-4" />
+								Schedule Meeting
+							</Button>
+						)}
+						{/* Show Join button once meeting is scheduled */}
+						{scheduledMeeting && (
+							<Button
+								onClick={() =>
+									router.push(`/investor/meeting/${scheduledMeeting._id}`)
+								}
+								className="gap-2 flex-1 sm:flex-none whitespace-nowrap bg-green-600 hover:bg-green-700"
+							>
+								<Video className="h-4 w-4" />
+								Join Meeting
+							</Button>
+						)}
 					</div>
 				</div>
 
@@ -766,6 +801,17 @@ export default function InvestorPitchViewPage() {
 					</div>
 				</div>
 			</DashboardLayout>
+
+			{/* Schedule Meeting Modal */}
+			{showScheduleModal && pitch && (
+				<ScheduleMeetingModal
+					submissionId={pitch._id}
+					submissionTitle={pitch.title}
+					entrepreneurUserId={pitch.entrepreneurId?._id ?? ""}
+					onClose={() => setShowScheduleModal(false)}
+					onScheduled={(meeting) => setScheduledMeeting(meeting)}
+				/>
+			)}
 		</ProtectedRoute>
 	);
 }
