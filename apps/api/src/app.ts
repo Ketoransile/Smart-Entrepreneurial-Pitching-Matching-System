@@ -7,7 +7,8 @@ import express, {
 import mongoSanitize from "express-mongo-sanitize";
 import rateLimit from "express-rate-limit";
 import helmet from "helmet";
-import swaggerUi from "swagger-ui-express";
+// swagger-ui-express is NOT used for serving UI on Vercel (static assets fail)
+// Instead we serve a CDN-based HTML page manually
 import { connectDB } from "./config/database";
 import { initFirebase } from "./config/firebase";
 import { openApiSpec } from "./config/openapi";
@@ -42,6 +43,24 @@ app.use(async (_req, _res, next) => {
 		next();
 	}
 });
+
+// Apply relaxed Helmet CSP for /api/docs so CDN assets load
+app.use(
+	"/api/docs",
+	helmet({
+		crossOriginOpenerPolicy: false,
+		crossOriginResourcePolicy: { policy: "cross-origin" },
+		contentSecurityPolicy: {
+			directives: {
+				defaultSrc: ["'self'"],
+				scriptSrc: ["'self'", "https://unpkg.com", "'unsafe-inline'"],
+				styleSrc: ["'self'", "https://unpkg.com", "'unsafe-inline'"],
+				imgSrc: ["'self'", "data:", "https:"],
+				connectSrc: ["'self'", "https://sepms-backend.vercel.app"],
+			},
+		},
+	}),
+);
 
 app.use(
 	helmet({
@@ -136,7 +155,36 @@ app.get("/health", healthHandler);
 app.get("/api/docs.json", (_req: Request, res: Response) => {
 	res.status(200).json(openApiSpec);
 });
-app.use("/api/docs", swaggerUi.serve, swaggerUi.setup(openApiSpec));
+
+// Serve Swagger UI via CDN (works on Vercel serverless)
+app.get("/api/docs", (_req: Request, res: Response) => {
+	res.setHeader("Content-Type", "text/html");
+	res.send(`<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SEPMS API Docs</title>
+  <link rel="stylesheet" href="https://unpkg.com/swagger-ui-dist@5/swagger-ui.css" />
+</head>
+<body>
+  <div id="swagger-ui"></div>
+  <script src="https://unpkg.com/swagger-ui-dist@5/swagger-ui-bundle.js"></script>
+  <script src="https://unpkg.com/swagger-ui-dist@5/swagger-ui-standalone-preset.js"></script>
+  <script>
+    window.onload = function () {
+      SwaggerUIBundle({
+        url: "/api/docs.json",
+        dom_id: "#swagger-ui",
+        presets: [SwaggerUIBundle.presets.apis, SwaggerUIStandalonePreset],
+        layout: "StandaloneLayout",
+        deepLinking: true,
+      });
+    };
+  </script>
+</body>
+</html>`);
+});
 
 // Mount route modules
 app.use("/api/auth", authRoutes);
