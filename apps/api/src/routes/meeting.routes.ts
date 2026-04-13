@@ -100,4 +100,24 @@ router.patch(
 	MeetingController.updateStatus,
 );
 
+/**
+ * @openapi
+ * /api/meetings/{meetingId}/token:
+ *   get:
+ *     tags: [Communication]
+ *     summary: Get a LiveKit access token for a meeting
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: meetingId
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: LiveKit JWT token
+ */
+router.get("/:meetingId/token", authenticate, MeetingController.getToken);
+
 export default router;

@@ -13,6 +13,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useRef } from "react";
+import { Logo } from "@/components/Logo";
 import Navbar from "@/components/Navbar";
 import {
 	Accordion,
@@ -30,43 +31,48 @@ import { useAuth } from "@/context/AuthContext";
    DATA
    ────────────────────────────────────────────── */
 
-const STATS = [
-	{ value: "98%", label: "Match accuracy" },
-	{ value: "<30s", label: "Pitch analysis" },
-	{ value: "3x", label: "Faster funding" },
-	{ value: "500+", label: "Active investors" },
-];
-
 const FEATURES = [
 	{
-		icon: <Zap className="w-5 h-5 text-primary" />,
-		title: "AI-Powered Scoring",
-		desc: "Our ML engine evaluates pitch completeness, market viability, and financial projections — generating an actionable quality score in seconds.",
+		icon: (
+			<Zap className="w-5 h-5 text-foreground drop-shadow-[0_0_8px_rgba(0,0,0,0.1)] dark:drop-shadow-[0_0_8px_rgba(255,255,255,0.2)]" />
+		),
+		title: "Secure Document Uploads",
+		desc: "Easily upload and manage your supporting documents, financial models, and business plans in one safe place.",
 	},
 	{
-		icon: <LinkIcon className="w-5 h-5 text-blue-500" />,
-		title: "Semantic Matching",
-		desc: "384-dimensional vector embeddings map your pitch against investor preferences for high-precision, context-aware matching.",
+		icon: (
+			<LinkIcon className="w-5 h-5 text-foreground drop-shadow-[0_0_8px_rgba(0,0,0,0.1)] dark:drop-shadow-[0_0_8px_rgba(255,255,255,0.2)]" />
+		),
+		title: "Smart Investor Matching",
+		desc: "Our matching engine understands the context of your pitch and connects you with investors whose interests and focus align with your startup.",
 	},
 	{
-		icon: <ShieldCheck className="w-5 h-5 text-green-500" />,
-		title: "KYC Verification",
-		desc: "Automated document verification ensures every participant is authenticated before entering the ecosystem.",
+		icon: (
+			<ShieldCheck className="w-5 h-5 text-foreground drop-shadow-[0_0_8px_rgba(0,0,0,0.1)] dark:drop-shadow-[0_0_8px_rgba(255,255,255,0.2)]" />
+		),
+		title: "Verified Profiles",
+		desc: "Every profile goes through verification so you can trust who you are connecting with on the platform.",
 	},
 	{
-		icon: <BarChart3 className="w-5 h-5 text-purple-500" />,
-		title: "Live Analytics",
-		desc: "Real-time dashboards track pitch performance, investor engagement, view counts, and match quality metrics.",
+		icon: (
+			<BarChart3 className="w-5 h-5 text-foreground drop-shadow-[0_0_8px_rgba(0,0,0,0.1)] dark:drop-shadow-[0_0_8px_rgba(255,255,255,0.2)]" />
+		),
+		title: "Dashboard Overview",
+		desc: "Monitor your pitch status, see how you match with investors, and manage your connections from a centralized hub.",
 	},
 	{
-		icon: <Radio className="w-5 h-5 text-rose-500" />,
-		title: "Audio Summaries",
-		desc: "AI-generated voice summaries let investors preview pitches on the go — no reading required.",
+		icon: (
+			<Radio className="w-5 h-5 text-foreground drop-shadow-[0_0_8px_rgba(0,0,0,0.1)] dark:drop-shadow-[0_0_8px_rgba(255,255,255,0.2)]" />
+		),
+		title: "Saved Pitches",
+		desc: "Investors can easily save promising pitches to their personal watchlists to review them later.",
 	},
 	{
-		icon: <MessageSquare className="w-5 h-5 text-cyan-500" />,
-		title: "Secure Messaging",
-		desc: "Once matched, communicate directly with investors through encrypted, in-platform conversations.",
+		icon: (
+			<MessageSquare className="w-5 h-5 text-foreground drop-shadow-[0_0_8px_rgba(0,0,0,0.1)] dark:drop-shadow-[0_0_8px_rgba(255,255,255,0.2)]" />
+		),
+		title: "Direct Conversations",
+		desc: "Once a match is made, start a secure private conversation directly on the platform.",
 	},
 ];
 
@@ -75,36 +81,24 @@ const PLATFORM_FEATURES = [
 		title: "For Entrepreneurs",
 		subtitle: "Everything you need to get funded",
 		items: [
-			"Guided multi-step pitch submission wizard",
-			"Real-time AI feedback on pitch quality",
-			"Document upload with OCR text extraction",
-			"Investor match notifications",
-			"Progress tracking dashboard",
-			"Pitch revision and versioning",
+			"Guided pitch submission process",
+			"AI feedback to strengthen your pitch",
+			"Secure document uploads",
+			"Investor match insights",
+			"Track your pitch status",
+			"Manage pitches easily",
 		],
 	},
 	{
 		title: "For Investors",
 		subtitle: "Discover high-quality deal flow",
 		items: [
-			"AI-curated pitch feed based on preferences",
-			"Sector, stage, and amount filters",
-			"Pitch quality scores at a glance",
-			"Audio pitch previews",
-			"Saved pitches and watchlist",
-			"Direct messaging with founders",
-		],
-	},
-	{
-		title: "For Administrators",
-		subtitle: "Full platform control and oversight",
-		items: [
-			"User verification and management",
-			"Submission review and moderation",
-			"AI audit logs and transparency",
-			"Platform health monitoring",
-			"Role-based access control",
-			"Bulk user status management",
+			"Personalized pitch feed",
+			"Filter by sector and stage",
+			"See pitch quality scores",
+			"Track your investments",
+			"Save promising pitches",
+			"Message founders directly",
 		],
 	},
 ];
@@ -112,73 +106,47 @@ const PLATFORM_FEATURES = [
 const STEPS = [
 	{
 		step: "01",
-		title: "Submit your pitch",
-		desc: "Fill out our guided 5-step form covering problem, solution, business model, financials, and supporting documents.",
+		title: "Register & create profile",
+		desc: "Create an account and set up your profile to tell us a bit about yourself and your goals.",
 	},
 	{
 		step: "02",
-		title: "AI analyzes & scores",
-		desc: "Our scoring engine evaluates completeness and quality. Low-confidence scores trigger Gemini LLM for deeper qualitative analysis.",
+		title: "Submit your pitch",
+		desc: "Walk through our step-by-step form to describe your problem, solution, business model, and upload documents.",
 	},
 	{
 		step: "03",
-		title: "Semantic matching",
-		desc: "Your pitch embedding is compared against investor preference vectors to find the highest-relevance matches.",
+		title: "Smart Matching",
+		desc: "The platform intelligently matches your pitch with verified investors whose sector focus and preferences align with yours.",
 	},
 	{
 		step: "04",
-		title: "Connect & fund",
-		desc: "Matched investors review your pitch, listen to audio summaries, and initiate direct conversations to move forward.",
+		title: "Connect and grow",
+		desc: "Matched investors can review your pitch and start a direct conversation with you.",
 	},
-];
-
-const TECH_STACK = [
-	{ name: "Next.js 16", category: "Frontend" },
-	{ name: "TypeScript", category: "Language" },
-	{ name: "shadcn/ui", category: "Components" },
-	{ name: "FastAPI", category: "AI Service" },
-	{ name: "Node.js", category: "Backend" },
-	{ name: "MongoDB", category: "Database" },
-	{ name: "Firebase Auth", category: "Authentication" },
-	{ name: "Gemini API", category: "LLM" },
-	{ name: "sentence-transformers", category: "Embeddings" },
-	{ name: "Tesseract OCR", category: "Document AI" },
 ];
 
 const FAQ = [
 	{
-		q: "How does the AI scoring work?",
-		a: "Our scoring engine analyzes 14 weighted fields across your pitch — from problem statement to financial projections. Each field is scored on completeness and quality. If the overall confidence is below 75%, the pitch is escalated to Google Gemini for deeper qualitative analysis.",
+		q: "How does the registration process work?",
+		a: "Simply sign up, verify your email, and fill out your profile details. Once your profile is complete, you can start submitting pitches or discovering startups.",
 	},
 	{
-		q: "What is semantic matching?",
-		a: "We convert both your pitch text and investor preferences into 384-dimensional vector embeddings using sentence-transformers. Cosine similarity between these vectors identifies the most relevant matches — going beyond simple keyword matching to understand context and intent.",
+		q: "How does investor matching work?",
+		a: "Our matching engine compares the context of your pitch against the preferences set by our investors to find the most relevant connections.",
 	},
 	{
 		q: "Is my data secure?",
-		a: "Absolutely. We use Firebase Authentication for secure login (including Google SSO), role-based access control for data isolation, and all communications are encrypted. KYC verification ensures every user is authenticated.",
+		a: "Yes. We use standard authentication and secure storage so that your interactions, documents, and pitches are protected.",
 	},
 	{
 		q: "What does it cost?",
-		a: "SEPMS is free to join for both entrepreneurs and investors. Premium features like priority matching and advanced analytics are available on paid tiers.",
+		a: "The platform is currently free to join for both entrepreneurs and investors. You can submit pitches, get matched, and start conversations.",
 	},
 	{
-		q: "How long does pitch analysis take?",
-		a: "The automated scoring engine processes pitches in under 30 seconds. If Gemini LLM deep analysis is triggered, it adds approximately 10–15 seconds. Audio summary generation takes about 5 seconds.",
+		q: "How long does it take to get matches?",
+		a: "Once your pitch is submitted and approved, our system automatically finds relevant investors and you will be notified of any strong matches.",
 	},
-];
-
-const DOTS = [
-	{ top: "65%", left: "15%", duration: 4, delay: 0 },
-	{ top: "72%", left: "85%", duration: 3.5, delay: 1 },
-	{ top: "52%", left: "75%", duration: 4.5, delay: 0.5 },
-	{ top: "82%", left: "30%", duration: 5, delay: 2 },
-	{ top: "68%", left: "65%", duration: 3, delay: 1.5 },
-	{ top: "78%", left: "45%", duration: 4.2, delay: 0.2 },
-	{ top: "52%", left: "82%", duration: 5.5, delay: 1.2 },
-	{ top: "88%", left: "20%", duration: 4.8, delay: 0.8 },
-	{ top: "60%", left: "10%", duration: 4.1, delay: 1.1 },
-	{ top: "85%", left: "75%", duration: 3.8, delay: 0.4 },
 ];
 
 /* ──────────────────────────────────────────────
@@ -197,9 +165,8 @@ export default function Home() {
 	});
 
 	const rotateX = useTransform(scrollYProgress, [0, 1], [35, 0]);
-	const scale = useTransform(scrollYProgress, [0, 1], [0.8, 1]);
-	const opacity = useTransform(scrollYProgress, [0, 1], [0.2, 1]);
-	const glowOpacity = useTransform(scrollYProgress, [0, 1], [0, 1]);
+	const scale = useTransform(scrollYProgress, [0, 1], [0.85, 1]);
+	const opacity = useTransform(scrollYProgress, [0, 1], [0.3, 1]);
 
 	const getDashboardRoute = () => {
 		if (userProfile?.role) {
@@ -214,12 +181,62 @@ export default function Home() {
 	};
 
 	return (
-		<div className="flex min-h-screen flex-col">
+		<div className="flex min-h-screen flex-col relative">
+			{/* Premium Fancy Vertical Lines */}
+			<div className="pointer-events-none fixed inset-0 flex justify-center z-[-1] overflow-hidden">
+				<div className="w-full max-w-7xl h-full flex justify-between border-x border-foreground/[0.04] dark:border-white/[0.04] relative">
+					{/* Animated particle on left border */}
+					<motion.div
+						className="absolute top-0 left-0 w-px h-[30vh] bg-gradient-to-b from-transparent via-foreground/20 dark:via-white/20 to-transparent"
+						animate={{ y: ["-100vh", "100vh"] }}
+						transition={{ duration: 8, repeat: Infinity, ease: "linear" }}
+					/>
+					{/* Animated particle on right border */}
+					<motion.div
+						className="absolute top-0 right-0 w-px h-[35vh] bg-gradient-to-b from-transparent via-foreground/20 dark:via-white/20 to-transparent"
+						animate={{ y: ["-100vh", "100vh"] }}
+						transition={{
+							duration: 10,
+							repeat: Infinity,
+							ease: "linear",
+							delay: 2,
+						}}
+					/>
+
+					{/* Left inner line */}
+					<div className="w-px h-full bg-gradient-to-b from-transparent via-foreground/[0.08] dark:via-white/[0.08] to-transparent mr-auto ml-[25%] relative">
+						<motion.div
+							className="absolute top-0 left-0 w-px h-[20vh] bg-gradient-to-b from-transparent via-foreground/30 dark:via-white/30 to-transparent"
+							animate={{ y: ["-100vh", "100vh"] }}
+							transition={{
+								duration: 7,
+								repeat: Infinity,
+								ease: "linear",
+								delay: 1,
+							}}
+						/>
+					</div>
+					{/* Right inner line */}
+					<div className="w-px h-full bg-gradient-to-b from-transparent via-foreground/[0.08] dark:via-white/[0.08] to-transparent ml-auto mr-[25%] relative">
+						<motion.div
+							className="absolute top-0 left-0 w-px h-[25vh] bg-gradient-to-b from-transparent via-foreground/30 dark:via-white/30 to-transparent"
+							animate={{ y: ["-100vh", "100vh"] }}
+							transition={{
+								duration: 9,
+								repeat: Infinity,
+								ease: "linear",
+								delay: 3,
+							}}
+						/>
+					</div>
+				</div>
+			</div>
+
 			<Navbar />
 			{/* ─── Hero ─── */}
 			<section className="relative overflow-hidden">
-				<div className="pointer-events-none absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.03)_1px,transparent_1px)] bg-[size:64px_64px] dark:block hidden" />
-				<div className="pointer-events-none absolute inset-0 bg-[linear-gradient(rgba(0,0,0,0.04)_1px,transparent_1px),linear-gradient(90deg,rgba(0,0,0,0.04)_1px,transparent_1px)] bg-[size:64px_64px] dark:hidden block" />
+				<div className="pointer-events-none absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.01)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.01)_1px,transparent_1px)] bg-[size:64px_64px] dark:block hidden" />
+				<div className="pointer-events-none absolute inset-0 bg-[linear-gradient(rgba(0,0,0,0.015)_1px,transparent_1px),linear-gradient(90deg,rgba(0,0,0,0.015)_1px,transparent_1px)] bg-[size:64px_64px] dark:hidden block" />
 
 				{/* Centered Ambient Lighting (Responsive for Light/Dark Mode) */}
 				<motion.div
@@ -230,28 +247,6 @@ export default function Home() {
 					}}
 					transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
 				/>
-
-				{/* Dispersed Random Dots Below Title */}
-				<div className="pointer-events-none absolute inset-0 z-0 overflow-hidden">
-					{DOTS.map((dot) => (
-						<motion.div
-							key={`${dot.top}-${dot.left}`}
-							className="absolute w-[2px] h-[2px] rounded-full bg-black dark:bg-white"
-							style={{ top: dot.top, left: dot.left }}
-							animate={{
-								y: [0, -15, 0],
-								opacity: [0.2, 0.8, 0.2],
-								scale: [1, 1.5, 1],
-							}}
-							transition={{
-								duration: dot.duration,
-								repeat: Infinity,
-								ease: "easeInOut",
-								delay: dot.delay,
-							}}
-						/>
-					))}
-				</div>
 
 				<div className="relative w-full px-4 sm:px-8 lg:px-16 pt-44 pb-20 sm:pt-40 sm:pb-32 lg:pt-52 lg:pb-40">
 					<motion.div
@@ -310,10 +305,10 @@ export default function Home() {
 									},
 								}}
 							>
-								Where great ideas
+								Where growing startups
 							</motion.span>
 							<motion.span
-								className="block relative bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent pb-4 inline-block mx-auto"
+								className="block relative bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-500 bg-clip-text text-transparent pb-4 inline-block mx-auto"
 								variants={{
 									hidden: {
 										opacity: 0,
@@ -383,9 +378,8 @@ export default function Home() {
 								},
 							}}
 						>
-							SEPMS uses machine learning to score your pitch, verify your
-							documents, and semantically match you with investors who align
-							with your vision.
+							Submit your pitch and connect with verified investors who are
+							actively looking for startups like yours all in one platform.
 						</motion.p>
 
 						<motion.div
@@ -424,7 +418,7 @@ export default function Home() {
 										onClick={() => router.push("/sign-up?role=entrepreneur")}
 									>
 										<span className="relative z-10 transition-transform duration-300 group-hover:scale-105 inline-block">
-											Start pitching — it&apos;s free
+											Start pitching for free
 										</span>
 										<motion.div
 											className="absolute inset-0 bg-white/20"
@@ -457,16 +451,20 @@ export default function Home() {
 					</motion.div>
 				</div>
 
-				{/* ─── 3D Dashboard Mockup Reveal ─── */}
+				{/* ─── Modern 3D Dashboard Mockup Reveal ─── */}
 				<div
 					ref={dashboardRef}
 					className="relative mx-auto max-w-6xl px-4 sm:px-8 pb-32 pt-10"
 					style={{ perspective: "2000px" }}
 				>
-					{/* Elegant Aurora Glow Behind Dashboard */}
+					{/* Elegant Pulsating Aurora Glow Behind Dashboard */}
 					<motion.div
-						style={{ opacity: glowOpacity, scale }}
-						className="absolute left-1/2 top-1/3 -translate-x-1/2 w-[90%] sm:w-[70%] h-[40%] sm:h-[50%] bg-gradient-to-r from-blue-500/20 via-indigo-500/20 to-purple-500/20 dark:from-blue-500/30 dark:via-indigo-500/30 dark:to-purple-500/30 blur-[60px] sm:blur-[100px] rounded-full pointer-events-none"
+						style={{ opacity }}
+						animate={{
+							scale: [0.95, 1.05, 0.95],
+						}}
+						transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
+						className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[95%] sm:w-[80%] h-[70%] bg-gradient-to-r from-blue-500/30 via-indigo-500/30 to-purple-500/30 dark:from-blue-500/40 dark:via-indigo-500/40 dark:to-purple-500/40 blur-[80px] sm:blur-[100px] rounded-full pointer-events-none"
 					/>
 
 					<motion.div
@@ -475,15 +473,8 @@ export default function Home() {
 							scale,
 							opacity,
 						}}
-						className="w-full relative rounded-xl border border-white/20 dark:border-white/10 bg-white/5 dark:bg-black/20 shadow-[0_0_50px_-12px_rgba(0,0,0,0.5)] p-2 sm:p-4 backdrop-blur-xl z-10"
+						className="w-full relative rounded-[1.5rem] border border-white/40 dark:border-white/10 bg-white/40 dark:bg-black/40 shadow-[0_0_80px_-15px_rgba(0,0,0,0.3)] p-2 sm:p-4 backdrop-blur-xl z-10"
 					>
-						{/* Mockup Top Bar (Dots) */}
-						<div className="flex items-center gap-2 mb-3 pl-2 opacity-50">
-							<div className="w-2.5 h-2.5 rounded-full bg-red-500/80" />
-							<div className="w-2.5 h-2.5 rounded-full bg-yellow-500/80" />
-							<div className="w-2.5 h-2.5 rounded-full bg-green-500/80" />
-						</div>
-
 						{/* The Image */}
 						<div className="relative w-full aspect-[16/9] overflow-hidden rounded-lg border border-border/50">
 							{/* Light Mode Mockup */}
@@ -504,31 +495,6 @@ export default function Home() {
 							/>
 						</div>
 					</motion.div>
-				</div>
-			</section>
-
-			{/* ─── Stats ─── */}
-			<section id="stats" className="border-y border-border/50">
-				<div className="w-full px-4 sm:px-8 lg:px-16 py-12">
-					<div className="grid grid-cols-2 gap-8 sm:grid-cols-4">
-						{STATS.map((stat, i) => (
-							<motion.div
-								key={stat.label}
-								className="text-center"
-								initial={{ opacity: 0, y: 20 }}
-								whileInView={{ opacity: 1, y: 0 }}
-								viewport={{ once: true, margin: "-50px" }}
-								transition={{ duration: 0.5, delay: i * 0.1 }}
-							>
-								<p className="text-3xl sm:text-4xl font-bold tracking-tight">
-									{stat.value}
-								</p>
-								<p className="mt-1 text-sm text-muted-foreground">
-									{stat.label}
-								</p>
-							</motion.div>
-						))}
-					</div>
 				</div>
 			</section>
 
@@ -562,8 +528,9 @@ export default function Home() {
 								viewport={{ once: true }}
 								transition={{ duration: 0.5, delay: i * 0.1 }}
 							>
-								<Card className="h-full group border-border/50 bg-background hover:bg-muted/10 hover:border-border transition-all duration-300">
-									<CardContent className="p-6">
+								<Card className="relative h-full group border-border/30 bg-background/40 backdrop-blur-md overflow-hidden hover:shadow-[0_0_40px_-10px_rgba(99,102,241,0.15)] dark:hover:shadow-[0_0_40px_-10px_rgba(99,102,241,0.2)] hover:-translate-y-1 hover:border-indigo-500/30 transition-all duration-500">
+									<div className="absolute inset-0 bg-gradient-to-br from-indigo-500/5 via-purple-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
+									<CardContent className="p-6 relative z-10">
 										<div className="mb-4 flex h-10 w-10 items-center justify-center rounded-lg bg-muted text-xl group-hover:scale-110 group-hover:bg-primary/10 transition-all duration-300">
 											{feature.icon}
 										</div>
@@ -582,8 +549,9 @@ export default function Home() {
 			{/* ─── Platform Features (3 columns) ─── */}
 			<section
 				id="platform"
-				className="border-y border-border/50 py-20 sm:py-28 bg-background"
+				className="border-y border-border/30 py-20 sm:py-28 relative bg-background/50 backdrop-blur-sm"
 			>
+				<div className="absolute inset-0 bg-gradient-to-b from-indigo-500/5 to-transparent pointer-events-none" />
 				<div className="w-full px-4 sm:px-8 lg:px-16">
 					<motion.div
 						className="mx-auto max-w-2xl text-center mb-16"
@@ -596,14 +564,14 @@ export default function Home() {
 							Platform
 						</Badge>
 						<h2 className="text-3xl font-bold tracking-tight sm:text-4xl">
-							Built for every stakeholder
+							Built for founders & investors
 						</h2>
 						<p className="mt-4 text-muted-foreground">
-							Three roles, one seamless experience — tailored dashboards for
-							entrepreneurs, investors, and admins.
+							Tailored tools and dashboards for both entrepreneurs seeking
+							capital and investors searching for opportunities.
 						</p>
 					</motion.div>
-					<div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+					<div className="grid gap-6 sm:grid-cols-2 max-w-4xl mx-auto">
 						{PLATFORM_FEATURES.map((role, i) => (
 							<motion.div
 								key={role.title}
@@ -612,8 +580,9 @@ export default function Home() {
 								viewport={{ once: true }}
 								transition={{ duration: 0.5, delay: i * 0.1 }}
 							>
-								<Card className="h-full border-border/50 bg-background hover:border-indigo-500/30 dark:hover:border-indigo-500/50 hover:shadow-xl hover:shadow-indigo-500/10 hover:-translate-y-1 transition-all duration-300">
-									<CardContent className="p-6 h-full flex flex-col">
+								<Card className="relative h-full border-border/30 bg-background/40 backdrop-blur-md overflow-hidden hover:border-indigo-500/40 dark:hover:border-indigo-500/40 hover:shadow-[0_0_50px_-12px_rgba(99,102,241,0.2)] hover:-translate-y-2 transition-all duration-500">
+									<div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 via-indigo-500/5 to-purple-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
+									<CardContent className="p-6 h-full flex flex-col relative z-10">
 										<h3 className="font-bold text-lg mb-1">{role.title}</h3>
 										<p className="text-sm text-muted-foreground mb-5">
 											{role.subtitle}
@@ -654,8 +623,8 @@ export default function Home() {
 							From pitch to partnership in four steps
 						</h2>
 						<p className="mt-4 text-muted-foreground">
-							Our intelligent pipeline takes your raw pitch and transforms it
-							into a funded opportunity.
+							A clear path from submitting your pitch to a funded partnership
+							with the right investor.
 						</p>
 					</motion.div>
 					<div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
@@ -668,7 +637,7 @@ export default function Home() {
 								viewport={{ once: true }}
 								transition={{ duration: 0.5, delay: i * 0.15 }}
 							>
-								<div className="text-5xl font-bold text-muted-foreground/15 mb-4">
+								<div className="text-5xl font-bold bg-gradient-to-b from-muted-foreground/30 to-muted-foreground/5 bg-clip-text text-transparent mb-4">
 									{step.step}
 								</div>
 								<h3 className="font-semibold mb-2">{step.title}</h3>
@@ -681,35 +650,6 @@ export default function Home() {
 									</div>
 								)}
 							</motion.div>
-						))}
-					</div>
-				</div>
-			</section>
-
-			{/* ─── Tech Stack ─── */}
-			<section className="border-y border-border/50 py-16 bg-background">
-				<div className="w-full px-4 sm:px-8 lg:px-16">
-					<div className="text-center mb-10">
-						<h2 className="text-xl font-bold tracking-tight sm:text-2xl">
-							Powered by modern technology
-						</h2>
-						<p className="mt-2 text-sm text-muted-foreground">
-							Enterprise-grade stack built for performance, security, and
-							scalability.
-						</p>
-					</div>
-					<div className="flex flex-wrap justify-center gap-3">
-						{TECH_STACK.map((tech) => (
-							<Badge
-								key={tech.name}
-								variant="outline"
-								className="px-4 py-2 text-xs font-medium"
-							>
-								{tech.name}
-								<span className="ml-2 text-muted-foreground font-normal">
-									{tech.category}
-								</span>
-							</Badge>
 						))}
 					</div>
 				</div>
@@ -738,7 +678,7 @@ export default function Home() {
 							<AccordionItem
 								key={item.q}
 								value={`item-${i}`}
-								className="border-border/50 border rounded-lg px-5 bg-background"
+								className="border-border/30 border rounded-lg px-5 bg-background/40 backdrop-blur-md hover:border-indigo-500/30 transition-all duration-300 shadow-sm hover:shadow-md"
 							>
 								<AccordionTrigger className="text-left font-medium text-sm py-5 hover:no-underline">
 									{item.q}
@@ -761,8 +701,9 @@ export default function Home() {
 						viewport={{ once: true }}
 						transition={{ duration: 0.6, type: "spring" }}
 					>
-						<Card className="overflow-hidden border-border/50 bg-background/50 backdrop-blur-xl relative">
-							<CardContent className="relative p-8 sm:p-12 lg:p-16 text-center">
+						<Card className="overflow-hidden border-border/30 bg-background/40 backdrop-blur-xl relative shadow-[0_0_50px_-10px_rgba(0,0,0,0.1)] dark:shadow-[0_0_50px_-10px_rgba(255,255,255,0.05)]">
+							<div className="absolute inset-0 bg-gradient-to-tr from-foreground/5 via-transparent to-foreground/5" />
+							<CardContent className="relative p-8 sm:p-12 lg:p-16 text-center z-10">
 								<div className="relative">
 									<h2 className="text-3xl font-bold tracking-tight sm:text-4xl mb-4">
 										Ready to accelerate your funding?
@@ -784,10 +725,18 @@ export default function Home() {
 											<>
 												<Button
 													size="lg"
-													className="h-12 px-8 font-semibold hover:scale-105 transition-transform duration-300"
+													className="h-12 px-8 font-semibold hover:scale-105 transition-transform duration-300 group relative overflow-hidden"
 													onClick={() => router.push("/sign-up")}
 												>
-													Create free account
+													<span className="relative z-10">
+														Create free account
+													</span>
+													<motion.div
+														className="absolute inset-0 bg-white/20"
+														initial={{ x: "-100%" }}
+														whileHover={{ x: "100%" }}
+														transition={{ duration: 0.5, ease: "easeInOut" }}
+													/>
 												</Button>
 												<Button
 													size="lg"
@@ -814,14 +763,12 @@ export default function Home() {
 						{/* Brand */}
 						<div className="lg:col-span-1">
 							<div className="flex items-center gap-2 mb-4">
-								<div className="flex h-7 w-7 items-center justify-center rounded-lg bg-foreground text-background font-bold text-xs">
-									S
-								</div>
+								<Logo className="h-7 w-7" />
 								<span className="font-semibold text-sm">SEPMS</span>
 							</div>
 							<p className="text-sm text-muted-foreground leading-relaxed max-w-xs">
-								Smart Entrepreneurial Pitching & Matching System — connecting
-								founders with capital through AI-powered analysis and semantic
+								Smart Entrepreneurial Pitching & Matching System helping
+								founders connect with the right investors through intelligent
 								matching.
 							</p>
 						</div>
@@ -831,11 +778,11 @@ export default function Home() {
 							<h4 className="font-semibold text-sm mb-4">Product</h4>
 							<ul className="space-y-2.5">
 								{[
-									"AI Scoring",
-									"Semantic Matching",
-									"Document Verification",
-									"Audio Summaries",
-									"Analytics Dashboard",
+									"Investor Matching",
+									"Profile Verification",
+									"Saved Pitches",
+									"Direct Messaging",
+									"Performance Dashboard",
 								].map((item) => (
 									<li key={item}>
 										<Link
@@ -856,8 +803,8 @@ export default function Home() {
 								{[
 									"How it Works",
 									"FAQ",
-									"API Documentation",
-									"System Architecture",
+									"Getting Started Guide",
+									"Help Center",
 									"Privacy Policy",
 								].map((item) => (
 									<li key={item}>
@@ -900,8 +847,8 @@ export default function Home() {
 
 					<div className="flex flex-col items-center justify-between gap-4 sm:flex-row">
 						<p className="text-xs text-muted-foreground">
-							© {new Date().getFullYear()} SEPMS — Smart Entrepreneurial
-							Pitching & Matching System. All rights reserved.
+							© {new Date().getFullYear()} SEPMS Smart Entrepreneurial Pitching
+							& Matching System. All rights reserved.
 						</p>
 						<div className="flex items-center gap-4">
 							<Link

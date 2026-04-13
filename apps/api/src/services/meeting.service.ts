@@ -1,3 +1,4 @@
+import { AccessToken } from "livekit-server-sdk";
 import { Meeting } from "../models/Meeting";
 import { NotificationService } from "./notification.service";
 
@@ -23,6 +24,50 @@ export class MeetingService {
 		return error instanceof MeetingServiceError;
 	}
 
+	static async generateLivekitToken(payload: {
+		meetingId: string;
+		userId: string;
+		userName: string;
+	}): Promise<string> {
+		const apiKey = process.env.LIVEKIT_API_KEY;
+		const apiSecret = process.env.LIVEKIT_API_SECRET;
+
+		if (!apiKey || !apiSecret) {
+			throw MeetingService.createError("LiveKit is not configured", 503);
+		}
+
+		const meeting = await Meeting.findById(payload.meetingId);
+		if (!meeting) {
+			throw MeetingService.createError("Meeting not found", 404);
+		}
+
+		const isParticipant = meeting.participants
+			.map((p) => p.toString())
+			.includes(payload.userId);
+		if (!isParticipant) {
+			throw MeetingService.createError(
+				"You are not a participant of this meeting",
+				403,
+			);
+		}
+
+		const roomName = meeting.livekitRoomName ?? payload.meetingId;
+
+		const at = new AccessToken(apiKey, apiSecret, {
+			identity: payload.userId,
+			name: payload.userName,
+			ttl: "4h",
+		});
+		at.addGrant({
+			roomJoin: true,
+			room: roomName,
+			canPublish: true,
+			canSubscribe: true,
+		});
+
+		return await at.toJwt();
+	}
+
 	static async scheduleMeeting(payload: {
 		organizerId: string;
 		participants: string[];
@@ -45,6 +90,9 @@ export class MeetingService {
 			...payload.participants.filter(Boolean),
 		]);
 
+		// Generate a stable room name from organizer + timestamp
+		const livekitRoomName = `meeting-${payload.organizerId}-${Date.now()}`;
+
 		const meeting = await Meeting.create({
 			organizerId: payload.organizerId,
 			participants: Array.from(participantSet),
@@ -53,6 +101,7 @@ export class MeetingService {
 			durationMinutes: payload.durationMinutes || 30,
 			submissionId: payload.submissionId || null,
 			meetingUrl: payload.meetingUrl || null,
+			livekitRoomName,
 			notes: payload.notes || null,
 			status: "scheduled",
 		});

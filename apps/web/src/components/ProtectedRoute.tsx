@@ -1,4 +1,5 @@
 "use client";
+// Design Pattern Implementation: Auth gate refinement
 
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";

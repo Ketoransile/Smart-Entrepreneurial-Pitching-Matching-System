@@ -1,4 +1,5 @@
 import {
+	CalendarDays,
 	Compass,
 	FileText,
 	Gauge,
@@ -28,6 +29,11 @@ export const ENTREPRENEUR_NAV = [
 		label: "Messages",
 		href: "/entrepreneur/messages",
 		icon: <MessageCircle className="h-4 w-4" />,
+	},
+	{
+		label: "Meetings",
+		href: "/entrepreneur/meetings",
+		icon: <CalendarDays className="h-4 w-4" />,
 	},
 	{
 		label: "Profile",

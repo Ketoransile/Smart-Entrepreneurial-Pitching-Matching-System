@@ -18,6 +18,25 @@ const handleMeetingError = (
 };
 
 export class MeetingController {
+	static async getToken(req: Request, res: Response): Promise<void> {
+		try {
+			if (!req.user) {
+				res.status(401).json({ status: "error", message: "Unauthorized" });
+				return;
+			}
+
+			const token = await MeetingService.generateLivekitToken({
+				meetingId: req.params.meetingId,
+				userId: req.user._id.toString(),
+				userName: req.user.fullName ?? req.user.email,
+			});
+
+			res.status(200).json({ status: "success", token });
+		} catch (error) {
+			handleMeetingError(res, error, "Failed to generate meeting token");
+		}
+	}
+
 	static async schedule(req: Request, res: Response): Promise<void> {
 		try {
 			if (!req.user) {
