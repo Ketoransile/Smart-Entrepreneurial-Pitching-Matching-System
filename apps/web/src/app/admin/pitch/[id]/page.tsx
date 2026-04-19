@@ -29,6 +29,7 @@ import {
 	CardTitle,
 } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
+import { ADMIN_NAV } from "@/constants/navigation";
 import { useAuth } from "@/context/AuthContext";
 import { SECTORS, STAGES } from "@/lib/validations/submission";
 
@@ -136,7 +137,7 @@ export default function AdminPitchViewPage() {
 				}
 			} else {
 				toast.error("Failed to fetch pitch details.");
-				router.push("/admin/oversight");
+				router.back();
 			}
 		} catch (err) {
 			console.error("Failed to load pitch:", err);
@@ -180,16 +181,7 @@ export default function AdminPitchViewPage() {
 	if (loading) {
 		return (
 			<ProtectedRoute allowedRoles={["admin"]}>
-				<DashboardLayout
-					navItems={[
-						{
-							label: "Back to Dashboard",
-							href: "/admin/oversight",
-							icon: <ArrowLeft className="h-4 w-4" />,
-						},
-					]}
-					title="SEPMS"
-				>
+				<DashboardLayout navItems={ADMIN_NAV} title="SEPMS">
 					<div className="flex h-[60vh] items-center justify-center">
 						<Loader2 className="h-8 w-8 animate-spin text-primary" />
 					</div>
@@ -207,22 +199,13 @@ export default function AdminPitchViewPage() {
 
 	return (
 		<ProtectedRoute allowedRoles={["admin"]}>
-			<DashboardLayout
-				navItems={[
-					{
-						label: "Back to Dashboard",
-						href: "/admin/oversight",
-						icon: <ArrowLeft className="h-4 w-4" />,
-					},
-				]}
-				title="SEPMS"
-			>
+			<DashboardLayout navItems={ADMIN_NAV} title="SEPMS">
 				<div className="mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
 					<div className="flex items-start sm:items-center gap-4 pr-2">
 						<Button
 							variant="ghost"
 							size="icon"
-							onClick={() => router.push("/admin/oversight")}
+							onClick={() => router.back()}
 							className="h-10 w-10 shrink-0 mt-0.5 sm:mt-0"
 						>
 							<ArrowLeft className="h-5 w-5" />
