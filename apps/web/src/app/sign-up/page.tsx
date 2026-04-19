@@ -47,6 +47,7 @@ function SignUpForm() {
 		setLoading(true);
 
 		try {
+			console.log("SIGN UP:", { email, role, fullName });
 			await signUp(email, password, fullName, { role, companyName, fundName });
 			toast.success("Account created! Check your email to verify.");
 			// Investors go to onboarding after email verification
@@ -69,6 +70,7 @@ function SignUpForm() {
 
 		try {
 			const profile = await signInWithGoogle({ role, companyName, fundName });
+			console.log("GOOGLE SIGN UP:", profile);
 
 			if (profile.role === "investor") {
 				router.push("/investor/onboarding");
