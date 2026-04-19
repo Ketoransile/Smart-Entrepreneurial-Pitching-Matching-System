@@ -133,57 +133,73 @@ export default function AdminReportsPage() {
 	return (
 		<ProtectedRoute allowedRoles={["admin"]}>
 			<DashboardLayout navItems={ADMIN_NAV} title="SEPMS">
-				<div className="mb-8">
-					<h1 className="text-2xl font-bold tracking-tight sm:text-3xl flex items-center gap-3">
-						<ShieldAlert className="h-7 w-7 text-destructive" />
-						Misconduct Reports
-					</h1>
-					<p className="mt-1 text-muted-foreground">
-						Review and resolve user misconduct reports
-					</p>
+				<div className="admin-greeting-card bg-card mb-8 p-6 sm:p-8 admin-content-fade">
+					<div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+						<div>
+							<h1 className="text-2xl font-bold tracking-tight sm:text-3xl admin-header-gradient flex items-center gap-3">
+								Misconduct Reports
+							</h1>
+							<p className="mt-1.5 text-muted-foreground text-sm sm:text-base">
+								Review and resolve user misconduct reports
+							</p>
+						</div>
+						{openCount > 0 && (
+							<Badge variant="destructive" className="text-xs font-medium gap-1.5 py-1 px-3 w-fit">
+								<AlertTriangle className="h-3.5 w-3.5" />
+								{openCount} Open
+							</Badge>
+						)}
+					</div>
 				</div>
 
 				{/* Stats */}
-				<div className="grid gap-4 sm:grid-cols-3 mb-8">
-					<Card>
-						<CardContent className="p-5">
+				<div className="admin-stat-grid grid gap-4 sm:grid-cols-3 mb-8">
+					<div className="admin-stat-card bg-card">
+						<div className="p-5">
 							<div className="flex items-center gap-3">
-								<div className="rounded-lg bg-destructive/10 p-2.5">
-									<AlertTriangle className="h-5 w-5 text-destructive" />
+								<div className="admin-icon-glow admin-icon-rose rounded-xl p-2.5 flex items-center justify-center shadow-sm">
+									<AlertTriangle className="h-4.5 w-4.5 text-white" />
 								</div>
-								<div>
-									<p className="text-xs text-muted-foreground font-medium">Open Reports</p>
-									<p className="text-2xl font-bold text-destructive">{openCount}</p>
+								<div className="min-w-0 flex-1">
+									<p className="text-[11px] uppercase tracking-wider font-semibold text-muted-foreground/70">Open Reports</p>
+									<div className="flex items-baseline gap-2">
+										<p className="text-2xl font-bold tracking-tight">{openCount}</p>
+										{openCount > 0 && (
+											<span className="text-[10px] font-semibold text-rose-500 bg-rose-500/10 px-1.5 py-0.5 rounded-full">
+												Action needed
+											</span>
+										)}
+									</div>
 								</div>
 							</div>
-						</CardContent>
-					</Card>
-					<Card>
-						<CardContent className="p-5">
+						</div>
+					</div>
+					<div className="admin-stat-card bg-card">
+						<div className="p-5">
 							<div className="flex items-center gap-3">
-								<div className="rounded-lg bg-emerald-500/10 p-2.5">
-									<CheckCircle2 className="h-5 w-5 text-emerald-500" />
+								<div className="admin-icon-glow admin-icon-emerald rounded-xl p-2.5 flex items-center justify-center shadow-sm">
+									<CheckCircle2 className="h-4.5 w-4.5 text-white" />
 								</div>
-								<div>
-									<p className="text-xs text-muted-foreground font-medium">Resolved</p>
-									<p className="text-2xl font-bold">{resolvedCount}</p>
+								<div className="min-w-0 flex-1">
+									<p className="text-[11px] uppercase tracking-wider font-semibold text-muted-foreground/70">Resolved</p>
+									<p className="text-2xl font-bold tracking-tight">{resolvedCount}</p>
 								</div>
 							</div>
-						</CardContent>
-					</Card>
-					<Card>
-						<CardContent className="p-5">
+						</div>
+					</div>
+					<div className="admin-stat-card bg-card">
+						<div className="p-5">
 							<div className="flex items-center gap-3">
-								<div className="rounded-lg bg-primary/10 p-2.5">
-									<MessageSquare className="h-5 w-5 text-primary" />
+								<div className="admin-icon-glow admin-icon-blue rounded-xl p-2.5 flex items-center justify-center shadow-sm">
+									<MessageSquare className="h-4.5 w-4.5 text-white" />
 								</div>
-								<div>
-									<p className="text-xs text-muted-foreground font-medium">Total</p>
-									<p className="text-2xl font-bold">{reports.length}</p>
+								<div className="min-w-0 flex-1">
+									<p className="text-[11px] uppercase tracking-wider font-semibold text-muted-foreground/70">Total</p>
+									<p className="text-2xl font-bold tracking-tight">{reports.length}</p>
 								</div>
 							</div>
-						</CardContent>
-					</Card>
+						</div>
+					</div>
 				</div>
 
 				{/* Filter */}

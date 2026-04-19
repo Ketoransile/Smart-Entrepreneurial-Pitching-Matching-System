@@ -519,57 +519,92 @@ export default function AdminOversight() {
 	return (
 		<ProtectedRoute allowedRoles={["admin"]}>
 			<DashboardLayout navItems={ADMIN_NAV} title="SEPMS Admin">
-				<div className="mb-8">
-					<h1 className="text-2xl font-bold tracking-tight sm:text-3xl">
-						Admin Overview
-					</h1>
-					<p className="mt-1 text-muted-foreground">
-						Monitor platform health, manage users, and review KYC submissions
-					</p>
+				{/* Greeting Card */}
+				<div className="admin-greeting-card bg-card mb-8 p-6 sm:p-8 admin-content-fade">
+					<div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+						<div>
+							<h1 className="text-2xl font-bold tracking-tight sm:text-3xl admin-header-gradient">
+								Admin Overview
+							</h1>
+							<p className="mt-1.5 text-muted-foreground text-sm sm:text-base">
+								Monitor platform health, manage users, and review KYC submissions
+							</p>
+						</div>
+						<div className="flex items-center gap-2 shrink-0">
+							<div className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
+							<span className="text-xs font-medium text-muted-foreground">System Online</span>
+						</div>
+					</div>
 				</div>
 
 				{/* Stats */}
-				<div className="grid gap-4 grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 mb-8">
+				<div className="admin-stat-grid grid gap-4 grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 mb-8">
 					{[
 						{
 							label: "Total Users",
 							value: userStats.total,
-							icon: <Users className="h-4 w-4" />,
+							icon: <Users className="h-4.5 w-4.5 text-white" />,
+							gradient: "admin-icon-blue",
+							change: null,
 						},
 						{
 							label: "Entrepreneurs",
 							value: userStats.entrepreneurs || 0,
-							icon: <Rocket className="h-4 w-4" />,
+							icon: <Rocket className="h-4.5 w-4.5 text-white" />,
+							gradient: "admin-icon-violet",
+							change: null,
 						},
 						{
 							label: "Investors",
 							value: userStats.investors || 0,
-							icon: <DollarSign className="h-4 w-4" />,
+							icon: <DollarSign className="h-4.5 w-4.5 text-white" />,
+							gradient: "admin-icon-emerald",
+							change: null,
 						},
 						{
 							label: "Pending KYC",
 							value: pendingCount,
-							icon: <UserCheck className="h-4 w-4" />,
+							icon: <UserCheck className="h-4.5 w-4.5 text-white" />,
+							gradient: "admin-icon-amber",
+							change: pendingCount > 0 ? "action" : null,
 						},
 						{
 							label: "Submitted",
 							value: subStats.submitted || 0,
-							icon: <Send className="h-4 w-4" />,
+							icon: <Send className="h-4.5 w-4.5 text-white" />,
+							gradient: "admin-icon-cyan",
+							change: null,
 						},
 						{
 							label: "Approved",
 							value: subStats.approved || 0,
-							icon: <CheckCircle2 className="h-4 w-4" />,
+							icon: <CheckCircle2 className="h-4.5 w-4.5 text-white" />,
+							gradient: "admin-icon-teal",
+							change: null,
 						},
 					].map((stat) => (
-						<Card key={stat.label}>
-							<CardContent className="p-4">
-								<p className="text-xs text-muted-foreground flex items-center gap-1.5">
-									{stat.icon} {stat.label}
-								</p>
-								<p className="text-2xl font-bold mt-1">{stat.value}</p>
-							</CardContent>
-						</Card>
+						<div key={stat.label} className="admin-stat-card bg-card" style={{ '--card-accent': undefined } as React.CSSProperties}>
+							<div className="p-4 sm:p-5">
+								<div className="flex items-center gap-3">
+									<div className={`admin-icon-glow ${stat.gradient} rounded-xl p-2.5 flex items-center justify-center shadow-sm`}>
+										{stat.icon}
+									</div>
+									<div className="min-w-0 flex-1">
+										<p className="text-[11px] uppercase tracking-wider font-semibold text-muted-foreground/70 truncate">
+											{stat.label}
+										</p>
+										<div className="flex items-baseline gap-2">
+											<p className="text-2xl font-bold tracking-tight">{stat.value}</p>
+											{stat.change === "action" && (
+												<span className="text-[10px] font-semibold text-amber-500 bg-amber-500/10 px-1.5 py-0.5 rounded-full">
+													Needs review
+												</span>
+											)}
+										</div>
+									</div>
+								</div>
+							</div>
+						</div>
 					))}
 				</div>
 
@@ -682,24 +717,29 @@ export default function AdminOversight() {
 
 					{/* ─── Users Tab ─── */}
 					<TabsContent value="users">
-						<div className="flex gap-3 mb-4">
-							<Select
-								value={roleFilter}
-								onValueChange={(v) => {
-									setRoleFilter(v);
-									setUserPage(1);
-								}}
-							>
-								<SelectTrigger className="w-40">
-									<SelectValue placeholder="Filter role" />
-								</SelectTrigger>
-								<SelectContent>
-									<SelectItem value="all">All roles</SelectItem>
-									<SelectItem value="entrepreneur">Entrepreneur</SelectItem>
-									<SelectItem value="investor">Investor</SelectItem>
-									<SelectItem value="admin">Admin</SelectItem>
-								</SelectContent>
-							</Select>
+						<div className="flex items-center justify-between gap-3 mb-4">
+							<div className="flex gap-3">
+								<Select
+									value={roleFilter}
+									onValueChange={(v) => {
+										setRoleFilter(v);
+										setUserPage(1);
+									}}
+								>
+									<SelectTrigger className="w-40">
+										<SelectValue placeholder="Filter role" />
+									</SelectTrigger>
+									<SelectContent>
+										<SelectItem value="all">All roles</SelectItem>
+										<SelectItem value="entrepreneur">Entrepreneur</SelectItem>
+										<SelectItem value="investor">Investor</SelectItem>
+										<SelectItem value="admin">Admin</SelectItem>
+									</SelectContent>
+								</Select>
+							</div>
+							<p className="text-sm text-muted-foreground">
+								{users.length} user{users.length !== 1 ? "s" : ""}
+							</p>
 						</div>
 
 						<Card>
@@ -767,7 +807,7 @@ export default function AdminOversight() {
 													{new Date(u.createdAt).toLocaleDateString()}
 												</TableCell>
 												<TableCell className="text-right">
-													{u.adminLevel === "super_admin" && !isSuperAdmin ? (
+													{(u.role === "admin" && !isSuperAdmin) ? (
 														<span className="text-xs text-muted-foreground">
 															Protected
 														</span>
@@ -790,29 +830,45 @@ export default function AdminOversight() {
 									)}
 								</TableBody>
 							</Table>
+							{/* Pagination */}
 							{totalUserPages > 1 && (
-								<div className="flex items-center justify-end space-x-2 p-4 border-t border-border/50">
-									<Button
-										variant="outline"
-										size="sm"
-										onClick={() => setUserPage((p) => Math.max(1, p - 1))}
-										disabled={userPage === 1}
-									>
-										Previous
-									</Button>
-									<span className="text-sm text-muted-foreground bg-muted/20 px-3 py-1 rounded-md border border-border/50">
-										Page {userPage} of {totalUserPages}
-									</span>
-									<Button
-										variant="outline"
-										size="sm"
-										onClick={() =>
-											setUserPage((p) => Math.min(totalUserPages, p + 1))
-										}
-										disabled={userPage === totalUserPages}
-									>
-										Next
-									</Button>
+								<div className="flex items-center justify-between p-4 border-t border-border/50">
+									<p className="text-sm text-muted-foreground">
+										Showing {(userPage - 1) * ITEMS_PER_PAGE + 1}–{Math.min(userPage * ITEMS_PER_PAGE, users.length)} of {users.length}
+									</p>
+									<div className="flex items-center gap-1">
+										<Button
+											variant="outline"
+											size="sm"
+											onClick={() => setUserPage((p) => Math.max(1, p - 1))}
+											disabled={userPage === 1}
+											className="h-8 px-3"
+										>
+											Previous
+										</Button>
+										{Array.from({ length: totalUserPages }, (_, i) => i + 1).map((pg) => (
+											<Button
+												key={pg}
+												variant={pg === userPage ? "default" : "outline"}
+												size="sm"
+												onClick={() => setUserPage(pg)}
+												className="h-8 w-8 p-0"
+											>
+												{pg}
+											</Button>
+										))}
+										<Button
+											variant="outline"
+											size="sm"
+											onClick={() =>
+												setUserPage((p) => Math.min(totalUserPages, p + 1))
+											}
+											disabled={userPage === totalUserPages}
+											className="h-8 px-3"
+										>
+											Next
+										</Button>
+									</div>
 								</div>
 							)}
 						</Card>

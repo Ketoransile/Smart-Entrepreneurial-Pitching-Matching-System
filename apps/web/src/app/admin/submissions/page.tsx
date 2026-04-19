@@ -182,69 +182,84 @@ export default function AdminSubmissionsPage() {
 	return (
 		<ProtectedRoute allowedRoles={["admin"]}>
 			<DashboardLayout navItems={ADMIN_NAV} title="SEPMS">
-				<div className="mb-8">
-					<h1 className="text-2xl font-bold tracking-tight sm:text-3xl">
-						Pitch Submissions
-					</h1>
-					<p className="mt-1 text-muted-foreground">
-						Review and manage all entrepreneur pitch submissions
-					</p>
+				<div className="admin-greeting-card bg-card mb-8 p-6 sm:p-8 admin-content-fade">
+					<div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+						<div>
+							<h1 className="text-2xl font-bold tracking-tight sm:text-3xl admin-header-gradient">
+								Pitch Submissions
+							</h1>
+							<p className="mt-1.5 text-muted-foreground text-sm sm:text-base">
+								Review and manage all entrepreneur pitch submissions
+							</p>
+						</div>
+						<Badge variant="outline" className="text-xs font-medium gap-1.5 py-1 px-3 w-fit">
+							<FileText className="h-3.5 w-3.5" />
+							{total} Total
+						</Badge>
+					</div>
 				</div>
 
 				{/* Stat Cards */}
-				<div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4 mb-8">
-					<Card>
-						<CardContent className="p-5">
+				<div className="admin-stat-grid grid gap-4 sm:grid-cols-2 lg:grid-cols-4 mb-8">
+					<div className="admin-stat-card bg-card">
+						<div className="p-5">
 							<div className="flex items-center gap-3">
-								<div className="rounded-lg bg-primary/10 p-2.5">
-									<FileText className="h-5 w-5 text-primary" />
+								<div className="admin-icon-glow admin-icon-blue rounded-xl p-2.5 flex items-center justify-center shadow-sm">
+									<FileText className="h-4.5 w-4.5 text-white" />
 								</div>
-								<div>
-									<p className="text-xs text-muted-foreground font-medium">Total</p>
-									<p className="text-2xl font-bold">{total}</p>
+								<div className="min-w-0 flex-1">
+									<p className="text-[11px] uppercase tracking-wider font-semibold text-muted-foreground/70">Total</p>
+									<p className="text-2xl font-bold tracking-tight">{total}</p>
 								</div>
 							</div>
-						</CardContent>
-					</Card>
-					<Card>
-						<CardContent className="p-5">
+						</div>
+					</div>
+					<div className="admin-stat-card bg-card">
+						<div className="p-5">
 							<div className="flex items-center gap-3">
-								<div className="rounded-lg bg-amber-500/10 p-2.5">
-									<Clock className="h-5 w-5 text-amber-500" />
+								<div className="admin-icon-glow admin-icon-amber rounded-xl p-2.5 flex items-center justify-center shadow-sm">
+									<Clock className="h-4.5 w-4.5 text-white" />
 								</div>
-								<div>
-									<p className="text-xs text-muted-foreground font-medium">Pending Review</p>
-									<p className="text-2xl font-bold">{(stats.submitted || 0) + (stats.under_review || 0)}</p>
+								<div className="min-w-0 flex-1">
+									<p className="text-[11px] uppercase tracking-wider font-semibold text-muted-foreground/70">Pending Review</p>
+									<div className="flex items-baseline gap-2">
+										<p className="text-2xl font-bold tracking-tight">{(stats.submitted || 0) + (stats.under_review || 0)}</p>
+										{((stats.submitted || 0) + (stats.under_review || 0)) > 0 && (
+											<span className="text-[10px] font-semibold text-amber-500 bg-amber-500/10 px-1.5 py-0.5 rounded-full">
+												Needs review
+											</span>
+										)}
+									</div>
 								</div>
 							</div>
-						</CardContent>
-					</Card>
-					<Card>
-						<CardContent className="p-5">
+						</div>
+					</div>
+					<div className="admin-stat-card bg-card">
+						<div className="p-5">
 							<div className="flex items-center gap-3">
-								<div className="rounded-lg bg-emerald-500/10 p-2.5">
-									<CheckCircle2 className="h-5 w-5 text-emerald-500" />
+								<div className="admin-icon-glow admin-icon-emerald rounded-xl p-2.5 flex items-center justify-center shadow-sm">
+									<CheckCircle2 className="h-4.5 w-4.5 text-white" />
 								</div>
-								<div>
-									<p className="text-xs text-muted-foreground font-medium">Approved</p>
-									<p className="text-2xl font-bold">{stats.approved || 0}</p>
+								<div className="min-w-0 flex-1">
+									<p className="text-[11px] uppercase tracking-wider font-semibold text-muted-foreground/70">Approved</p>
+									<p className="text-2xl font-bold tracking-tight">{stats.approved || 0}</p>
 								</div>
 							</div>
-						</CardContent>
-					</Card>
-					<Card>
-						<CardContent className="p-5">
+						</div>
+					</div>
+					<div className="admin-stat-card bg-card">
+						<div className="p-5">
 							<div className="flex items-center gap-3">
-								<div className="rounded-lg bg-destructive/10 p-2.5">
-									<XCircle className="h-5 w-5 text-destructive" />
+								<div className="admin-icon-glow admin-icon-rose rounded-xl p-2.5 flex items-center justify-center shadow-sm">
+									<XCircle className="h-4.5 w-4.5 text-white" />
 								</div>
-								<div>
-									<p className="text-xs text-muted-foreground font-medium">Rejected</p>
-									<p className="text-2xl font-bold">{(stats.rejected || 0) + (stats.suspended || 0)}</p>
+								<div className="min-w-0 flex-1">
+									<p className="text-[11px] uppercase tracking-wider font-semibold text-muted-foreground/70">Rejected</p>
+									<p className="text-2xl font-bold tracking-tight">{(stats.rejected || 0) + (stats.suspended || 0)}</p>
 								</div>
 							</div>
-						</CardContent>
-					</Card>
+						</div>
+					</div>
 				</div>
 
 				{/* Filters */}
@@ -386,24 +401,49 @@ export default function AdminSubmissionsPage() {
 
 						{/* Pagination */}
 						{totalPages > 1 && (
-							<div className="flex items-center justify-between mt-4">
+							<div className="flex items-center justify-between mt-6">
 								<p className="text-sm text-muted-foreground">
-									Page {page} of {totalPages} ({total} total)
+									Page {page} of {totalPages} · {total} total
 								</p>
-								<div className="flex gap-2">
+								<div className="flex items-center gap-1">
 									<Button
 										variant="outline"
 										size="sm"
 										disabled={page <= 1}
 										onClick={() => setPage((p) => Math.max(1, p - 1))}
+										className="h-8 px-3"
 									>
 										Previous
 									</Button>
+									{Array.from({ length: Math.min(totalPages, 5) }, (_, i) => {
+										let pg: number;
+										if (totalPages <= 5) {
+											pg = i + 1;
+										} else if (page <= 3) {
+											pg = i + 1;
+										} else if (page >= totalPages - 2) {
+											pg = totalPages - 4 + i;
+										} else {
+											pg = page - 2 + i;
+										}
+										return (
+											<Button
+												key={pg}
+												variant={pg === page ? "default" : "outline"}
+												size="sm"
+												onClick={() => setPage(pg)}
+												className="h-8 w-8 p-0"
+											>
+												{pg}
+											</Button>
+										);
+									})}
 									<Button
 										variant="outline"
 										size="sm"
 										disabled={page >= totalPages}
 										onClick={() => setPage((p) => p + 1)}
+										className="h-8 px-3"
 									>
 										Next
 									</Button>
