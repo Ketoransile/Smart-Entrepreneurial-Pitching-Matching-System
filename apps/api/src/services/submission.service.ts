@@ -65,7 +65,10 @@ export class SubmissionService {
 		submissionId: string,
 		user: IUser,
 	): Promise<ISubmission> {
-		const submission = await Submission.findById(submissionId).populate("entrepreneurId", "fullName email");
+		const submission = await Submission.findById(submissionId).populate(
+			"entrepreneurId",
+			"fullName email",
+		);
 
 		if (!submission) {
 			throw SubmissionService.createError("Submission not found", 404);
@@ -74,8 +77,10 @@ export class SubmissionService {
 		// After .populate(), entrepreneurId is a hydrated object { _id, fullName, email }.
 		// Extract the raw _id for comparison.
 		const ownerId =
-			typeof submission.entrepreneurId === "object" && submission.entrepreneurId !== null
-				? (submission.entrepreneurId as any)._id?.toString() || (submission.entrepreneurId as any).toString()
+			typeof submission.entrepreneurId === "object" &&
+			submission.entrepreneurId !== null
+				? (submission.entrepreneurId as any)._id?.toString() ||
+					(submission.entrepreneurId as any).toString()
 				: (submission.entrepreneurId as any)?.toString();
 
 		if (user.role === "entrepreneur" && ownerId !== user._id.toString()) {
@@ -83,8 +88,15 @@ export class SubmissionService {
 		}
 
 		// Don't let investors snoop on incomplete or suspended pitches
-		if (user.role === "investor" && submission.status !== "approved" && submission.status !== "matched") {
-			throw SubmissionService.createError("Pitch is not publicly available yet", 403);
+		if (
+			user.role === "investor" &&
+			submission.status !== "approved" &&
+			submission.status !== "matched"
+		) {
+			throw SubmissionService.createError(
+				"Pitch is not publicly available yet",
+				403,
+			);
 		}
 
 		return submission;
@@ -315,7 +327,12 @@ export class SubmissionService {
 	}
 
 	static async listAdmin(query: Record<string, unknown>) {
-		const { status: statusFilter, sector: sectorFilter, page = "1", limit = "20" } = query;
+		const {
+			status: statusFilter,
+			sector: sectorFilter,
+			page = "1",
+			limit = "20",
+		} = query;
 		const safePage = Math.max(parseIntOrDefault(page, 1), 1);
 		const safeLimit = Math.min(Math.max(parseIntOrDefault(limit, 20), 1), 100);
 

@@ -1,3 +1,5 @@
+// Barrel file exporting auth use-cases (domain layer).
+// Import this file to access all auth-related use case classes.
 export 'get_current_user_usecase.dart';
 export 'refresh_user_profile_usecase.dart';
 export 'resend_verification_usecase.dart';

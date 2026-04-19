@@ -20,3 +20,4 @@ import specJson from "./openapi-spec.json";
 // the JSON module's wide `unknown` / `object` inference.
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const openApiSpec: Record<string, any> = specJson;
+

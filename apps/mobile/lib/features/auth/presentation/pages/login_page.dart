@@ -33,6 +33,7 @@ class _LoginPageState extends State<LoginPage> {
   }
 
   void _onSignIn() {
+    // Component Ideation — Added small clarifying comment for sign-in flow and validation.
     if (_formKey.currentState?.validate() ?? false) {
       context.read<AuthBloc>().add(SignInRequested(
             email: _emailController.text.trim(),

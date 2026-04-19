@@ -2,19 +2,25 @@
 
 import {
 	ArrowLeft,
+	CalendarDays,
 	Check,
 	CheckCheck,
+	Clock,
 	Loader2,
 	MessageSquare,
 	Paperclip,
 	Send,
 	ShieldAlert,
+	Video,
 } from "lucide-react";
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import DashboardLayout from "@/components/DashboardLayout";
 import ProtectedRoute from "@/components/ProtectedRoute";
+import ScheduleMeetingModal, {
+	type ScheduledMeeting,
+} from "@/components/ScheduleMeetingModal";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -31,6 +37,87 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { ENTREPRENEUR_NAV, INVESTOR_NAV } from "@/constants/navigation";
 import { useAuth } from "@/context/AuthContext";
+
+const MEETING_PREFIX = "MEETING_CARD:";
+
+interface MeetingCardData {
+	_id: string;
+	title: string;
+	scheduledAt: string;
+	durationMinutes: number;
+	livekitRoomName: string;
+	status: string;
+}
+
+function parseMeetingCard(body: string): MeetingCardData | null {
+	if (!body.startsWith(MEETING_PREFIX)) return null;
+	try {
+		return JSON.parse(body.slice(MEETING_PREFIX.length)) as MeetingCardData;
+	} catch {
+		return null;
+	}
+}
+
+function MeetingCard({
+	data,
+	onJoin,
+}: {
+	data: MeetingCardData;
+	onJoin: (meetingId: string) => void;
+}) {
+	const scheduled = new Date(data.scheduledAt);
+	const now = new Date();
+	const isJoinable =
+		(data.status === "scheduled" || data.status === "ongoing") &&
+		scheduled.getTime() - now.getTime() < 15 * 60 * 1000; // within 15 min
+
+	return (
+		<div className="rounded-xl border border-primary/20 bg-primary/5 p-3 min-w-[240px] max-w-[300px]">
+			<div className="flex items-center gap-2 mb-2">
+				<Video className="h-4 w-4 text-primary shrink-0" />
+				<span className="text-sm font-semibold text-primary">
+					Video Meeting
+				</span>
+			</div>
+			<p className="text-xs font-medium mb-1 truncate">{data.title}</p>
+			<div className="flex items-center gap-2 text-xs text-muted-foreground mb-1">
+				<CalendarDays className="h-3 w-3" />
+				{scheduled.toLocaleDateString(undefined, {
+					weekday: "short",
+					month: "short",
+					day: "numeric",
+				})}
+			</div>
+			<div className="flex items-center gap-2 text-xs text-muted-foreground mb-3">
+				<Clock className="h-3 w-3" />
+				{scheduled.toLocaleTimeString(undefined, {
+					hour: "2-digit",
+					minute: "2-digit",
+				})}
+				{" · "}
+				{data.durationMinutes} min
+			</div>
+			{isJoinable ? (
+				<Button
+					size="sm"
+					className="w-full bg-green-600 hover:bg-green-700 gap-1.5"
+					onClick={() => onJoin(data._id)}
+				>
+					<Video className="h-3.5 w-3.5" />
+					Join Now
+				</Button>
+			) : (
+				<p className="text-xs text-center text-muted-foreground">
+					{data.status === "cancelled"
+						? "Meeting cancelled"
+						: data.status === "completed"
+							? "Meeting ended"
+							: "Join button appears 15 min before start"}
+				</p>
+			)}
+		</div>
+	);
+}
 
 /* ── Types ── */
 interface Participant {
@@ -55,6 +142,7 @@ interface Conversation {
 	createdAt: string;
 	unreadCount?: number;
 	lastMessage?: LastMessagePreview | null;
+	submissionId?: { _id: string; title: string } | string | null;
 }
 
 interface ReadReceipt {
@@ -71,6 +159,13 @@ interface Message {
 	attachmentUrl?: string;
 	readBy?: ReadReceipt[];
 	createdAt: string;
+}
+
+interface LocalProfile {
+	_id: string;
+	role: string;
+	displayName?: string | null;
+	email?: string | null;
 }
 
 /* ── Helpers ── */
@@ -144,6 +239,7 @@ function RoleBadge({ role }: { role?: string }) {
 function MessagesContent() {
 	const { user, userProfile } = useAuth();
 	const searchParams = useSearchParams();
+	const router = useRouter();
 	const [conversations, setConversations] = useState<Conversation[]>([]);
 	const [activeConvo, setActiveConvo] = useState<Conversation | null>(null);
 	const [messages, setMessages] = useState<Message[]>([]);
@@ -155,6 +251,7 @@ function MessagesContent() {
 	const [reportReason, setReportReason] = useState("");
 	const [reportDetails, setReportDetails] = useState("");
 	const [reportLoading, setReportLoading] = useState(false);
+	const [showScheduleModal, setShowScheduleModal] = useState(false);
 	const messagesEndRef = useRef<HTMLDivElement>(null);
 	const inputRef = useRef<HTMLInputElement>(null);
 	const hasAutoOpenedRef = useRef(false);
@@ -164,6 +261,9 @@ function MessagesContent() {
 	const api = (
 		process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api"
 	).replace(/\/+$/, "");
+
+	// Typed cast — UserProfile from AuthContext has _id and role at runtime
+	const profile = userProfile as unknown as LocalProfile | null;
 
 	const getToken = useCallback(async () => {
 		if (!user) return "";
@@ -258,7 +358,8 @@ function MessagesContent() {
 				if (!res.ok) return;
 				const { notifications } = await res.json();
 				const unreadMsgNotifs = (notifications || []).filter(
-					(n: any) => !n.isRead && n.type === "message_received",
+					(n: { isRead: boolean; type: string }) =>
+						!n.isRead && n.type === "message_received",
 				);
 				for (const n of unreadMsgNotifs) {
 					fetch(`${api}/messages/notifications/${n._id}/read`, {
@@ -376,11 +477,11 @@ function MessagesContent() {
 		const optimisticMsg: Message = {
 			_id: `temp-${Date.now()}`,
 			conversationId: activeConvo._id,
-			senderId: (userProfile as any)._id || "",
+			senderId: profile?._id || "",
 			body,
 			type: "text",
 			readBy: [
-				{ userId: (userProfile as any)._id, readAt: new Date().toISOString() },
+				{ userId: profile?._id ?? "", readAt: new Date().toISOString() },
 			],
 			createdAt: new Date().toISOString(),
 		};
@@ -466,7 +567,7 @@ function MessagesContent() {
 	const getOtherParticipant = (convo: Conversation) => {
 		if (!userProfile) return null;
 		return (
-			convo.participants.find((p) => p._id !== (userProfile as any)._id) ||
+			convo.participants.find((p) => p._id !== profile?._id) ||
 			convo.participants[0]
 		);
 	};
@@ -478,7 +579,7 @@ function MessagesContent() {
 
 	const isReadByOther = (msg: Message) => {
 		if (!userProfile || !msg.readBy) return false;
-		const myId = (userProfile as any)._id;
+		const myId = profile?._id;
 		return msg.readBy.some(
 			(r) => r.userId !== myId && r.userId.toString() !== myId,
 		);
@@ -519,7 +620,7 @@ function MessagesContent() {
 	}
 
 	const navItems =
-		(userProfile as any)?.role === "investor" ? INVESTOR_NAV : ENTREPRENEUR_NAV;
+		profile?.role === "investor" ? INVESTOR_NAV : ENTREPRENEUR_NAV;
 
 	return (
 		<ProtectedRoute allowedRoles={["entrepreneur", "investor"]}>
@@ -568,10 +669,11 @@ function MessagesContent() {
 										const unread = convo.unreadCount || 0;
 
 										return (
-											<div
+											<button
+												type="button"
 												key={convo._id}
 												onClick={() => setActiveConvo(convo)}
-												className={`flex items-center gap-3 px-4 py-3 cursor-pointer transition-all duration-150 border-b border-border 
+												className={`w-full text-left flex items-center gap-3 px-4 py-3 cursor-pointer transition-all duration-150 border-b border-border 
 													${isActive ? "bg-primary/8 border-l-[3px] border-l-primary" : "hover:bg-muted/40 border-l-[3px] border-l-transparent"}
 													${convo.isArchived ? "opacity-50" : ""}`}
 											>
@@ -621,7 +723,7 @@ function MessagesContent() {
 														)}
 													</div>
 												</div>
-											</div>
+											</button>
 										);
 									})
 								)}
@@ -685,15 +787,31 @@ function MessagesContent() {
 											</div>
 										</div>
 										{!activeConvo.isArchived && (
-											<Button
-												variant="ghost"
-												size="sm"
-												className="text-destructive hover:text-destructive hover:bg-destructive/10 gap-1.5"
-												onClick={() => setShowReportDialog(true)}
-											>
-												<ShieldAlert className="h-4 w-4" />
-												<span className="hidden sm:inline">Report</span>
-											</Button>
+											<div className="flex items-center gap-2">
+												{/* Schedule Meeting — investor only */}
+												{profile?.role === "investor" && (
+													<Button
+														variant="outline"
+														size="sm"
+														className="gap-1.5 text-xs"
+														onClick={() => setShowScheduleModal(true)}
+													>
+														<CalendarDays className="h-3.5 w-3.5" />
+														<span className="hidden sm:inline">
+															Schedule Meeting
+														</span>
+													</Button>
+												)}
+												<Button
+													variant="ghost"
+													size="sm"
+													className="text-destructive hover:text-destructive hover:bg-destructive/10 gap-1.5"
+													onClick={() => setShowReportDialog(true)}
+												>
+													<ShieldAlert className="h-4 w-4" />
+													<span className="hidden sm:inline">Report</span>
+												</Button>
+											</div>
 										)}
 									</div>
 
@@ -723,8 +841,8 @@ function MessagesContent() {
 												</p>
 											</div>
 										) : (
-											groupedMessages.map((group, gi) => (
-												<div key={gi}>
+											groupedMessages.map((group) => (
+												<div key={group.date}>
 													{/* Date separator */}
 													<div className="flex items-center justify-center my-4">
 														<span className="px-3 py-1 rounded-full bg-muted/60 text-[11px] font-medium text-muted-foreground shadow-sm">
@@ -734,8 +852,7 @@ function MessagesContent() {
 
 													{group.msgs.map((msg) => {
 														const senderId = getSenderId(msg);
-														const isMine =
-															senderId === (userProfile as any)?._id;
+														const isMine = senderId === profile?._id;
 														const read = isReadByOther(msg);
 
 														return (
@@ -750,9 +867,25 @@ function MessagesContent() {
 																			: "bg-card border border-border/50 rounded-bl-md"
 																	}`}
 																>
-																	<p className="text-[13.5px] leading-relaxed whitespace-pre-wrap break-words">
-																		{msg.body}
-																	</p>
+																	{(() => {
+																		const meetingData = parseMeetingCard(
+																			msg.body,
+																		);
+																		return meetingData ? (
+																			<MeetingCard
+																				data={meetingData}
+																				onJoin={(id) =>
+																					router.push(
+																						`/${profile?.role}/meeting/${id}`,
+																					)
+																				}
+																			/>
+																		) : (
+																			<p className="text-[13.5px] leading-relaxed whitespace-pre-wrap break-words">
+																				{msg.body}
+																			</p>
+																		);
+																	})()}
 																	{msg.attachmentUrl && (
 																		<a
 																			href={msg.attachmentUrl}
@@ -848,6 +981,55 @@ function MessagesContent() {
 						</div>
 					</div>
 				</div>
+
+				{/* ── Schedule Meeting Modal ── */}
+				{showScheduleModal && activeConvo && (
+					<ScheduleMeetingModal
+						submissionId={
+							typeof activeConvo.submissionId === "object" &&
+							activeConvo.submissionId !== null
+								? (activeConvo.submissionId as { _id: string })._id
+								: ((activeConvo.submissionId as string | null) ?? "")
+						}
+						submissionTitle={
+							typeof activeConvo.submissionId === "object" &&
+							activeConvo.submissionId !== null
+								? (activeConvo.submissionId as { _id: string; title: string })
+										.title
+								: "this pitch"
+						}
+						entrepreneurUserId={
+							activeConvo.participants.find((p) => p._id !== profile?._id)
+								?._id ?? ""
+						}
+						onClose={() => setShowScheduleModal(false)}
+						onScheduled={async (meeting: ScheduledMeeting) => {
+							// Send meeting card as a message in the conversation
+							if (!user || !activeConvo) return;
+							try {
+								const token = await user.getIdToken();
+								await fetch(
+									`${api}/messages/conversations/${activeConvo._id}/messages`,
+									{
+										method: "POST",
+										headers: {
+											Authorization: `Bearer ${token}`,
+											"Content-Type": "application/json",
+										},
+										body: JSON.stringify({
+											body: `${MEETING_PREFIX}${JSON.stringify(meeting)}`,
+											type: "text",
+										}),
+									},
+								);
+								loadMessages(activeConvo._id);
+							} catch {
+								toast.error("Failed to share meeting in chat");
+							}
+							setShowScheduleModal(false);
+						}}
+					/>
+				)}
 
 				{/* ── Report Misconduct Dialog ── */}
 				<Dialog open={showReportDialog} onOpenChange={setShowReportDialog}>

@@ -10,6 +10,9 @@ class AuthRepositoryImpl implements AuthRepository {
   final AuthRemoteDataSource _remoteDataSource;
   final AuthLocalDataSource _localDataSource;
 
+  /// Implementation of `AuthRepository` that composes remote and local data
+  /// sources. Remote calls are attempted first and results are cached locally.
+
   AuthRepositoryImpl({
     required AuthRemoteDataSource remoteDataSource,
     required AuthLocalDataSource localDataSource,

@@ -7,6 +7,9 @@ import 'auth_event.dart';
 import 'auth_state.dart';
 
 class AuthBloc extends Bloc<AuthEvent, AuthState> {
+  /// Coordinates authentication flows between UI and domain layer.
+  /// Receives `AuthEvent`s (user actions or state changes) and emits
+  /// `AuthState`s representing the current authentication status.
   final SignInUseCase _signIn;
   final SignUpUseCase _signUp;
   final SignInWithGoogleUseCase _signInWithGoogle;

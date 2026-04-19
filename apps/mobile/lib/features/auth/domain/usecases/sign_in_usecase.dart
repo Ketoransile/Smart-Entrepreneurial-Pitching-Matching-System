@@ -10,6 +10,7 @@ class SignInUseCase {
   SignInUseCase(this.repository);
 
   Future<Either<Failure, UserEntity>> call(SignInParams params) {
+    // Delegates sign-in parameters to the repository and returns domain result.
     return repository.signIn(
       email: params.email,
       password: params.password,

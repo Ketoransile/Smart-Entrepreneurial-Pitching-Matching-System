@@ -4,6 +4,7 @@ import {
 	ArrowLeft,
 	BadgeCheck,
 	BarChart3,
+	CalendarDays,
 	ChevronDown,
 	ChevronUp,
 	DollarSign,
@@ -13,6 +14,8 @@ import {
 	Loader2,
 	MessageSquare,
 	Search,
+	Sparkles,
+	Video,
 	XCircle,
 } from "lucide-react";
 import Image from "next/image";
@@ -21,6 +24,9 @@ import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 import DashboardLayout from "@/components/DashboardLayout";
 import ProtectedRoute from "@/components/ProtectedRoute";
+import ScheduleMeetingModal, {
+	type ScheduledMeeting,
+} from "@/components/ScheduleMeetingModal";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -74,26 +80,32 @@ function MatchContextBanner({
 	const isPending = match.status === "pending";
 
 	return (
-		<Card className="mb-6 border-primary/20 bg-primary/5">
-			<CardContent className="p-4">
-				<div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-					<div className="flex items-center gap-4">
-						<div className="flex flex-col items-center justify-center h-14 w-14 rounded-full border-4 border-primary/30 shrink-0">
-							<span className="text-sm font-bold text-primary">
+		<Card className="mb-8 border-primary/30 bg-gradient-to-r from-primary/10 to-transparent overflow-hidden rounded-2xl shadow-lg shadow-primary/5 relative">
+			<div className="absolute left-0 top-0 bottom-0 w-1.5 bg-primary opacity-80" />
+			<CardContent className="p-5 sm:p-6">
+				<div className="flex flex-col sm:flex-row sm:items-center justify-between gap-5">
+					<div className="flex items-center gap-5">
+						<div className="flex flex-col items-center justify-center h-16 w-16 rounded-2xl border-2 border-primary/30 bg-background/50 backdrop-blur-md shrink-0 shadow-sm">
+							<span className="text-lg font-bold tracking-tighter text-primary">
 								{Math.round(match.score * 100)}%
 							</span>
 						</div>
-						<div>
-							<p className="text-sm font-semibold">AI Match Score</p>
+						<div className="flex-1">
+							<div className="flex items-center gap-2.5 mb-1">
+								<h3 className="text-base font-bold text-foreground">
+									AI Match Score
+								</h3>
+								<Sparkles className="h-4 w-4 text-primary" />
+							</div>
 							{match.aiRationale && (
-								<p className="text-xs text-muted-foreground mt-0.5 max-w-sm">
+								<p className="text-xs text-muted-foreground mt-1 max-w-md leading-relaxed">
 									{match.aiRationale}
 								</p>
 							)}
 							{match.scoreBreakdown && (
 								<button
 									type="button"
-									className="flex items-center gap-1 text-xs text-primary mt-1 hover:underline"
+									className="flex items-center gap-1 text-xs text-primary mt-2 hover:underline font-medium"
 									onClick={() => setShowBreakdown((v) => !v)}
 								>
 									{showBreakdown ? (
@@ -222,6 +234,9 @@ export default function InvestorPitchViewPage() {
 	const [loading, setLoading] = useState(true);
 	const [matchContext, setMatchContext] = useState<MatchContext | null>(null);
 	const [responding, setResponding] = useState(false);
+	const [showScheduleModal, setShowScheduleModal] = useState(false);
+	const [scheduledMeeting, setScheduledMeeting] =
+		useState<ScheduledMeeting | null>(null);
 
 	const api = (
 		process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api"
@@ -285,6 +300,10 @@ export default function InvestorPitchViewPage() {
 						: "Match declined",
 				);
 				setMatchContext((prev) => (prev ? { ...prev, status } : prev));
+				// After accepting, prompt investor to schedule a meeting
+				if (status === "accepted") {
+					setShowScheduleModal(true);
+				}
 			} else {
 				toast.error(data.message ?? "Failed to respond");
 			}
@@ -370,42 +389,71 @@ export default function InvestorPitchViewPage() {
 				]}
 				title="SEPMS"
 			>
-				<div className="mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-					<div className="flex items-start sm:items-center gap-4 pr-2">
+				{/* Premium Hero Header */}
+				<div className="admin-greeting-card bg-card mb-8 p-6 sm:p-8 shrink-0 rounded-2xl shadow-xl shadow-primary/5 border border-border/80 flex flex-col gap-6 relative overflow-hidden group">
+					<div className="absolute top-0 right-0 w-64 h-64 bg-primary/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 pointer-events-none" />
+
+					<div className="flex items-start sm:items-center gap-5 relative z-10">
 						<Button
-							variant="ghost"
+							variant="outline"
 							size="icon"
 							onClick={() => router.push("/investor/feed")}
-							className="h-10 w-10 shrink-0 mt-0.5 sm:mt-0"
+							className="h-11 w-11 shrink-0 rounded-xl shadow-sm border-border/60 hover:bg-muted/50 transition-colors"
 						>
-							<ArrowLeft className="h-5 w-5" />
+							<ArrowLeft className="h-5 w-5 text-muted-foreground group-hover:text-foreground transition-colors" />
 						</Button>
 						<div className="min-w-0 flex-1">
-							<h1 className="text-xl sm:text-2xl font-bold tracking-tight break-words">
+							<h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight break-words admin-header-gradient pb-1">
 								{pitch.title}
 							</h1>
-							<p className="text-sm text-muted-foreground mt-1 truncate">
-								By{" "}
-								{pitch.entrepreneurId?.fullName || "A Confirmed Entrepreneur"}
-							</p>
+							<div className="flex items-center gap-2 text-sm text-muted-foreground mt-1.5 font-medium">
+								<span className="truncate text-foreground/80">
+									By{" "}
+									{pitch.entrepreneurId?.fullName || "A Confirmed Entrepreneur"}
+								</span>
+							</div>
 						</div>
 					</div>
-					<div className="flex flex-wrap sm:flex-nowrap items-center gap-3 w-full sm:w-auto">
+
+					<div className="flex flex-wrap items-center gap-3 relative z-10">
 						{pitch.aiScore !== undefined && (
-							<Badge
-								variant="outline"
-								className="border-primary/50 text-primary whitespace-nowrap"
-							>
-								AI Market Score: {pitch.aiScore}%
-							</Badge>
+							<div className="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-primary/20 bg-primary/5">
+								<Sparkles className="h-4 w-4 text-primary" />
+								<span className="text-sm font-bold text-primary">
+									AI Market Score: {pitch.aiScore}%
+								</span>
+							</div>
 						)}
 						<Button
 							onClick={handleMessageInitiate}
-							className="gap-2 bg-primary flex-1 sm:flex-none whitespace-nowrap"
+							className="gap-2 bg-primary whitespace-nowrap rounded-xl shadow-sm"
 						>
 							<MessageSquare className="h-4 w-4" />
 							Message Founder
 						</Button>
+						{/* Show Schedule button if match is accepted but no meeting yet */}
+						{matchContext?.status === "accepted" && !scheduledMeeting && (
+							<Button
+								variant="outline"
+								onClick={() => setShowScheduleModal(true)}
+								className="gap-2 whitespace-nowrap rounded-xl"
+							>
+								<CalendarDays className="h-4 w-4" />
+								Schedule Meeting
+							</Button>
+						)}
+						{/* Show Join button once meeting is scheduled */}
+						{scheduledMeeting && (
+							<Button
+								onClick={() =>
+									router.push(`/investor/meeting/${scheduledMeeting._id}`)
+								}
+								className="gap-2 whitespace-nowrap bg-green-600 hover:bg-green-700 rounded-xl shadow-sm"
+							>
+								<Video className="h-4 w-4" />
+								Join Meeting
+							</Button>
+						)}
 					</div>
 				</div>
 
@@ -420,14 +468,14 @@ export default function InvestorPitchViewPage() {
 
 				<div className="grid gap-6 md:grid-cols-3">
 					<div className="md:col-span-2 space-y-6">
-						<Card>
-							<CardHeader>
-								<CardTitle className="flex items-center gap-2">
+						<Card className="bg-card shadow-sm border-border/60 hover:shadow-md transition-shadow overflow-hidden rounded-2xl">
+							<CardHeader className="bg-muted/30 border-b border-border/40 pb-4 pt-6">
+								<CardTitle className="flex items-center gap-2.5 text-lg admin-header-gradient">
 									<Search className="h-5 w-5 text-primary" />
 									Executive Summary
 								</CardTitle>
 							</CardHeader>
-							<CardContent>
+							<CardContent className="pt-6">
 								<p className="text-sm whitespace-pre-wrap leading-relaxed text-muted-foreground">
 									{pitch.summary || "No executive summary provided."}
 								</p>
@@ -448,14 +496,14 @@ export default function InvestorPitchViewPage() {
 							</CardContent>
 						</Card>
 
-						<Card>
-							<CardHeader>
-								<CardTitle className="flex items-center gap-2 text-lg">
+						<Card className="bg-card shadow-sm border-border/60 hover:shadow-md transition-shadow overflow-hidden rounded-2xl">
+							<CardHeader className="bg-muted/30 border-b border-border/40 pb-4 pt-6">
+								<CardTitle className="flex items-center gap-2.5 text-lg admin-header-gradient">
 									<XCircle className="h-5 w-5 text-destructive" />
 									The Problem
 								</CardTitle>
 							</CardHeader>
-							<CardContent className="space-y-4">
+							<CardContent className="space-y-5 pt-6">
 								<div>
 									<h4 className="text-sm font-semibold mb-1">
 										Problem Statement
@@ -481,14 +529,14 @@ export default function InvestorPitchViewPage() {
 							</CardContent>
 						</Card>
 
-						<Card>
-							<CardHeader>
-								<CardTitle className="flex items-center gap-2 text-lg">
+						<Card className="bg-card shadow-sm border-border/60 hover:shadow-md transition-shadow overflow-hidden rounded-2xl">
+							<CardHeader className="bg-muted/30 border-b border-border/40 pb-4 pt-6">
+								<CardTitle className="flex items-center gap-2.5 text-lg admin-header-gradient">
 									<Lightbulb className="h-5 w-5 text-amber-500" />
 									The Solution
 								</CardTitle>
 							</CardHeader>
-							<CardContent className="space-y-4">
+							<CardContent className="space-y-5 pt-6">
 								<div>
 									<h4 className="text-sm font-semibold mb-1">
 										Solution Description
@@ -518,14 +566,14 @@ export default function InvestorPitchViewPage() {
 							</CardContent>
 						</Card>
 
-						<Card>
-							<CardHeader>
-								<CardTitle className="flex items-center gap-2 text-lg">
+						<Card className="bg-card shadow-sm border-border/60 hover:shadow-md transition-shadow overflow-hidden rounded-2xl">
+							<CardHeader className="bg-muted/30 border-b border-border/40 pb-4 pt-6">
+								<CardTitle className="flex items-center gap-2.5 text-lg admin-header-gradient">
 									<BarChart3 className="h-5 w-5 text-blue-500" />
 									Business Model
 								</CardTitle>
 							</CardHeader>
-							<CardContent className="space-y-4">
+							<CardContent className="space-y-5 pt-6">
 								<div>
 									<h4 className="text-sm font-semibold mb-1">
 										Revenue Streams
@@ -558,9 +606,9 @@ export default function InvestorPitchViewPage() {
 					</div>
 
 					<div className="space-y-6">
-						<Card className="border-primary/20 bg-primary/5">
-							<CardHeader>
-								<CardTitle className="flex items-center gap-2 text-lg">
+						<Card className="border-primary/30 shadow-lg shadow-primary/5 bg-gradient-to-br from-primary/10 to-background rounded-2xl overflow-hidden">
+							<CardHeader className="pb-4 pt-6">
+								<CardTitle className="flex items-center gap-2.5 text-lg admin-header-gradient">
 									<DollarSign className="h-5 w-5 text-primary" />
 									Funding Ask
 								</CardTitle>
@@ -606,9 +654,9 @@ export default function InvestorPitchViewPage() {
 							</CardContent>
 						</Card>
 
-						<Card>
-							<CardHeader>
-								<CardTitle className="flex items-center gap-2 text-lg">
+						<Card className="bg-card shadow-sm border-border/60 hover:shadow-md transition-shadow overflow-hidden rounded-2xl">
+							<CardHeader className="bg-muted/30 border-b border-border/40 pb-4 pt-6">
+								<CardTitle className="flex items-center gap-2.5 text-lg admin-header-gradient">
 									<FileUp className="h-5 w-5 text-muted-foreground" />
 									Pitch Documents
 								</CardTitle>
@@ -766,6 +814,17 @@ export default function InvestorPitchViewPage() {
 					</div>
 				</div>
 			</DashboardLayout>
+
+			{/* Schedule Meeting Modal */}
+			{showScheduleModal && pitch && (
+				<ScheduleMeetingModal
+					submissionId={pitch._id}
+					submissionTitle={pitch.title}
+					entrepreneurUserId={pitch.entrepreneurId?._id ?? ""}
+					onClose={() => setShowScheduleModal(false)}
+					onScheduled={(meeting) => setScheduledMeeting(meeting)}
+				/>
+			)}
 		</ProtectedRoute>
 	);
 }

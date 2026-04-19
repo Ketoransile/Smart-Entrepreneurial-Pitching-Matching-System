@@ -8,6 +8,8 @@ class AppTheme {
   AppTheme._();
 
   static ThemeData get lightTheme {
+    /// Light theme configuration for the app.
+    /// Centralizes colors, typography and component themes.
     return ThemeData(
       useMaterial3: true,
       brightness: Brightness.light,
@@ -226,6 +228,7 @@ class AppTheme {
   }
 
   static ThemeData get darkTheme {
+    /// Dark theme configuration for the app.
     return ThemeData(
       useMaterial3: true,
       brightness: Brightness.dark,

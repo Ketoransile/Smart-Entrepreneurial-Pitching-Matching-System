@@ -65,6 +65,9 @@ class AuthState extends Equatable {
         isLoading = false,
         successMessage = null;
 
+  // Convenience getters and copyWith allow the presentation layer to react to
+  // small state deltas without manually copying fields every time.
+
   AuthState copyWith({
     AuthStatus? status,
     Object? user = _unset,

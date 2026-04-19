@@ -78,6 +78,8 @@ export default function SignInPage() {
 		}
 	};
 
+	const APP_NAME = "SEPMS";
+
 	return (
 		<div className="flex min-h-screen w-full bg-background flex-col lg:flex-row">
 			{/* Left Split - Branding */}
@@ -88,7 +90,7 @@ export default function SignInPage() {
 				<div className="relative z-10 flex flex-col gap-8">
 					<Link href="/" className="flex items-center gap-3 w-fit">
 						<Logo className="h-10 w-10" />
-						<span className="text-xl font-bold tracking-tight">SEPMS</span>
+						<span className="text-xl font-bold tracking-tight">{APP_NAME}</span>
 					</Link>
 
 					<div className="space-y-4">

@@ -197,40 +197,84 @@ export default function InvestorFeed() {
 		<ProtectedRoute allowedRoles={["investor"]}>
 			<DashboardLayout navItems={INVESTOR_NAV} title="SEPMS">
 				{/* Page header */}
-				<div className="mb-8">
-					<h1 className="text-2xl font-bold tracking-tight sm:text-3xl">
-						Discovery Feed
-					</h1>
-					<p className="mt-1 text-muted-foreground">
-						Browse AI-scored pitches tailored to your investment preferences
-					</p>
+				<div className="admin-greeting-card bg-card mb-8 p-6 sm:p-8 admin-content-fade">
+					<div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+						<div>
+							<h1 className="text-2xl font-bold tracking-tight sm:text-3xl admin-header-gradient">
+								Discovery Feed
+							</h1>
+							<p className="mt-1.5 text-muted-foreground text-sm sm:text-base">
+								Browse AI-scored pitches tailored to your investment preferences
+							</p>
+						</div>
+						<Badge
+							variant="outline"
+							className="text-xs font-medium gap-1.5 py-1 px-3 w-fit"
+						>
+							<Compass className="h-3.5 w-3.5" />
+							{total} Available
+						</Badge>
+					</div>
 				</div>
 
 				{/* Stat cards */}
-				<div className="grid gap-4 sm:grid-cols-3 mb-8">
-					<Card>
-						<CardContent className="p-5">
-							<p className="text-sm text-muted-foreground">Available Pitches</p>
-							<p className="text-2xl font-bold mt-1">{total}</p>
-						</CardContent>
-					</Card>
-					<Card
-						className="cursor-pointer hover:bg-muted/50 transition-colors"
+				<div className="admin-stat-grid grid gap-4 sm:grid-cols-3 mb-8">
+					<div className="admin-stat-card bg-card">
+						<div className="p-5">
+							<div className="flex items-center gap-3">
+								<div className="admin-icon-glow admin-icon-blue rounded-xl p-2.5 flex items-center justify-center shadow-sm">
+									<Briefcase className="h-4.5 w-4.5 text-white" />
+								</div>
+								<div className="min-w-0 flex-1">
+									<p className="text-[11px] uppercase tracking-wider font-semibold text-muted-foreground/70">
+										Available Pitches
+									</p>
+									<p className="text-2xl font-bold tracking-tight">{total}</p>
+								</div>
+							</div>
+						</div>
+					</div>
+					<div
+						className="admin-stat-card bg-card cursor-pointer"
 						onClick={() => router.push("/investor/saved")}
+						onKeyDown={(e) => {
+							if (e.key === "Enter" || e.key === " ")
+								router.push("/investor/saved");
+						}}
+						role="button"
+						tabIndex={0}
 					>
-						<CardContent className="p-5">
-							<p className="text-sm text-muted-foreground">Saved</p>
-							<p className="text-2xl font-bold mt-1">{savedPitchIds.size}</p>
-						</CardContent>
-					</Card>
-					<Card>
-						<CardContent className="p-5">
-							<p className="text-sm text-muted-foreground">
-								Active Conversations
-							</p>
-							<p className="text-2xl font-bold mt-1">0</p>
-						</CardContent>
-					</Card>
+						<div className="p-5">
+							<div className="flex items-center gap-3">
+								<div className="admin-icon-glow admin-icon-rose rounded-xl p-2.5 flex items-center justify-center shadow-sm">
+									<Heart className="h-4.5 w-4.5 text-white" />
+								</div>
+								<div className="min-w-0 flex-1">
+									<p className="text-[11px] uppercase tracking-wider font-semibold text-muted-foreground/70">
+										Saved
+									</p>
+									<p className="text-2xl font-bold tracking-tight">
+										{savedPitchIds.size}
+									</p>
+								</div>
+							</div>
+						</div>
+					</div>
+					<div className="admin-stat-card bg-card">
+						<div className="p-5">
+							<div className="flex items-center gap-3">
+								<div className="admin-icon-glow admin-icon-emerald rounded-xl p-2.5 flex items-center justify-center shadow-sm">
+									<MessageSquare className="h-4.5 w-4.5 text-white" />
+								</div>
+								<div className="min-w-0 flex-1">
+									<p className="text-[11px] uppercase tracking-wider font-semibold text-muted-foreground/70">
+										Active Conversations
+									</p>
+									<p className="text-2xl font-bold tracking-tight">0</p>
+								</div>
+							</div>
+						</div>
+					</div>
 				</div>
 
 				{/* Filters */}

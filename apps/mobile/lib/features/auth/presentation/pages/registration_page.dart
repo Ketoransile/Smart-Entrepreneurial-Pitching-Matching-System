@@ -63,6 +63,8 @@ class _RegistrationPageState extends State<RegistrationPage> {
   }
 
   void _onSignUp() {
+    // Component Ideation — Added brief documentation comment for sign-up action and parameter mapping.
+    // This comment clarifies how company/fund names are assigned based on selected role.
     if (_formKey.currentState?.validate() ?? false) {
       context.read<AuthBloc>().add(SignUpRequested(
             email: _emailController.text.trim(),

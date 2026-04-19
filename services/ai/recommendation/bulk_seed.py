@@ -33,6 +33,8 @@ SLEEP_SEC     = 0.3  # throttle between requests
 
 # Submission.sector valid values
 VALID_SECTORS = {
+
+
     "technology", "healthcare", "fintech", "education",
     "agriculture", "energy", "real_estate", "manufacturing",
     "retail", "other",
@@ -40,6 +42,7 @@ VALID_SECTORS = {
 
 # Map common Crunchbase market strings → Submission.sector enum
 SECTOR_MAP = {
+   
     "finance":           "fintech",
     "financial services":"fintech",
     "health":            "healthcare",

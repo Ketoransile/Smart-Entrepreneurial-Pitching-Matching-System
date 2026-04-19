@@ -150,3 +150,267 @@
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
 	background: hsl(var(--muted-foreground) / 0.4);
 }
+
+/* ─── Admin Dashboard Modern Cards ─── */
+@keyframes admin-fade-up {
+	from {
+		opacity: 0;
+		transform: translateY(16px);
+	}
+	to {
+		opacity: 1;
+		transform: translateY(0);
+	}
+}
+
+@keyframes admin-shimmer {
+	0% {
+		background-position: -200% 0;
+	}
+	100% {
+		background-position: 200% 0;
+	}
+}
+
+@keyframes admin-float {
+	0%,
+	100% {
+		transform: translateY(0px);
+	}
+	50% {
+		transform: translateY(-4px);
+	}
+}
+
+@keyframes admin-pulse-ring {
+	0% {
+		transform: scale(1);
+		opacity: 0.5;
+	}
+	100% {
+		transform: scale(1.7);
+		opacity: 0;
+	}
+}
+
+@keyframes admin-gradient-shift {
+	0%,
+	100% {
+		background-position: 0% 50%;
+	}
+	50% {
+		background-position: 100% 50%;
+	}
+}
+
+/* Staggered fade-in for stat card grid items */
+.admin-stat-grid > * {
+	animation: admin-fade-up 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+.admin-stat-grid > *:nth-child(1) {
+	animation-delay: 0ms;
+}
+.admin-stat-grid > *:nth-child(2) {
+	animation-delay: 60ms;
+}
+.admin-stat-grid > *:nth-child(3) {
+	animation-delay: 120ms;
+}
+.admin-stat-grid > *:nth-child(4) {
+	animation-delay: 180ms;
+}
+.admin-stat-grid > *:nth-child(5) {
+	animation-delay: 240ms;
+}
+.admin-stat-grid > *:nth-child(6) {
+	animation-delay: 300ms;
+}
+
+/* Modern glassmorphism stat card */
+.admin-stat-card {
+	position: relative;
+	overflow: hidden;
+	border: 1px solid rgba(0, 0, 0, 0.08);
+	border-radius: 1rem;
+	transition: all 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.dark .admin-stat-card {
+	border-color: rgba(255, 255, 255, 0.08);
+}
+
+.admin-stat-card:hover {
+	transform: translateY(-3px);
+	box-shadow:
+		0 12px 40px -8px rgba(0, 0, 0, 0.12),
+		0 0 0 1px rgba(0, 0, 0, 0.06);
+}
+
+.dark .admin-stat-card:hover {
+	box-shadow:
+		0 12px 40px -8px rgba(0, 0, 0, 0.5),
+		0 0 0 1px rgba(255, 255, 255, 0.08);
+}
+
+/* Decorative shimmer line across the top of cards */
+.admin-stat-card::before {
+	content: "";
+	position: absolute;
+	top: 0;
+	left: 0;
+	right: 0;
+	height: 2px;
+	background: linear-gradient(
+		90deg,
+		transparent,
+		var(--card-accent, currentColor),
+		transparent
+	);
+	opacity: 0;
+	transition: opacity 0.35s ease;
+}
+
+.admin-stat-card:hover::before {
+	opacity: 1;
+}
+
+/* Background glow orb behind icon area */
+.admin-icon-glow {
+	position: relative;
+}
+
+.admin-icon-glow::after {
+	content: "";
+	position: absolute;
+	inset: -6px;
+	border-radius: 50%;
+	background: inherit;
+	opacity: 0;
+	filter: blur(12px);
+	z-index: -1;
+	transition: opacity 0.35s ease;
+}
+
+.admin-stat-card:hover .admin-icon-glow::after {
+	opacity: 0.35;
+}
+
+/* Gradient backgrounds for stat icons — !important overrides Tailwind layer */
+.admin-icon-blue {
+	background: linear-gradient(135deg, #3b82f6, #6366f1) !important;
+	color: white !important;
+	--card-accent: #3b82f6;
+}
+
+.admin-icon-emerald {
+	background: linear-gradient(135deg, #10b981, #059669) !important;
+	color: white !important;
+	--card-accent: #10b981;
+}
+
+.admin-icon-amber {
+	background: linear-gradient(135deg, #f59e0b, #ef4444) !important;
+	color: white !important;
+	--card-accent: #f59e0b;
+}
+
+.admin-icon-violet {
+	background: linear-gradient(135deg, #8b5cf6, #a855f7) !important;
+	color: white !important;
+	--card-accent: #8b5cf6;
+}
+
+.admin-icon-rose {
+	background: linear-gradient(135deg, #f43f5e, #ec4899) !important;
+	color: white !important;
+	--card-accent: #f43f5e;
+}
+
+.admin-icon-cyan {
+	background: linear-gradient(135deg, #06b6d4, #3b82f6) !important;
+	color: white !important;
+	--card-accent: #06b6d4;
+}
+
+.admin-icon-teal {
+	background: linear-gradient(135deg, #14b8a6, #22c55e) !important;
+	color: white !important;
+	--card-accent: #14b8a6;
+}
+
+/* Page header gradient text */
+.admin-header-gradient {
+	background: linear-gradient(
+		135deg,
+		var(--foreground) 0%,
+		var(--muted-foreground) 100%
+	);
+	-webkit-background-clip: text;
+	-webkit-text-fill-color: transparent;
+	background-clip: text;
+}
+
+/* Greeting section animated gradient border */
+.admin-greeting-card {
+	position: relative;
+	overflow: hidden;
+	border-radius: 1.25rem;
+}
+
+.admin-greeting-card::before {
+	content: "";
+	position: absolute;
+	inset: 0;
+	padding: 1px;
+	border-radius: 1.25rem;
+	background: linear-gradient(
+		135deg,
+		rgba(59, 130, 246, 0.3),
+		rgba(168, 85, 247, 0.3),
+		rgba(236, 72, 153, 0.3)
+	);
+	mask:
+		linear-gradient(#fff 0 0) content-box,
+		linear-gradient(#fff 0 0);
+	mask-composite: exclude;
+	-webkit-mask:
+		linear-gradient(#fff 0 0) content-box,
+		linear-gradient(#fff 0 0);
+	-webkit-mask-composite: xor;
+	pointer-events: none;
+	background-size: 200% 200%;
+	animation: admin-gradient-shift 6s ease infinite;
+}
+
+/* Modern table hover effect */
+.admin-table-row {
+	transition: all 0.2s ease;
+}
+
+.admin-table-row:hover {
+	background: linear-gradient(
+		90deg,
+		transparent,
+		rgba(59, 130, 246, 0.03),
+		transparent
+	) !important;
+}
+
+.dark .admin-table-row:hover {
+	background: linear-gradient(
+		90deg,
+		transparent,
+		rgba(59, 130, 246, 0.06),
+		transparent
+	) !important;
+}
+
+/* Badge glow effect */
+.admin-badge-glow {
+	box-shadow: 0 0 8px -2px currentColor;
+}
+
+/* Content fade-in */
+.admin-content-fade {
+	animation: admin-fade-up 0.4s cubic-bezier(0.22, 1, 0.36, 1) both;
+}

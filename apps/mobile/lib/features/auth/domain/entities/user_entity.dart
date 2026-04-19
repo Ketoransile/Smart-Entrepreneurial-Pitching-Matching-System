@@ -27,6 +27,8 @@ class UserEntity extends Equatable {
     this.kycRejectionReason,
   });
 
+  /// Convenience getters to check the user's role and verification state.
+  /// These are used by presentation code to branch UI flows.
   bool get isEntrepreneur => role == UserRole.entrepreneur;
   bool get isInvestor => role == UserRole.investor;
   bool get isAdmin => role == UserRole.admin;

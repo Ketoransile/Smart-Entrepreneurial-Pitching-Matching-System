@@ -8,6 +8,8 @@ abstract class AuthEvent extends Equatable {
   List<Object?> get props => [];
 }
 
+// Events emitted by the UI or listeners to drive authentication flows.
+
 class AuthCheckRequested extends AuthEvent {
   const AuthCheckRequested();
 }

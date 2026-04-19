@@ -3,6 +3,9 @@ import 'package:flutter/material.dart';
 class AppSpacing {
   AppSpacing._();
 
+  /// Reusable spacing constants and layout helpers.
+  /// Provides consistent paddings, gaps and radii used across the UI.
+
   // Base spacing values
   static const double xxs = 2.0;
   static const double xs = 4.0;

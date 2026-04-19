@@ -16,8 +16,8 @@ import {
 	DialogTitle,
 } from "@/components/ui/dialog";
 import { Separator } from "@/components/ui/separator";
-import { useAuth } from "@/context/AuthContext";
 import { INVESTOR_NAV } from "@/constants/navigation";
+import { useAuth } from "@/context/AuthContext";
 
 interface Submission {
 	_id: string;
@@ -74,7 +74,7 @@ export default function SavedPitchesPage() {
 		setLoading(true);
 		try {
 			const token = await user.getIdToken();
-			
+
 			const res = await fetch(
 				`${(process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api").replace(/\/+$/, "")}/investor/saved-pitches`,
 				{ headers: { Authorization: `Bearer ${token}` } },
@@ -101,8 +101,8 @@ export default function SavedPitchesPage() {
 		// Optimistically remove from view
 		const originalSubmissions = [...submissions];
 		const originalSelected = selectedPitch;
-		
-		setSubmissions(prev => prev.filter(p => p._id !== pitchId));
+
+		setSubmissions((prev) => prev.filter((p) => p._id !== pitchId));
 		if (selectedPitch?._id === pitchId) {
 			setSelectedPitch(null);
 		}
@@ -111,13 +111,13 @@ export default function SavedPitchesPage() {
 			const token = await user.getIdToken();
 			const res = await fetch(
 				`${(process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api").replace(/\/+$/, "")}/investor/saved-pitches/${pitchId}`,
-				{ 
+				{
 					method: "POST",
-					headers: { Authorization: `Bearer ${token}` }
+					headers: { Authorization: `Bearer ${token}` },
 				},
 			);
 			const data = await res.json();
-			
+
 			if (!data.success) {
 				// Revert Optimistic Update
 				setSubmissions(originalSubmissions);
@@ -137,18 +137,23 @@ export default function SavedPitchesPage() {
 		<ProtectedRoute allowedRoles={["investor"]}>
 			<DashboardLayout navItems={INVESTOR_NAV} title="SEPMS">
 				{/* Page header */}
-				<div className="mb-8 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                    <div>
-                        <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">
-                            Saved Pitches
-                        </h1>
-                        <p className="mt-1 text-muted-foreground">
-                            Pitches you have bookmarked for later review
-                        </p>
-                    </div>
-                    <Button variant="outline" onClick={() => router.push("/investor/feed")}>
-                        Back to Feed
-                    </Button>
+				<div className="admin-greeting-card bg-card mb-8 p-6 sm:p-8 admin-content-fade">
+					<div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+						<div>
+							<h1 className="text-2xl font-bold tracking-tight sm:text-3xl admin-header-gradient">
+								Saved Pitches
+							</h1>
+							<p className="mt-1.5 text-muted-foreground text-sm sm:text-base">
+								Pitches you have bookmarked for later review
+							</p>
+						</div>
+						<Button
+							variant="outline"
+							onClick={() => router.push("/investor/feed")}
+						>
+							Back to Feed
+						</Button>
+					</div>
 				</div>
 
 				<Separator className="mb-6" />
@@ -164,11 +169,12 @@ export default function SavedPitchesPage() {
 							<Heart className="h-10 w-10 text-muted-foreground mb-4" />
 							<h3 className="text-lg font-semibold mb-2">No saved pitches</h3>
 							<p className="text-muted-foreground text-center max-w-md text-sm mb-4">
-								You haven't bookmarked any pitches yet. Start exploring the feed to find interesting startups!
+								You haven't bookmarked any pitches yet. Start exploring the feed
+								to find interesting startups!
 							</p>
-                            <Button onClick={() => router.push("/investor/feed")}>
-                                Browse Feed
-                            </Button>
+							<Button onClick={() => router.push("/investor/feed")}>
+								Browse Feed
+							</Button>
 						</CardContent>
 					</Card>
 				) : (
@@ -199,9 +205,7 @@ export default function SavedPitchesPage() {
 												className="h-7 w-7 rounded-full -mr-2 hover:bg-muted"
 												onClick={(e) => toggleSaved(e, pitch._id)}
 											>
-												<Heart 
-													className="h-4 w-4 fill-primary text-primary transition-colors" 
-												/>
+												<Heart className="h-4 w-4 fill-primary text-primary transition-colors" />
 											</Button>
 										</div>
 									</div>
@@ -259,9 +263,7 @@ export default function SavedPitchesPage() {
 										className="gap-1.5"
 										onClick={(e) => toggleSaved(e, selectedPitch._id)}
 									>
-										<Heart 
-											className="h-4 w-4 fill-primary text-primary" 
-										/>
+										<Heart className="h-4 w-4 fill-primary text-primary" />
 										Saved
 									</Button>
 								)}

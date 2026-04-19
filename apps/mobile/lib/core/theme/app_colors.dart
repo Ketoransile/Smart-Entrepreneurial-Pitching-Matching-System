@@ -3,6 +3,9 @@ import 'package:flutter/material.dart';
 class AppColors {
   AppColors._();
 
+  /// Centralized color palette for the mobile app.
+  /// Use the named constants to ensure consistent colors across widgets.
+
   // Primary
   static const Color primary = Color(0xFF2563EB);
   static const Color primaryForeground = Color(0xFFFFFFFF);

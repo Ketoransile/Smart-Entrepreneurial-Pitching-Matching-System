@@ -17,6 +17,8 @@ class RoleSelector extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    /// Presents a compact role selector with two tappable options.
+    /// Calls `onRoleChanged` with the selected `UserRole` when tapped.
     return Container(
       padding: const EdgeInsets.all(4),
       decoration: BoxDecoration(

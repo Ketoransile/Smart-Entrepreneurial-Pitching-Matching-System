@@ -10,6 +10,8 @@ class SignUpUseCase {
   SignUpUseCase(this.repository);
 
   Future<Either<Failure, UserEntity>> call(SignUpParams params) {
+    // Routes sign-up params to the authentication repository which handles
+    // user creation, backend registration and caching.
     return repository.signUp(
       email: params.email,
       password: params.password,

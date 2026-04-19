@@ -34,6 +34,9 @@ class AuthFailure extends Failure {
   });
 
   factory AuthFailure.fromFirebaseCode(String code) {
+    /// Maps Firebase auth error codes to local `AuthFailure` instances.
+    /// Centralizes user-facing messages so the auth layer can convert
+    /// remote error codes into friendly, typed failures.
     switch (code) {
       case 'user-not-found':
         return const AuthFailure(

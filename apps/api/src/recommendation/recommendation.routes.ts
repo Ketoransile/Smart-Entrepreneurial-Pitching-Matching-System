@@ -16,8 +16,10 @@
 import { type Request, type Response, Router } from "express";
 import { authenticate, authorize } from "../middleware/auth";
 import { MatchResult } from "../models/MatchResult";
+import { Submission } from "../models/Submission";
 import { AIService } from "../services/ai.service";
 import { MatchingService } from "../services/matching.service";
+import { MessageService } from "../services/message.service";
 import { applyRocchioUpdate } from "./rocchio.service";
 
 const router = Router();
@@ -252,10 +254,43 @@ router.patch(
 				});
 			});
 
+			// On accept: create/get conversation and send automatic system message
+			let conversationId: string | null = null;
+			if (status === "accepted") {
+				try {
+					const entrepreneurUserId = match.entrepreneurId.toString();
+					const conversation = await MessageService.getOrCreateConversation({
+						currentUserId: investorUserId,
+						otherUserId: entrepreneurUserId,
+						matchResultId: match._id.toString(),
+						submissionId: match.submissionId.toString(),
+					});
+					conversationId = conversation._id.toString();
+
+					// Fetch submission title for the system message
+					const submission = await Submission.findById(match.submissionId)
+						.select("title")
+						.lean();
+					const pitchTitle = submission?.title ?? "your pitch";
+
+					// Send automatic system message from investor to entrepreneur
+					await MessageService.sendMessage({
+						conversationId: conversationId,
+						senderId: investorUserId,
+						body: `👋 Hi! I reviewed your pitch "${pitchTitle}" and I'm interested in learning more. I've accepted the match — let's connect and discuss next steps.`,
+						type: "text",
+					});
+				} catch (err) {
+					// Non-critical — don't fail the whole request
+					console.error("Failed to create conversation on accept:", err);
+				}
+			}
+
 			res.status(200).json({
 				status: "success",
 				message: `Match ${status}`,
 				match,
+				conversationId,
 			});
 		} catch (err) {
 			if (MatchingService.isServiceError(err)) {

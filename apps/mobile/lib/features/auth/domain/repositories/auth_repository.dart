@@ -3,6 +3,8 @@ import '../../../../core/error/failures.dart';
 import '../entities/user_entity.dart';
 
 abstract class AuthRepository {
+  /// Repository interface for authentication-related operations.
+  /// Implementations should return domain-level `Failure` or `UserEntity`.
   /// Sign up with email and password
   Future<Either<Failure, UserEntity>> signUp({
     required String email,

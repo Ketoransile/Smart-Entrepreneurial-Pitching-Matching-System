@@ -53,6 +53,8 @@ class AppTextField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    /// Builds a labeled TextFormField with consistent decoration and optional
+    /// prefix/suffix widgets, validation and submit handling.
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisSize: MainAxisSize.min,

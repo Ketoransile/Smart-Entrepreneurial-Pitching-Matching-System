@@ -8,16 +8,26 @@ import 'features/auth/presentation/bloc/auth_event.dart';
 import 'features/auth/presentation/bloc/auth_state.dart';
 import 'features/auth/presentation/pages/login_page.dart';
 import 'features/auth/presentation/pages/verify_email_page.dart';
+import 'features/shell/presentation/pages/admin_shell.dart';
+import 'features/shell/presentation/pages/entrepreneur_shell.dart';
+import 'features/shell/presentation/pages/investor_shell.dart';
+import 'features/user_profile/presentation/bloc/user_profile_bloc.dart';
+import 'features/user_profile/presentation/pages/account_gate_page.dart';
 
 class SepmsApp extends StatelessWidget {
   const SepmsApp({super.key});
 
   @override
   Widget build(BuildContext context) {
+    /// Builds the root application and provides top-level Bloc providers.
+    /// This widget wires global providers and configures the MaterialApp.
     return MultiBlocProvider(
       providers: [
         BlocProvider<AuthBloc>(
           create: (context) => sl<AuthBloc>()..add(const AuthCheckRequested()),
+        ),
+        BlocProvider<UserProfileBloc>(
+          create: (context) => sl<UserProfileBloc>(),
         ),
       ],
       child: MaterialApp(
@@ -37,6 +47,8 @@ class AuthWrapper extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    /// Chooses the correct screen based on authentication state.
+    /// Maps auth states to appropriate pages (login, verification, dashboard).
     return BlocBuilder<AuthBloc, AuthState>(
       builder: (context, state) {
         switch (state.status) {
@@ -66,44 +78,18 @@ class AuthWrapper extends StatelessWidget {
       return const LoginPage();
     }
 
-    // TODO: Navigate to appropriate dashboard based on role
-    // For now, show a placeholder home screen
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('SEPMS'),
-        actions: [
-          Builder(
-            builder: (context) => IconButton(
-              icon: const Icon(Icons.logout),
-              onPressed: () {
-                context.read<AuthBloc>().add(const SignOutRequested());
-              },
-            ),
-          ),
-        ],
-      ),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text(
-              'Welcome, ${user.displayName ?? 'User'}!',
-              style: Theme.of(context).textTheme.headlineSmall,
-            ),
-            const SizedBox(height: 8),
-            Text(
-              'Role: ${user.role.name}',
-              style: Theme.of(context).textTheme.bodyLarge,
-            ),
-            const SizedBox(height: 8),
-            Text(
-              'Status: ${user.status.name}',
-              style: Theme.of(context).textTheme.bodyMedium,
-            ),
-          ],
-        ),
-      ),
-    );
+    if (!user.isVerified) {
+      return AccountGatePage(user: user);
+    }
+
+    switch (user.role) {
+      case UserRole.entrepreneur:
+        return const EntrepreneurShell();
+      case UserRole.investor:
+        return const InvestorShell();
+      case UserRole.admin:
+        return const AdminShell();
+    }
   }
 }
 
@@ -112,6 +98,7 @@ class _SplashScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    /// Simple splash/loading screen shown during authentication checks.
     return Scaffold(
       body: Center(
         child: Column(

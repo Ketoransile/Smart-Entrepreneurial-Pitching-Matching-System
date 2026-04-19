@@ -110,75 +110,104 @@ function EntrepreneurDashboardInner() {
 				)}
 
 				{/* Header */}
-				<div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-					<div>
-						<h1 className="text-2xl font-bold tracking-tight sm:text-3xl">
-							Dashboard
-						</h1>
-						<p className="mt-1 text-muted-foreground">
-							Manage your pitches and track investor interest
-						</p>
-					</div>
-					<Button
-						onClick={() => {
-							if (userProfile?.status !== "verified") {
-								toast.error(
-									"Complete your verification first to create pitches.",
-									{
-										action: {
-											label: "Go to Profile",
-											onClick: () => router.push("/entrepreneur/profile"),
+				<div className="admin-greeting-card bg-card mb-8 p-6 sm:p-8 admin-content-fade">
+					<div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+						<div>
+							<h1 className="text-2xl font-bold tracking-tight sm:text-3xl admin-header-gradient">
+								Dashboard
+							</h1>
+							<p className="mt-1.5 text-muted-foreground text-sm sm:text-base">
+								Manage your pitches and track investor interest
+							</p>
+						</div>
+						<Button
+							onClick={() => {
+								if (userProfile?.status !== "verified") {
+									toast.error(
+										"Complete your verification first to create pitches.",
+										{
+											action: {
+												label: "Go to Profile",
+												onClick: () => router.push("/entrepreneur/profile"),
+											},
 										},
-									},
-								);
-								return;
-							}
-							router.push("/entrepreneur/pitch/new");
-						}}
-						className={userProfile?.status !== "verified" ? "opacity-70" : ""}
-					>
-						{userProfile?.status !== "verified" && (
-							<Lock className="h-3.5 w-3.5 mr-1.5" />
-						)}
-						+ New Pitch
-					</Button>
+									);
+									return;
+								}
+								router.push("/entrepreneur/pitch/new");
+							}}
+							className={userProfile?.status !== "verified" ? "opacity-70" : ""}
+						>
+							{userProfile?.status !== "verified" && (
+								<Lock className="h-3.5 w-3.5 mr-1.5" />
+							)}
+							+ New Pitch
+						</Button>
+					</div>
 				</div>
 
 				{/* Stats */}
-				<div className="grid gap-4 sm:grid-cols-3 mb-8">
-					<Card>
-						<CardContent className="p-5">
-							<p className="text-sm text-muted-foreground flex items-center gap-1.5">
-								<FileText className="h-3.5 w-3.5" /> Total Pitches
-							</p>
-							<p className="text-2xl font-bold mt-1">{submissions.length}</p>
-							<p className="text-xs text-muted-foreground mt-0.5">
-								{drafts.length} draft{drafts.length !== 1 ? "s" : ""}
-							</p>
-						</CardContent>
-					</Card>
-					<Card>
-						<CardContent className="p-5">
-							<p className="text-sm text-muted-foreground flex items-center gap-1.5">
-								<Send className="h-3.5 w-3.5" /> Submitted
-							</p>
-							<p className="text-2xl font-bold mt-1">{submitted.length}</p>
-							<p className="text-xs text-muted-foreground mt-0.5">
-								Awaiting review
-							</p>
-						</CardContent>
-					</Card>
-					<Card>
-						<CardContent className="p-5">
-							<p className="text-sm text-muted-foreground flex items-center gap-1.5">
-								<Handshake className="h-3.5 w-3.5" /> Matches
-							</p>
-							<p className="text-2xl font-bold mt-1">{acceptedMatchCount}</p>
-							<p className="text-xs text-muted-foreground mt-0.5">
-								Accepted investor matches
-							</p>
-						</CardContent>
-					</Card>
+				<div className="admin-stat-grid grid gap-4 sm:grid-cols-3 mb-8">
+					<div className="admin-stat-card bg-card">
+						<div className="p-5">
+							<div className="flex items-center gap-3">
+								<div className="admin-icon-glow admin-icon-blue rounded-xl p-2.5 flex items-center justify-center shadow-sm">
+									<FileText className="h-4.5 w-4.5 text-white" />
+								</div>
+								<div className="min-w-0 flex-1">
+									<p className="text-[11px] uppercase tracking-wider font-semibold text-muted-foreground/70">
+										Total Pitches
+									</p>
+									<p className="text-2xl font-bold tracking-tight">
+										{submissions.length}
+									</p>
+									<p className="text-xs text-muted-foreground mt-0.5">
+										{drafts.length} draft{drafts.length !== 1 ? "s" : ""}
+									</p>
+								</div>
+							</div>
+						</div>
+					</div>
+					<div className="admin-stat-card bg-card">
+						<div className="p-5">
+							<div className="flex items-center gap-3">
+								<div className="admin-icon-glow admin-icon-cyan rounded-xl p-2.5 flex items-center justify-center shadow-sm">
+									<Send className="h-4.5 w-4.5 text-white" />
+								</div>
+								<div className="min-w-0 flex-1">
+									<p className="text-[11px] uppercase tracking-wider font-semibold text-muted-foreground/70">
+										Submitted
+									</p>
+									<p className="text-2xl font-bold tracking-tight">
+										{submitted.length}
+									</p>
+									<p className="text-xs text-muted-foreground mt-0.5">
+										Awaiting review
+									</p>
+								</div>
+							</div>
+						</div>
+					</div>
+					<div className="admin-stat-card bg-card">
+						<div className="p-5">
+							<div className="flex items-center gap-3">
+								<div className="admin-icon-glow admin-icon-emerald rounded-xl p-2.5 flex items-center justify-center shadow-sm">
+									<Handshake className="h-4.5 w-4.5 text-white" />
+								</div>
+								<div className="min-w-0 flex-1">
+									<p className="text-[11px] uppercase tracking-wider font-semibold text-muted-foreground/70">
+										Matches
+									</p>
+									<p className="text-2xl font-bold tracking-tight">
+										{acceptedMatchCount}
+									</p>
+									<p className="text-xs text-muted-foreground mt-0.5">
+										Accepted investor matches
+									</p>
+								</div>
+							</div>
+						</div>
+					</div>
 				</div>
 
 				<Separator className="mb-6" />

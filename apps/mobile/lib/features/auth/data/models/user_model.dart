@@ -14,6 +14,7 @@ class UserModel extends UserEntity {
   });
 
   factory UserModel.fromJson(Map<String, dynamic> json) {
+    // Parse a JSON map into a concrete UserModel used by the data layer.
     return UserModel(
       uid: json['uid'] as String,
       email: json['email'] as String?,
@@ -28,6 +29,7 @@ class UserModel extends UserEntity {
   }
 
   Map<String, dynamic> toJson() {
+    // Serialize the UserModel into a JSON map suitable for backend requests.
     return {
       'uid': uid,
       'email': email,

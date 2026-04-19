@@ -45,10 +45,8 @@ import { Label } from "@/components/ui/label";
 import { Progress } from "@/components/ui/progress";
 import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useAuth } from "@/context/AuthContext";
 import { ENTREPRENEUR_NAV } from "@/constants/navigation";
-
-
+import { useAuth } from "@/context/AuthContext";
 
 // ─── File Upload Card ───
 function FileUploadCard({
@@ -483,12 +481,12 @@ function EntrepreneurProfilePageInner() {
 		<ProtectedRoute allowedRoles={["entrepreneur"]}>
 			<DashboardLayout navItems={ENTREPRENEUR_NAV} title="SEPMS">
 				{/* Header */}
-				<div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+				<div className="admin-greeting-card bg-card mb-8 p-6 sm:p-8 admin-content-fade">
 					<div>
-						<h1 className="text-2xl font-bold tracking-tight sm:text-3xl">
+						<h1 className="text-2xl font-bold tracking-tight sm:text-3xl admin-header-gradient">
 							Profile Settings
 						</h1>
-						<p className="mt-1 text-muted-foreground">
+						<p className="mt-1.5 text-muted-foreground text-sm sm:text-base">
 							Manage your personal information and verification documents
 						</p>
 					</div>

@@ -57,6 +57,8 @@ class DioClient {
   }
 
   Future<String?> _getFirebaseToken() async {
+    /// Returns the current user's Firebase ID token, or null if unauthenticated.
+    /// The token is attached to outgoing requests in the request interceptor.
     try {
       final user = _firebaseAuth.currentUser;
       if (user != null) {

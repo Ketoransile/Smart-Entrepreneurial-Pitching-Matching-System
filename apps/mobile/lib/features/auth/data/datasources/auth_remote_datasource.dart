@@ -246,6 +246,8 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
         message: 'Failed to load profile (HTTP ${response.statusCode})',
       );
     } on DioException catch (e) {
+      // Network or server error encountered while fetching the profile.
+      // Convert Dio exceptions into domain failures for higher layers.
       if (e.type == DioExceptionType.connectionTimeout ||
           e.type == DioExceptionType.sendTimeout ||
           e.type == DioExceptionType.receiveTimeout ||

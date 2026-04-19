@@ -96,6 +96,8 @@ class AppButton extends StatelessWidget {
   }
 
   Widget _buildChild(BuildContext context) {
+    /// Builds the button's inner content: shows a loading indicator when
+    /// `isLoading` is true, otherwise composes icon + text or plain text.
     if (isLoading) {
       return SizedBox(
         width: 20,
