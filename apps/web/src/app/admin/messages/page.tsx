@@ -616,8 +616,10 @@ function MessagesContent() {
 			<DashboardLayout navItems={navItems} title="SEPMS Admin">
 				<div className="flex flex-col h-[calc(100vh-120px)]">
 					{/* Header */}
-					<div className="mb-4">
-						<h1 className="text-2xl font-bold tracking-tight">Messages</h1>
+					<div className="mb-4 admin-content-fade">
+						<h1 className="text-2xl font-bold tracking-tight admin-header-gradient">
+							Messages
+						</h1>
 						<p className="text-sm text-muted-foreground">
 							Communicate securely with your connections
 						</p>

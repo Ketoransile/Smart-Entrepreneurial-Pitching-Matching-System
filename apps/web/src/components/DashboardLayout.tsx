@@ -127,12 +127,9 @@ export default function DashboardLayout({
 				</SidebarHeader>
 
 				<SidebarContent className="px-3 py-4 group-data-[collapsible=icon]:px-0 group-data-[collapsible=icon]:items-center">
-					<SidebarGroup className="group-data-[collapsible=icon]:p-0 group-data-[collapsible=icon]:items-center">
-						<SidebarGroupLabel className="mb-2 px-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground/70 group-data-[collapsible=icon]:hidden">
-							Overview
-						</SidebarGroupLabel>
+					<SidebarGroup className="group-data-[collapsible=icon]:p-0 group-data-[collapsible=icon]:items-center mt-2">
 						<SidebarGroupContent className="group-data-[collapsible=icon]:flex group-data-[collapsible=icon]:flex-col group-data-[collapsible=icon]:items-center">
-							<SidebarMenu className="gap-1.5 group-data-[collapsible=icon]:items-center">
+							<SidebarMenu className="gap-2 group-data-[collapsible=icon]:items-center">
 								{navItems.map((item) => {
 									const isActive =
 										pathname === item.href ||
@@ -143,9 +140,9 @@ export default function DashboardLayout({
 												isActive={isActive}
 												onClick={() => router.push(item.href)}
 												tooltip={item.label}
-												className="cursor-pointer rounded-md transition-all h-9 group-data-[collapsible=icon]:!justify-center group-data-[collapsible=icon]:!p-0"
+												className={`cursor-pointer rounded-xl transition-all h-10 px-3 flex items-center gap-3 ${isActive ? "bg-primary/5 font-semibold text-primary" : "text-muted-foreground hover:bg-muted font-medium"} group-data-[collapsible=icon]:!justify-center group-data-[collapsible=icon]:!p-0`}
 											>
-												<div className="relative flex items-center justify-center">
+												<div className="relative flex items-center justify-center shrink-0">
 													{item.icon}
 													{item.label === "Messages" && unreadCount > 0 && (
 														<span className="absolute -top-1.5 -right-1.5 hidden h-3.5 w-3.5 items-center justify-center rounded-full bg-destructive text-[9px] font-bold text-destructive-foreground shadow-sm group-data-[collapsible=icon]:flex">
@@ -153,7 +150,7 @@ export default function DashboardLayout({
 														</span>
 													)}
 												</div>
-												<span className="flex-1 flex items-center justify-between font-medium group-data-[collapsible=icon]:hidden">
+												<span className="flex-1 flex items-center justify-between group-data-[collapsible=icon]:hidden tracking-wide text-[15px]">
 													{item.label}
 													{item.label === "Messages" && unreadCount > 0 && (
 														<Badge
@@ -180,7 +177,7 @@ export default function DashboardLayout({
 								<DropdownMenuTrigger asChild>
 									<SidebarMenuButton
 										size="lg"
-										className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground cursor-pointer group-data-[collapsible=icon]:!justify-center group-data-[collapsible=icon]:!p-0 group-data-[collapsible=icon]:!size-10 group-data-[collapsible=icon]:rounded-xl transition-all"
+										className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground cursor-pointer rounded-xl p-2 h-auto hover:bg-muted transition-all group-data-[collapsible=icon]:!justify-center group-data-[collapsible=icon]:!p-0 group-data-[collapsible=icon]:!size-10 group-data-[collapsible=icon]:rounded-xl"
 									>
 										<Avatar className="h-8 w-8 rounded-lg group-data-[collapsible=icon]:size-10 group-data-[collapsible=icon]:rounded-xl transition-all">
 											{userProfile?.photoURL && (
@@ -258,7 +255,7 @@ export default function DashboardLayout({
 			</Sidebar>
 
 			<SidebarInset>
-				<header className="sticky top-0 z-20 flex h-16 shrink-0 items-center justify-between gap-2 border-b bg-background px-4 sm:px-6 lg:px-8">
+				<header className="sticky top-0 z-20 flex h-16 shrink-0 items-center justify-between gap-2 border-b bg-background/80 backdrop-blur-xl px-4 sm:px-6 lg:px-8">
 					<div className="flex items-center gap-2">
 						<SidebarTrigger className="-ml-2" />
 						<Separator orientation="vertical" className="mr-2 h-4" />

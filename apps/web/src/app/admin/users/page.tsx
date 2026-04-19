@@ -22,8 +22,8 @@ import {
 	Users,
 	XCircle,
 } from "lucide-react";
-import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 import DashboardLayout from "@/components/DashboardLayout";
 import ProtectedRoute from "@/components/ProtectedRoute";
@@ -58,10 +58,8 @@ import {
 	TableRow,
 } from "@/components/ui/table";
 import { Textarea } from "@/components/ui/textarea";
-import { useAuth } from "@/context/AuthContext";
 import { ADMIN_NAV } from "@/constants/navigation";
-
-
+import { useAuth } from "@/context/AuthContext";
 
 interface UserRecord {
 	_id: string;
@@ -321,13 +319,24 @@ export default function AdminUsersPage() {
 	return (
 		<ProtectedRoute allowedRoles={["admin"]}>
 			<DashboardLayout navItems={ADMIN_NAV} title="SEPMS Admin">
-				<div className="mb-8">
-					<h1 className="text-2xl font-bold tracking-tight sm:text-3xl">
-						User Management
-					</h1>
-					<p className="mt-1 text-muted-foreground">
-						View, search, and manage all platform users
-					</p>
+				<div className="admin-greeting-card bg-card mb-8 p-6 sm:p-8 admin-content-fade">
+					<div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+						<div>
+							<h1 className="text-2xl font-bold tracking-tight sm:text-3xl admin-header-gradient">
+								User Management
+							</h1>
+							<p className="mt-1.5 text-muted-foreground text-sm sm:text-base">
+								View, search, and manage all platform users
+							</p>
+						</div>
+						<Badge
+							variant="outline"
+							className="text-xs font-medium gap-1.5 py-1 px-3 w-fit"
+						>
+							<Users className="h-3.5 w-3.5" />
+							{loading ? "..." : `${total} Users`}
+						</Badge>
+					</div>
 				</div>
 
 				{/* Filters Bar */}
@@ -416,8 +425,7 @@ export default function AdminUsersPage() {
 								</TableRow>
 							) : (
 								filteredUsers.map((u) => {
-									const isProtected =
-										u.adminLevel === "super_admin" && !isSuperAdmin;
+									const isProtected = u.role === "admin" && !isSuperAdmin;
 									return (
 										<TableRow
 											key={u._id}
@@ -542,26 +550,50 @@ export default function AdminUsersPage() {
 
 				{/* Pagination */}
 				{totalPages > 1 && (
-					<div className="flex items-center justify-between mt-4">
+					<div className="flex items-center justify-between mt-6">
 						<p className="text-sm text-muted-foreground">
-							Page {page} of {totalPages}
+							Page {page} of {totalPages} · {total} total user
+							{total !== 1 ? "s" : ""}
 						</p>
-						<div className="flex items-center gap-2">
+						<div className="flex items-center gap-1">
 							<Button
 								variant="outline"
 								size="sm"
 								disabled={page <= 1}
 								onClick={() => setPage((p) => Math.max(1, p - 1))}
-								className="gap-1"
+								className="gap-1 h-8 px-3"
 							>
 								<ChevronLeft className="h-4 w-4" /> Previous
 							</Button>
+							{Array.from({ length: Math.min(totalPages, 5) }, (_, i) => {
+								let pg: number;
+								if (totalPages <= 5) {
+									pg = i + 1;
+								} else if (page <= 3) {
+									pg = i + 1;
+								} else if (page >= totalPages - 2) {
+									pg = totalPages - 4 + i;
+								} else {
+									pg = page - 2 + i;
+								}
+								return (
+									<Button
+										key={pg}
+										variant={pg === page ? "default" : "outline"}
+										size="sm"
+										onClick={() => setPage(pg)}
+										className="h-8 w-8 p-0"
+									>
+										{pg}
+									</Button>
+								);
+							})}
 							<Button
 								variant="outline"
 								size="sm"
 								disabled={page >= totalPages}
 								onClick={() => setPage((p) => p + 1)}
-								className="gap-1"
+								className="gap-1 h-8 px-3"
 							>
 								Next <ChevronRight className="h-4 w-4" />
 							</Button>

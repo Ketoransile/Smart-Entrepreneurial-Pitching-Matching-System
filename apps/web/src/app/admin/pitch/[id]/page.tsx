@@ -11,6 +11,7 @@ import {
 	Lightbulb,
 	Loader2,
 	Search,
+	Sparkles,
 	XCircle,
 } from "lucide-react";
 import Image from "next/image";
@@ -200,27 +201,44 @@ export default function AdminPitchViewPage() {
 	return (
 		<ProtectedRoute allowedRoles={["admin"]}>
 			<DashboardLayout navItems={ADMIN_NAV} title="SEPMS">
-				<div className="mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-					<div className="flex items-start sm:items-center gap-4 pr-2">
+				{/* Premium Hero Header */}
+				<div className="admin-greeting-card bg-card mb-8 p-6 sm:p-8 shrink-0 rounded-2xl shadow-xl shadow-primary/5 border border-border/80 flex flex-col sm:flex-row sm:items-center justify-between gap-6 relative overflow-hidden group">
+					<div className="absolute top-0 right-0 w-64 h-64 bg-primary/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 pointer-events-none" />
+
+					<div className="flex items-start sm:items-center gap-5 relative z-10">
 						<Button
-							variant="ghost"
+							variant="outline"
 							size="icon"
 							onClick={() => router.back()}
-							className="h-10 w-10 shrink-0 mt-0.5 sm:mt-0"
+							className="h-11 w-11 shrink-0 rounded-xl shadow-sm border-border/60 hover:bg-muted/50 transition-colors"
 						>
-							<ArrowLeft className="h-5 w-5" />
+							<ArrowLeft className="h-5 w-5 text-muted-foreground group-hover:text-foreground transition-colors" />
 						</Button>
 						<div className="min-w-0 flex-1">
-							<h1 className="text-xl sm:text-2xl font-bold tracking-tight break-words">
+							<h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight break-words admin-header-gradient pb-1">
 								{pitch.title}
 							</h1>
-							<p className="text-sm text-muted-foreground mt-1 truncate">
-								By {pitch.entrepreneurId?.fullName || "Unknown"} (
-								{pitch.entrepreneurId?.email || "No Email"})
-							</p>
+							<div className="flex items-center gap-2 text-sm text-muted-foreground mt-1.5 font-medium">
+								<span className="truncate text-foreground/80">
+									By {pitch.entrepreneurId?.fullName || "Unknown"}
+								</span>
+								<span className="h-1 w-1 rounded-full bg-border" />
+								<span className="truncate">
+									{pitch.entrepreneurId?.email || "No Email"}
+								</span>
+							</div>
 						</div>
 					</div>
-					<div className="flex flex-wrap sm:flex-nowrap items-center gap-3 w-full sm:w-auto">
+
+					<div className="flex flex-wrap sm:flex-nowrap items-center gap-3 w-full sm:w-auto relative z-10 shrink-0">
+						{pitch.aiScore !== undefined && (
+							<div className="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-primary/20 bg-primary/5">
+								<Sparkles className="h-4 w-4 text-primary" />
+								<span className="text-sm font-bold text-primary">
+									AI Score: {pitch.aiScore}%
+								</span>
+							</div>
+						)}
 						<Badge
 							variant={
 								pitch.status === "approved"
@@ -229,46 +247,60 @@ export default function AdminPitchViewPage() {
 										? "destructive"
 										: "secondary"
 							}
-							className="capitalize whitespace-nowrap"
+							className="capitalize whitespace-nowrap px-4 py-1.5 text-sm font-semibold rounded-lg shadow-sm"
 						>
 							{pitch.status.replace("_", " ")}
 						</Badge>
-						{pitch.aiScore !== undefined && (
-							<Badge
-								variant="outline"
-								className="border-primary/50 text-primary whitespace-nowrap"
-							>
-								AI Score: {pitch.aiScore}%
-							</Badge>
-						)}
 					</div>
 				</div>
 
 				{/* AI Trust Score Banner */}
 				{trustScore && (
 					<div
-						className={`mb-6 rounded-lg border p-4 flex items-center justify-between gap-4 ${
+						className={`mb-8 overflow-hidden rounded-2xl shadow-sm border flex items-center justify-between gap-6 relative ${
 							trustScore.flag === "Flagged: Suspect Content"
-								? "border-destructive/40 bg-destructive/5"
-								: "border-emerald-500/30 bg-emerald-500/5"
+								? "border-destructive/30 bg-gradient-to-r from-destructive/10 to-transparent"
+								: "border-emerald-500/20 bg-gradient-to-r from-emerald-500/10 to-transparent"
 						}`}
 					>
-						<div className="flex items-center gap-3">
+						<div
+							className="absolute left-0 top-0 bottom-0 w-1.5 opacity-80 backdrop-blur-sm shadow-inner"
+							style={{
+								backgroundColor:
+									trustScore.flag === "Flagged: Suspect Content"
+										? "var(--destructive)"
+										: "#10b981",
+							}}
+						/>
+
+						<div className="p-5 sm:p-6 flex items-center gap-5 w-full">
 							<div
-								className={`flex flex-col items-center justify-center h-14 w-14 rounded-full border-4 shrink-0 ${
+								className={`flex flex-col items-center justify-center h-16 w-16 rounded-2xl border-2 shrink-0 shadow-sm bg-background/50 backdrop-blur-md ${
 									trustScore.flag === "Flagged: Suspect Content"
 										? "border-destructive/40 text-destructive"
 										: "border-emerald-500/40 text-emerald-600"
 								}`}
 							>
-								<span className="text-sm font-bold">
+								<span className="text-lg font-bold tracking-tighter">
 									{trustScore.score.toFixed(0)}%
 								</span>
 							</div>
-							<div>
-								<p className="text-sm font-semibold">AI Trust Score</p>
+							<div className="flex-1">
+								<div className="flex items-center gap-3 mb-1">
+									<h3 className="text-base font-bold text-foreground">
+										AI Intelligence Report
+									</h3>
+									{trustScore.flag === "Flagged: Suspect Content" && (
+										<Badge
+											variant="destructive"
+											className="shrink-0 uppercase text-[10px] tracking-widest animate-pulse"
+										>
+											Action Required
+										</Badge>
+									)}
+								</div>
 								<p
-									className={`text-xs mt-0.5 font-medium ${
+									className={`text-sm font-semibold tracking-wide ${
 										trustScore.flag === "Flagged: Suspect Content"
 											? "text-destructive"
 											: "text-emerald-600"
@@ -276,29 +308,26 @@ export default function AdminPitchViewPage() {
 								>
 									{trustScore.flag}
 								</p>
-								<p className="text-xs text-muted-foreground mt-0.5">
-									Based on pitch text quality and content analysis
+								<p className="text-xs text-muted-foreground mt-1.5 font-medium max-w-2xl">
+									This evaluation is generated automatically by analyzing the
+									linguistic patterns, semantic density, and overall structural
+									coherence of the submitted pitch text.
 								</p>
 							</div>
 						</div>
-						{trustScore.flag === "Flagged: Suspect Content" && (
-							<Badge variant="destructive" className="shrink-0">
-								Review Carefully
-							</Badge>
-						)}
 					</div>
 				)}
 
 				<div className="grid gap-6 md:grid-cols-3">
 					<div className="md:col-span-2 space-y-6">
-						<Card>
-							<CardHeader>
-								<CardTitle className="flex items-center gap-2">
+						<Card className="bg-card shadow-sm border-border/60 hover:shadow-md transition-shadow overflow-hidden rounded-2xl">
+							<CardHeader className="bg-muted/30 border-b border-border/40 pb-4 pt-6">
+								<CardTitle className="flex items-center gap-2.5 text-lg admin-header-gradient">
 									<Search className="h-5 w-5 text-primary" />
 									Executive Summary
 								</CardTitle>
 							</CardHeader>
-							<CardContent>
+							<CardContent className="pt-6">
 								<p className="text-sm whitespace-pre-wrap leading-relaxed text-muted-foreground">
 									{pitch.summary || "No executive summary provided."}
 								</p>
@@ -319,14 +348,14 @@ export default function AdminPitchViewPage() {
 							</CardContent>
 						</Card>
 
-						<Card>
-							<CardHeader>
-								<CardTitle className="flex items-center gap-2 text-lg">
+						<Card className="bg-card shadow-sm border-border/60 hover:shadow-md transition-shadow overflow-hidden rounded-2xl">
+							<CardHeader className="bg-muted/30 border-b border-border/40 pb-4 pt-6">
+								<CardTitle className="flex items-center gap-2.5 text-lg admin-header-gradient">
 									<XCircle className="h-5 w-5 text-destructive" />
 									The Problem
 								</CardTitle>
 							</CardHeader>
-							<CardContent className="space-y-4">
+							<CardContent className="space-y-5 pt-6">
 								<div>
 									<h4 className="text-sm font-semibold mb-1">
 										Problem Statement
@@ -352,14 +381,14 @@ export default function AdminPitchViewPage() {
 							</CardContent>
 						</Card>
 
-						<Card>
-							<CardHeader>
-								<CardTitle className="flex items-center gap-2 text-lg">
+						<Card className="bg-card shadow-sm border-border/60 hover:shadow-md transition-shadow overflow-hidden rounded-2xl">
+							<CardHeader className="bg-muted/30 border-b border-border/40 pb-4 pt-6">
+								<CardTitle className="flex items-center gap-2.5 text-lg admin-header-gradient">
 									<Lightbulb className="h-5 w-5 text-amber-500" />
 									The Solution
 								</CardTitle>
 							</CardHeader>
-							<CardContent className="space-y-4">
+							<CardContent className="space-y-5 pt-6">
 								<div>
 									<h4 className="text-sm font-semibold mb-1">
 										Solution Description
@@ -389,14 +418,14 @@ export default function AdminPitchViewPage() {
 							</CardContent>
 						</Card>
 
-						<Card>
-							<CardHeader>
-								<CardTitle className="flex items-center gap-2 text-lg">
+						<Card className="bg-card shadow-sm border-border/60 hover:shadow-md transition-shadow overflow-hidden rounded-2xl">
+							<CardHeader className="bg-muted/30 border-b border-border/40 pb-4 pt-6">
+								<CardTitle className="flex items-center gap-2.5 text-lg admin-header-gradient">
 									<BarChart3 className="h-5 w-5 text-blue-500" />
 									Business Model
 								</CardTitle>
 							</CardHeader>
-							<CardContent className="space-y-4">
+							<CardContent className="space-y-5 pt-6">
 								<div>
 									<h4 className="text-sm font-semibold mb-1">
 										Revenue Streams
@@ -429,9 +458,9 @@ export default function AdminPitchViewPage() {
 					</div>
 
 					<div className="space-y-6">
-						<Card className="border-primary/20 bg-primary/5">
-							<CardHeader>
-								<CardTitle className="flex items-center gap-2 text-lg">
+						<Card className="border-primary/30 shadow-lg shadow-primary/5 bg-gradient-to-br from-primary/10 to-background rounded-2xl overflow-hidden">
+							<CardHeader className="pb-4 pt-6">
+								<CardTitle className="flex items-center gap-2.5 text-lg admin-header-gradient">
 									<DollarSign className="h-5 w-5 text-primary" />
 									Funding Ask
 								</CardTitle>
@@ -478,10 +507,10 @@ export default function AdminPitchViewPage() {
 						</Card>
 
 						{/* Admin Action Box */}
-						<Card className="border-amber-500/30">
-							<CardHeader className="bg-amber-500/5 pb-4">
-								<CardTitle className="text-base flex items-center gap-2">
-									<ClipboardList className="h-4 w-4" />
+						<Card className="border-amber-500/40 shadow-lg shadow-amber-500/5 bg-background rounded-2xl overflow-hidden">
+							<CardHeader className="bg-gradient-to-br from-amber-500/10 to-transparent pb-4 pt-6 border-b border-amber-500/10">
+								<CardTitle className="text-base flex items-center gap-2.5 text-amber-600 font-bold">
+									<ClipboardList className="h-5 w-5" />
 									Administrator Actions
 								</CardTitle>
 								<CardDescription>
@@ -523,9 +552,9 @@ export default function AdminPitchViewPage() {
 							</CardContent>
 						</Card>
 
-						<Card>
-							<CardHeader>
-								<CardTitle className="flex items-center gap-2 text-lg">
+						<Card className="bg-card shadow-sm border-border/60 hover:shadow-md transition-shadow overflow-hidden rounded-2xl">
+							<CardHeader className="bg-muted/30 border-b border-border/40 pb-4 pt-6">
+								<CardTitle className="flex items-center gap-2.5 text-lg admin-header-gradient">
 									<FileUp className="h-5 w-5 text-muted-foreground" />
 									Appended Documents
 								</CardTitle>

@@ -75,14 +75,16 @@ export default function EntrepreneurMeetingsPage() {
 	return (
 		<ProtectedRoute allowedRoles={["entrepreneur"]}>
 			<DashboardLayout navItems={ENTREPRENEUR_NAV} title="SEPMS">
-				<div className="mb-8">
-					<h1 className="text-2xl font-bold tracking-tight flex items-center gap-2">
-						<CalendarDays className="h-6 w-6 text-primary" />
-						My Meetings
-					</h1>
-					<p className="mt-1 text-muted-foreground">
-						Video calls scheduled by investors for your pitches.
-					</p>
+				<div className="admin-greeting-card bg-card mb-8 p-6 sm:p-8 admin-content-fade">
+					<div>
+						<h1 className="text-2xl font-bold tracking-tight admin-header-gradient flex items-center gap-2">
+							<CalendarDays className="h-6 w-6 text-primary" />
+							My Meetings
+						</h1>
+						<p className="mt-1.5 text-muted-foreground text-sm sm:text-base">
+							Video calls scheduled by investors for your pitches.
+						</p>
+					</div>
 				</div>
 
 				{loading ? (

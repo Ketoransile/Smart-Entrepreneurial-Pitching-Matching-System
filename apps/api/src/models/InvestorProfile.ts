@@ -130,7 +130,6 @@ InvestorProfileSchema.index({
 	"investmentRange.max": 1,
 });
 
-export const InvestorProfile = (mongoose.models.InvestorProfile as mongoose.Model<IInvestorProfile>) || mongoose.model<IInvestorProfile>(
-	"InvestorProfile",
-	InvestorProfileSchema,
-);
+export const InvestorProfile =
+	(mongoose.models.InvestorProfile as mongoose.Model<IInvestorProfile>) ||
+	mongoose.model<IInvestorProfile>("InvestorProfile", InvestorProfileSchema);
