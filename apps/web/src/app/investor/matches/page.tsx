@@ -3,12 +3,10 @@
 import {
 	BadgeCheck,
 	Briefcase,
-	CalendarDays,
 	ChevronDown,
 	ChevronUp,
 	Loader2,
 	Sparkles,
-	Video,
 	XCircle,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
@@ -16,9 +14,6 @@ import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 import DashboardLayout from "@/components/DashboardLayout";
 import ProtectedRoute from "@/components/ProtectedRoute";
-import ScheduleMeetingModal, {
-	type ScheduledMeeting,
-} from "@/components/ScheduleMeetingModal";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -108,11 +103,6 @@ export default function InvestorMatchesPage() {
 	const [statusFilter, setStatusFilter] = useState<string>("all");
 	const [responding, setResponding] = useState<string | null>(null);
 	const [expanded, setExpanded] = useState<Set<string>>(new Set());
-	const [scheduleTarget, setScheduleTarget] = useState<Match | null>(null);
-	// meetingId keyed by matchId
-	const [meetingMap, setMeetingMap] = useState<
-		Record<string, ScheduledMeeting>
-	>({});
 
 	// ── Fetch ──────────────────────────────────────────────────────────────
 
@@ -166,17 +156,15 @@ export default function InvestorMatchesPage() {
 			if (data.status === "success") {
 				toast.success(
 					status === "accepted"
-						? "Match accepted — invitation sent"
+						? "Match accepted — redirecting to chat"
 						: "Match declined",
 				);
-				// Update locally so UI reflects immediately
 				setMatches((prev) =>
 					prev.map((m) => (m._id === matchId ? { ...m, status } : m)),
 				);
-				// After accepting, open schedule modal
-				if (status === "accepted") {
-					const target = matches.find((m) => m._id === matchId);
-					if (target) setScheduleTarget(target);
+				// On accept: go straight to the conversation
+				if (status === "accepted" && data.conversationId) {
+					router.push(`/investor/messages?open=${data.conversationId}`);
 				}
 			} else {
 				toast.error(data.message ?? "Failed to respond");
@@ -410,35 +398,6 @@ export default function InvestorMatchesPage() {
 													View Pitch
 												</Button>
 
-												{/* Show Schedule button if accepted but no meeting */}
-												{match.status === "accepted" &&
-													!meetingMap[match._id] && (
-														<Button
-															variant="outline"
-															size="sm"
-															onClick={() => setScheduleTarget(match)}
-														>
-															<CalendarDays className="h-3.5 w-3.5 mr-1" />
-															Schedule
-														</Button>
-													)}
-
-												{/* Show Join button if meeting exists */}
-												{meetingMap[match._id] && (
-													<Button
-														size="sm"
-														onClick={() =>
-															router.push(
-																`/investor/meeting/${meetingMap[match._id]._id}`,
-															)
-														}
-														className="bg-green-600 hover:bg-green-700"
-													>
-														<Video className="h-3.5 w-3.5 mr-1" />
-														Join
-													</Button>
-												)}
-
 												{isPending && (
 													<>
 														<Button
@@ -477,23 +436,6 @@ export default function InvestorMatchesPage() {
 					</div>
 				)}
 			</DashboardLayout>
-
-			{/* Schedule Meeting Modal */}
-			{scheduleTarget && (
-				<ScheduleMeetingModal
-					submissionId={scheduleTarget.submissionId._id}
-					submissionTitle={scheduleTarget.submissionId.title}
-					entrepreneurUserId={""}
-					onClose={() => setScheduleTarget(null)}
-					onScheduled={(meeting) => {
-						setMeetingMap((prev) => ({
-							...prev,
-							[scheduleTarget._id]: meeting,
-						}));
-						setScheduleTarget(null);
-					}}
-				/>
-			)}
 		</ProtectedRoute>
 	);
 }
