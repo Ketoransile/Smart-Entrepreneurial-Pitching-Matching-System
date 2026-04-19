@@ -155,8 +155,12 @@ function EntrepreneurDashboardInner() {
 									<FileText className="h-4.5 w-4.5 text-white" />
 								</div>
 								<div className="min-w-0 flex-1">
-									<p className="text-[11px] uppercase tracking-wider font-semibold text-muted-foreground/70">Total Pitches</p>
-									<p className="text-2xl font-bold tracking-tight">{submissions.length}</p>
+									<p className="text-[11px] uppercase tracking-wider font-semibold text-muted-foreground/70">
+										Total Pitches
+									</p>
+									<p className="text-2xl font-bold tracking-tight">
+										{submissions.length}
+									</p>
 									<p className="text-xs text-muted-foreground mt-0.5">
 										{drafts.length} draft{drafts.length !== 1 ? "s" : ""}
 									</p>
@@ -171,8 +175,12 @@ function EntrepreneurDashboardInner() {
 									<Send className="h-4.5 w-4.5 text-white" />
 								</div>
 								<div className="min-w-0 flex-1">
-									<p className="text-[11px] uppercase tracking-wider font-semibold text-muted-foreground/70">Submitted</p>
-									<p className="text-2xl font-bold tracking-tight">{submitted.length}</p>
+									<p className="text-[11px] uppercase tracking-wider font-semibold text-muted-foreground/70">
+										Submitted
+									</p>
+									<p className="text-2xl font-bold tracking-tight">
+										{submitted.length}
+									</p>
 									<p className="text-xs text-muted-foreground mt-0.5">
 										Awaiting review
 									</p>
@@ -187,8 +195,12 @@ function EntrepreneurDashboardInner() {
 									<Handshake className="h-4.5 w-4.5 text-white" />
 								</div>
 								<div className="min-w-0 flex-1">
-									<p className="text-[11px] uppercase tracking-wider font-semibold text-muted-foreground/70">Matches</p>
-									<p className="text-2xl font-bold tracking-tight">{acceptedMatchCount}</p>
+									<p className="text-[11px] uppercase tracking-wider font-semibold text-muted-foreground/70">
+										Matches
+									</p>
+									<p className="text-2xl font-bold tracking-tight">
+										{acceptedMatchCount}
+									</p>
 									<p className="text-xs text-muted-foreground mt-0.5">
 										Accepted investor matches
 									</p>

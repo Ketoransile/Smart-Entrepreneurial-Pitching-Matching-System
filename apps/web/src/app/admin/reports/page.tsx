@@ -38,8 +38,8 @@ import {
 	SelectValue,
 } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
-import { useAuth } from "@/context/AuthContext";
 import { ADMIN_NAV } from "@/constants/navigation";
+import { useAuth } from "@/context/AuthContext";
 
 interface ReportUser {
 	_id: string;
@@ -58,8 +58,6 @@ interface Report {
 	status: "open" | "resolved";
 	createdAt: string;
 }
-
-
 
 export default function AdminReportsPage() {
 	const { user } = useAuth();
@@ -98,19 +96,25 @@ export default function AdminReportsPage() {
 		fetchReports();
 	}, [fetchReports]);
 
-	const handleResolve = async (reportId: string, action: "unfreeze" | "keep_frozen") => {
+	const handleResolve = async (
+		reportId: string,
+		action: "unfreeze" | "keep_frozen",
+	) => {
 		if (!user) return;
 		setResolving(true);
 		try {
 			const token = await user.getIdToken();
-			const res = await fetch(`${api}/messages/admin/reports/${reportId}/resolve`, {
-				method: "PATCH",
-				headers: {
-					Authorization: `Bearer ${token}`,
-					"Content-Type": "application/json",
+			const res = await fetch(
+				`${api}/messages/admin/reports/${reportId}/resolve`,
+				{
+					method: "PATCH",
+					headers: {
+						Authorization: `Bearer ${token}`,
+						"Content-Type": "application/json",
+					},
+					body: JSON.stringify({ action }),
 				},
-				body: JSON.stringify({ action }),
-			});
+			);
 			if (res.ok) {
 				const data = await res.json();
 				toast.success(data.message);
@@ -144,7 +148,10 @@ export default function AdminReportsPage() {
 							</p>
 						</div>
 						{openCount > 0 && (
-							<Badge variant="destructive" className="text-xs font-medium gap-1.5 py-1 px-3 w-fit">
+							<Badge
+								variant="destructive"
+								className="text-xs font-medium gap-1.5 py-1 px-3 w-fit"
+							>
 								<AlertTriangle className="h-3.5 w-3.5" />
 								{openCount} Open
 							</Badge>
@@ -161,9 +168,13 @@ export default function AdminReportsPage() {
 									<AlertTriangle className="h-4.5 w-4.5 text-white" />
 								</div>
 								<div className="min-w-0 flex-1">
-									<p className="text-[11px] uppercase tracking-wider font-semibold text-muted-foreground/70">Open Reports</p>
+									<p className="text-[11px] uppercase tracking-wider font-semibold text-muted-foreground/70">
+										Open Reports
+									</p>
 									<div className="flex items-baseline gap-2">
-										<p className="text-2xl font-bold tracking-tight">{openCount}</p>
+										<p className="text-2xl font-bold tracking-tight">
+											{openCount}
+										</p>
 										{openCount > 0 && (
 											<span className="text-[10px] font-semibold text-rose-500 bg-rose-500/10 px-1.5 py-0.5 rounded-full">
 												Action needed
@@ -181,8 +192,12 @@ export default function AdminReportsPage() {
 									<CheckCircle2 className="h-4.5 w-4.5 text-white" />
 								</div>
 								<div className="min-w-0 flex-1">
-									<p className="text-[11px] uppercase tracking-wider font-semibold text-muted-foreground/70">Resolved</p>
-									<p className="text-2xl font-bold tracking-tight">{resolvedCount}</p>
+									<p className="text-[11px] uppercase tracking-wider font-semibold text-muted-foreground/70">
+										Resolved
+									</p>
+									<p className="text-2xl font-bold tracking-tight">
+										{resolvedCount}
+									</p>
 								</div>
 							</div>
 						</div>
@@ -194,8 +209,12 @@ export default function AdminReportsPage() {
 									<MessageSquare className="h-4.5 w-4.5 text-white" />
 								</div>
 								<div className="min-w-0 flex-1">
-									<p className="text-[11px] uppercase tracking-wider font-semibold text-muted-foreground/70">Total</p>
-									<p className="text-2xl font-bold tracking-tight">{reports.length}</p>
+									<p className="text-[11px] uppercase tracking-wider font-semibold text-muted-foreground/70">
+										Total
+									</p>
+									<p className="text-2xl font-bold tracking-tight">
+										{reports.length}
+									</p>
 								</div>
 							</div>
 						</div>
@@ -252,7 +271,11 @@ export default function AdminReportsPage() {
 											{/* Status & Date */}
 											<div className="flex items-center gap-2 flex-wrap">
 												<Badge
-													variant={report.status === "open" ? "destructive" : "secondary"}
+													variant={
+														report.status === "open"
+															? "destructive"
+															: "secondary"
+													}
 													className="text-xs capitalize gap-1"
 												>
 													{report.status === "open" ? (
@@ -271,15 +294,20 @@ export default function AdminReportsPage() {
 											<div className="flex items-center gap-3">
 												<Avatar className="h-8 w-8">
 													<AvatarFallback className="text-xs bg-amber-500/10 text-amber-600">
-														{report.reporterId?.fullName?.slice(0, 2).toUpperCase() || "??"}
+														{report.reporterId?.fullName
+															?.slice(0, 2)
+															.toUpperCase() || "??"}
 													</AvatarFallback>
 												</Avatar>
 												<div>
-													<p className="text-xs text-muted-foreground">Reported by</p>
+													<p className="text-xs text-muted-foreground">
+														Reported by
+													</p>
 													<p className="text-sm font-semibold">
 														{report.reporterId?.fullName || "Unknown"}
 														<span className="text-xs text-muted-foreground font-normal ml-1.5">
-															({report.reporterId?.email}) — {report.reporterId?.role}
+															({report.reporterId?.email}) —{" "}
+															{report.reporterId?.role}
 														</span>
 													</p>
 												</div>
@@ -289,15 +317,25 @@ export default function AdminReportsPage() {
 											<div className="flex items-center gap-3">
 												<Avatar className="h-8 w-8">
 													<AvatarFallback className="text-xs bg-destructive/10 text-destructive">
-														{report.reportedUserIds?.[0]?.fullName?.slice(0, 2).toUpperCase() || "??"}
+														{report.reportedUserIds?.[0]?.fullName
+															?.slice(0, 2)
+															.toUpperCase() || "??"}
 													</AvatarFallback>
 												</Avatar>
 												<div>
-													<p className="text-xs text-muted-foreground">Accused user</p>
+													<p className="text-xs text-muted-foreground">
+														Accused user
+													</p>
 													<p className="text-sm font-semibold">
-														{report.reportedUserIds?.map((u) => u.fullName).join(", ") || "Unknown"}
+														{report.reportedUserIds
+															?.map((u) => u.fullName)
+															.join(", ") || "Unknown"}
 														<span className="text-xs text-muted-foreground font-normal ml-1.5">
-															({report.reportedUserIds?.map((u) => u.email).join(", ")}) — {report.reportedUserIds?.[0]?.role}
+															(
+															{report.reportedUserIds
+																?.map((u) => u.email)
+																.join(", ")}
+															) — {report.reportedUserIds?.[0]?.role}
 														</span>
 													</p>
 												</div>
@@ -305,12 +343,18 @@ export default function AdminReportsPage() {
 
 											{/* Reason */}
 											<div className="bg-muted/50 rounded-lg p-3 mt-2">
-												<p className="text-xs font-medium text-muted-foreground mb-1">Reason</p>
+												<p className="text-xs font-medium text-muted-foreground mb-1">
+													Reason
+												</p>
 												<p className="text-sm font-medium">{report.reason}</p>
 												{report.details && (
 													<>
-														<p className="text-xs font-medium text-muted-foreground mt-2 mb-1">Additional Details</p>
-														<p className="text-sm text-muted-foreground whitespace-pre-wrap">{report.details}</p>
+														<p className="text-xs font-medium text-muted-foreground mt-2 mb-1">
+															Additional Details
+														</p>
+														<p className="text-sm text-muted-foreground whitespace-pre-wrap">
+															{report.details}
+														</p>
 													</>
 												)}
 											</div>
@@ -338,7 +382,10 @@ export default function AdminReportsPage() {
 				)}
 
 				{/* Resolve Dialog */}
-				<Dialog open={!!selectedReport} onOpenChange={() => setSelectedReport(null)}>
+				<Dialog
+					open={!!selectedReport}
+					onOpenChange={() => setSelectedReport(null)}
+				>
 					<DialogContent className="sm:max-w-lg">
 						<DialogHeader>
 							<DialogTitle className="flex items-center gap-2">
@@ -346,8 +393,9 @@ export default function AdminReportsPage() {
 								Resolve Misconduct Report
 							</DialogTitle>
 							<DialogDescription>
-								Choose how to handle this report. You can unfreeze the conversation
-								(clearing the user) or keep it frozen (confirming the misconduct).
+								Choose how to handle this report. You can unfreeze the
+								conversation (clearing the user) or keep it frozen (confirming
+								the misconduct).
 							</DialogDescription>
 						</DialogHeader>
 
@@ -355,19 +403,26 @@ export default function AdminReportsPage() {
 							<div className="space-y-3 py-2">
 								<div className="bg-muted/50 rounded-lg p-3">
 									<p className="text-xs text-muted-foreground mb-1">Reporter</p>
-									<p className="text-sm font-semibold">{selectedReport.reporterId?.fullName} ({selectedReport.reporterId?.email})</p>
+									<p className="text-sm font-semibold">
+										{selectedReport.reporterId?.fullName} (
+										{selectedReport.reporterId?.email})
+									</p>
 								</div>
 								<div className="bg-muted/50 rounded-lg p-3">
 									<p className="text-xs text-muted-foreground mb-1">Accused</p>
 									<p className="text-sm font-semibold">
-										{selectedReport.reportedUserIds?.map((u) => `${u.fullName} (${u.email})`).join(", ")}
+										{selectedReport.reportedUserIds
+											?.map((u) => `${u.fullName} (${u.email})`)
+											.join(", ")}
 									</p>
 								</div>
 								<div className="bg-muted/50 rounded-lg p-3">
 									<p className="text-xs text-muted-foreground mb-1">Reason</p>
 									<p className="text-sm">{selectedReport.reason}</p>
 									{selectedReport.details && (
-										<p className="text-sm text-muted-foreground mt-1">{selectedReport.details}</p>
+										<p className="text-sm text-muted-foreground mt-1">
+											{selectedReport.details}
+										</p>
 									)}
 								</div>
 							</div>
@@ -384,18 +439,32 @@ export default function AdminReportsPage() {
 							<Button
 								variant="destructive"
 								disabled={resolving}
-								onClick={() => selectedReport && handleResolve(selectedReport._id, "keep_frozen")}
+								onClick={() =>
+									selectedReport &&
+									handleResolve(selectedReport._id, "keep_frozen")
+								}
 								className="gap-1.5"
 							>
-								{resolving ? <Loader2 className="h-4 w-4 animate-spin" /> : <XCircle className="h-4 w-4" />}
+								{resolving ? (
+									<Loader2 className="h-4 w-4 animate-spin" />
+								) : (
+									<XCircle className="h-4 w-4" />
+								)}
 								Keep Frozen
 							</Button>
 							<Button
 								disabled={resolving}
-								onClick={() => selectedReport && handleResolve(selectedReport._id, "unfreeze")}
+								onClick={() =>
+									selectedReport &&
+									handleResolve(selectedReport._id, "unfreeze")
+								}
 								className="gap-1.5"
 							>
-								{resolving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Unlock className="h-4 w-4" />}
+								{resolving ? (
+									<Loader2 className="h-4 w-4 animate-spin" />
+								) : (
+									<Unlock className="h-4 w-4" />
+								)}
 								Unfreeze Conversation
 							</Button>
 						</DialogFooter>

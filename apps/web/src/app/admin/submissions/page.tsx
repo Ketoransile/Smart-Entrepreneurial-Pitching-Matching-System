@@ -39,8 +39,8 @@ import {
 	TableHeader,
 	TableRow,
 } from "@/components/ui/table";
-import { useAuth } from "@/context/AuthContext";
 import { ADMIN_NAV } from "@/constants/navigation";
+import { useAuth } from "@/context/AuthContext";
 
 interface Submission {
 	_id: string;
@@ -55,8 +55,6 @@ interface Submission {
 	updatedAt: string;
 	createdAt: string;
 }
-
-
 
 const STATUS_OPTIONS = [
 	{ value: "all", label: "All Statuses" },
@@ -192,7 +190,10 @@ export default function AdminSubmissionsPage() {
 								Review and manage all entrepreneur pitch submissions
 							</p>
 						</div>
-						<Badge variant="outline" className="text-xs font-medium gap-1.5 py-1 px-3 w-fit">
+						<Badge
+							variant="outline"
+							className="text-xs font-medium gap-1.5 py-1 px-3 w-fit"
+						>
 							<FileText className="h-3.5 w-3.5" />
 							{total} Total
 						</Badge>
@@ -208,7 +209,9 @@ export default function AdminSubmissionsPage() {
 									<FileText className="h-4.5 w-4.5 text-white" />
 								</div>
 								<div className="min-w-0 flex-1">
-									<p className="text-[11px] uppercase tracking-wider font-semibold text-muted-foreground/70">Total</p>
+									<p className="text-[11px] uppercase tracking-wider font-semibold text-muted-foreground/70">
+										Total
+									</p>
 									<p className="text-2xl font-bold tracking-tight">{total}</p>
 								</div>
 							</div>
@@ -221,10 +224,14 @@ export default function AdminSubmissionsPage() {
 									<Clock className="h-4.5 w-4.5 text-white" />
 								</div>
 								<div className="min-w-0 flex-1">
-									<p className="text-[11px] uppercase tracking-wider font-semibold text-muted-foreground/70">Pending Review</p>
+									<p className="text-[11px] uppercase tracking-wider font-semibold text-muted-foreground/70">
+										Pending Review
+									</p>
 									<div className="flex items-baseline gap-2">
-										<p className="text-2xl font-bold tracking-tight">{(stats.submitted || 0) + (stats.under_review || 0)}</p>
-										{((stats.submitted || 0) + (stats.under_review || 0)) > 0 && (
+										<p className="text-2xl font-bold tracking-tight">
+											{(stats.submitted || 0) + (stats.under_review || 0)}
+										</p>
+										{(stats.submitted || 0) + (stats.under_review || 0) > 0 && (
 											<span className="text-[10px] font-semibold text-amber-500 bg-amber-500/10 px-1.5 py-0.5 rounded-full">
 												Needs review
 											</span>
@@ -241,8 +248,12 @@ export default function AdminSubmissionsPage() {
 									<CheckCircle2 className="h-4.5 w-4.5 text-white" />
 								</div>
 								<div className="min-w-0 flex-1">
-									<p className="text-[11px] uppercase tracking-wider font-semibold text-muted-foreground/70">Approved</p>
-									<p className="text-2xl font-bold tracking-tight">{stats.approved || 0}</p>
+									<p className="text-[11px] uppercase tracking-wider font-semibold text-muted-foreground/70">
+										Approved
+									</p>
+									<p className="text-2xl font-bold tracking-tight">
+										{stats.approved || 0}
+									</p>
 								</div>
 							</div>
 						</div>
@@ -254,8 +265,12 @@ export default function AdminSubmissionsPage() {
 									<XCircle className="h-4.5 w-4.5 text-white" />
 								</div>
 								<div className="min-w-0 flex-1">
-									<p className="text-[11px] uppercase tracking-wider font-semibold text-muted-foreground/70">Rejected</p>
-									<p className="text-2xl font-bold tracking-tight">{(stats.rejected || 0) + (stats.suspended || 0)}</p>
+									<p className="text-[11px] uppercase tracking-wider font-semibold text-muted-foreground/70">
+										Rejected
+									</p>
+									<p className="text-2xl font-bold tracking-tight">
+										{(stats.rejected || 0) + (stats.suspended || 0)}
+									</p>
 								</div>
 							</div>
 						</div>
@@ -273,23 +288,39 @@ export default function AdminSubmissionsPage() {
 							className="pl-9"
 						/>
 					</div>
-					<Select value={statusFilter} onValueChange={(v) => { setStatusFilter(v); setPage(1); }}>
+					<Select
+						value={statusFilter}
+						onValueChange={(v) => {
+							setStatusFilter(v);
+							setPage(1);
+						}}
+					>
 						<SelectTrigger className="w-full sm:w-44">
 							<SelectValue placeholder="Status" />
 						</SelectTrigger>
 						<SelectContent>
 							{STATUS_OPTIONS.map((o) => (
-								<SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
+								<SelectItem key={o.value} value={o.value}>
+									{o.label}
+								</SelectItem>
 							))}
 						</SelectContent>
 					</Select>
-					<Select value={sectorFilter} onValueChange={(v) => { setSectorFilter(v); setPage(1); }}>
+					<Select
+						value={sectorFilter}
+						onValueChange={(v) => {
+							setSectorFilter(v);
+							setPage(1);
+						}}
+					>
 						<SelectTrigger className="w-full sm:w-44">
 							<SelectValue placeholder="Sector" />
 						</SelectTrigger>
 						<SelectContent>
 							{SECTOR_OPTIONS.map((o) => (
-								<SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
+								<SelectItem key={o.value} value={o.value}>
+									{o.label}
+								</SelectItem>
 							))}
 						</SelectContent>
 					</Select>
@@ -306,7 +337,9 @@ export default function AdminSubmissionsPage() {
 					<Card className="border-dashed">
 						<CardContent className="flex flex-col items-center justify-center py-16">
 							<ClipboardList className="h-10 w-10 text-muted-foreground mb-4" />
-							<h3 className="text-lg font-semibold mb-2">No submissions found</h3>
+							<h3 className="text-lg font-semibold mb-2">
+								No submissions found
+							</h3>
 							<p className="text-muted-foreground text-center max-w-md text-sm">
 								{searchQuery || statusFilter !== "all" || sectorFilter !== "all"
 									? "Try adjusting your filters to find what you're looking for."
@@ -321,16 +354,26 @@ export default function AdminSubmissionsPage() {
 								<TableHeader>
 									<TableRow className="bg-muted/30">
 										<TableHead className="font-semibold">Pitch</TableHead>
-										<TableHead className="font-semibold hidden md:table-cell">Founder</TableHead>
-										<TableHead className="font-semibold hidden lg:table-cell">Sector</TableHead>
+										<TableHead className="font-semibold hidden md:table-cell">
+											Founder
+										</TableHead>
+										<TableHead className="font-semibold hidden lg:table-cell">
+											Sector
+										</TableHead>
 										<TableHead className="font-semibold">
 											<div className="flex items-center gap-1">
 												Status <ArrowUpDown className="h-3 w-3" />
 											</div>
 										</TableHead>
-										<TableHead className="font-semibold hidden sm:table-cell text-right">Amount</TableHead>
-										<TableHead className="font-semibold hidden lg:table-cell">AI Score</TableHead>
-										<TableHead className="font-semibold text-right">Action</TableHead>
+										<TableHead className="font-semibold hidden sm:table-cell text-right">
+											Amount
+										</TableHead>
+										<TableHead className="font-semibold hidden lg:table-cell">
+											AI Score
+										</TableHead>
+										<TableHead className="font-semibold text-right">
+											Action
+										</TableHead>
 									</TableRow>
 								</TableHeader>
 								<TableBody>
@@ -341,9 +384,13 @@ export default function AdminSubmissionsPage() {
 										>
 											<TableCell>
 												<div>
-													<p className="font-medium text-sm truncate max-w-[200px]">{sub.title}</p>
+													<p className="font-medium text-sm truncate max-w-[200px]">
+														{sub.title}
+													</p>
 													<p className="text-xs text-muted-foreground mt-0.5">
-														{new Date(sub.submittedAt || sub.createdAt).toLocaleDateString()}
+														{new Date(
+															sub.submittedAt || sub.createdAt,
+														).toLocaleDateString()}
 													</p>
 												</div>
 											</TableCell>
@@ -363,7 +410,10 @@ export default function AdminSubmissionsPage() {
 												</Badge>
 											</TableCell>
 											<TableCell>
-												<Badge variant={statusBadge(sub.status)} className="text-xs gap-1 capitalize">
+												<Badge
+													variant={statusBadge(sub.status)}
+													className="text-xs gap-1 capitalize"
+												>
 													{statusIcon(sub.status)}
 													{sub.status.replace("_", " ")}
 												</Badge>
@@ -379,7 +429,9 @@ export default function AdminSubmissionsPage() {
 														{sub.aiScore}/100
 													</Badge>
 												) : (
-													<span className="text-xs text-muted-foreground">—</span>
+													<span className="text-xs text-muted-foreground">
+														—
+													</span>
 												)}
 											</TableCell>
 											<TableCell className="text-right">

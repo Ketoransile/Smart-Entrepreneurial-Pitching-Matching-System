@@ -43,10 +43,8 @@ import { Label } from "@/components/ui/label";
 import { Progress } from "@/components/ui/progress";
 import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useAuth } from "@/context/AuthContext";
 import { INVESTOR_NAV } from "@/constants/navigation";
-
-
+import { useAuth } from "@/context/AuthContext";
 
 // ─── File Upload Card ───
 function FileUploadCard({

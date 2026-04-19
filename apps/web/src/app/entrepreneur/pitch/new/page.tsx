@@ -420,62 +420,131 @@ function NewPitchPageInner() {
 		<ProtectedRoute allowedRoles={["entrepreneur"]}>
 			<div className="min-h-screen bg-background">
 				{/* Header */}
-				<header className="border-b border-border/40 bg-card">
-					<div className="mx-auto flex h-16 max-w-4xl items-center justify-between px-4">
-						<Button
-							variant="ghost"
-							onClick={() => router.push("/entrepreneur/dashboard")}
-						>
-							← Back to Dashboard
-						</Button>
-						<div className="flex items-center gap-3">
+				{/* Modern Header */}
+				<header className="sticky top-0 z-30 bg-background/80 backdrop-blur-md border-b border-border/40">
+					<div className="mx-auto flex h-16 max-w-4xl items-center justify-between px-4 sm:px-6">
+						<div className="flex items-center gap-2">
+							<Button
+								variant="ghost"
+								size="icon"
+								onClick={() => router.push("/entrepreneur/dashboard")}
+								className="mr-1 hover:bg-muted/50"
+							>
+								<svg
+									xmlns="http://www.w3.org/2000/svg"
+									width="20"
+									height="20"
+									viewBox="0 0 24 24"
+									fill="none"
+									stroke="currentColor"
+									strokeWidth="2"
+									strokeLinecap="round"
+									strokeLinejoin="round"
+								>
+									<path d="m15 18-6-6 6-6" />
+								</svg>
+							</Button>
+							<h1 className="text-lg font-bold tracking-tight sm:text-xl admin-header-gradient">
+								Pitch Creation Studio
+							</h1>
+						</div>
+
+						<div className="flex items-center gap-4">
 							{saveMessage && (
-								<span className="text-sm text-muted-foreground animate-in fade-in">
+								<span className="hidden sm:inline-block text-xs font-medium text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-2.5 py-1 rounded-full animate-in fade-in zoom-in duration-300">
 									{saveMessage}
 								</span>
 							)}
 							<Button
 								variant="outline"
 								size="sm"
+								className="h-9 gap-2 px-4 shadow-sm"
 								onClick={() => saveDraft()}
 								disabled={saving}
 							>
-								{saving ? "Saving..." : "Save Draft"}
+								{saving ? (
+									<>
+										<Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+										<span className="hidden sm:inline">Saving...</span>
+									</>
+								) : (
+									<>
+										<ClipboardList className="h-4 w-4 text-primary" />
+										<span className="hidden sm:inline">Save Draft</span>
+									</>
+								)}
 							</Button>
 						</div>
 					</div>
 				</header>
 
 				<main className="mx-auto max-w-4xl px-4 py-8">
-					{/* Progress */}
-					<div className="mb-8">
-						<div className="flex items-center justify-between mb-3">
-							{STEPS.map((step) => (
-								<Button
-									key={step.id}
-									variant="ghost"
-									size="sm"
-									onClick={() => setCurrentStep(step.id)}
-									className={`flex flex-col items-center gap-1 h-auto py-2 px-3 text-xs transition-colors ${
-										step.id === currentStep
-											? "text-primary font-semibold"
-											: step.id < currentStep
-												? "text-muted-foreground"
-												: "text-muted-foreground/50"
-									}`}
-								>
-									<span>{step.icon}</span>
-									<span className="hidden sm:block">{step.title}</span>
-								</Button>
-							))}
+					{/* Progress Stepper */}
+					<div className="mb-8 relative admin-content-fade">
+						<div className="flex items-center justify-between relative z-10">
+							{STEPS.map((step, index) => {
+								const isActive = step.id === currentStep;
+								const isPast = step.id < currentStep;
+
+								return (
+									<button
+										key={step.id}
+										onClick={() => setCurrentStep(step.id)}
+										className={`group flex flex-col items-center gap-2 transition-all duration-300 w-16 sm:w-24 focus:outline-none`}
+									>
+										<div
+											className={`relative flex h-10 w-10 sm:h-12 sm:w-12 items-center justify-center rounded-2xl border-2 transition-all duration-500 shadow-sm
+											${
+												isActive
+													? "border-primary bg-primary/10 text-primary shadow-primary/20 scale-110 ring-4 ring-primary/5"
+													: isPast
+														? "border-emerald-500 bg-emerald-50 text-emerald-600 dark:bg-emerald-500/10 dark:text-emerald-400"
+														: "border-muted-foreground/20 bg-muted/30 text-muted-foreground group-hover:border-muted-foreground/40"
+											}`}
+										>
+											{/* Status indicator icon for past steps */}
+											{isPast ? (
+												<CheckCircle2 className="h-5 w-5 sm:h-6 sm:w-6" />
+											) : (
+												<div className="transform transition-transform group-hover:scale-110">
+													{step.icon}
+												</div>
+											)}
+
+											{/* Glow effect for active step */}
+											{isActive && (
+												<div className="absolute inset-0 rounded-2xl bg-primary/20 blur-md -z-10 animate-pulse" />
+											)}
+										</div>
+										<span
+											className={`text-[10px] sm:text-xs font-semibold uppercase tracking-wider text-center transition-colors ${
+												isActive
+													? "text-primary"
+													: isPast
+														? "text-emerald-600 dark:text-emerald-400"
+														: "text-muted-foreground/70"
+											}`}
+										>
+											{step.title}
+										</span>
+									</button>
+								);
+							})}
 						</div>
-						<Progress value={progress} className="h-2" />
+
+						{/* Background progress track */}
+						<div className="absolute top-5 sm:top-6 left-0 w-full h-1 bg-muted/40 rounded-full -z-0 hidden sm:block">
+							<div
+								className="h-full bg-gradient-to-r from-primary to-emerald-400 rounded-full transition-all duration-700 ease-out"
+								style={{ width: `${progress}%` }}
+							/>
+						</div>
 					</div>
 
 					{/* Step 1: Overview / Metadata */}
 					{currentStep === 1 && (
-						<Card className="animate-in fade-in slide-in-from-bottom-4 duration-500">
-							<CardHeader>
+						<Card className="admin-greeting-card bg-card animate-in fade-in slide-in-from-bottom-4 duration-500 overflow-hidden border-0 shadow-lg">
+							<CardHeader className="bg-primary/5 border-b border-border/40 pb-6">
 								<CardTitle className="flex items-center gap-2">
 									<ClipboardList className="h-5 w-5" /> Pitch Overview
 								</CardTitle>
@@ -589,8 +658,8 @@ function NewPitchPageInner() {
 
 					{/* Step 2: Problem */}
 					{currentStep === 2 && (
-						<Card className="animate-in fade-in slide-in-from-bottom-4 duration-500">
-							<CardHeader>
+						<Card className="admin-greeting-card bg-card animate-in fade-in slide-in-from-bottom-4 duration-500 overflow-hidden border-0 shadow-lg">
+							<CardHeader className="bg-primary/5 border-b border-border/40 pb-6">
 								<CardTitle className="flex items-center gap-2">
 									<Search className="h-5 w-5" /> The Problem
 								</CardTitle>
@@ -649,8 +718,8 @@ function NewPitchPageInner() {
 
 					{/* Step 3: Solution */}
 					{currentStep === 3 && (
-						<Card className="animate-in fade-in slide-in-from-bottom-4 duration-500">
-							<CardHeader>
+						<Card className="admin-greeting-card bg-card animate-in fade-in slide-in-from-bottom-4 duration-500 overflow-hidden border-0 shadow-lg">
+							<CardHeader className="bg-primary/5 border-b border-border/40 pb-6">
 								<CardTitle className="flex items-center gap-2">
 									<Lightbulb className="h-5 w-5" /> Your Solution
 								</CardTitle>
@@ -716,8 +785,8 @@ function NewPitchPageInner() {
 
 					{/* Step 4: Business Model */}
 					{currentStep === 4 && (
-						<Card className="animate-in fade-in slide-in-from-bottom-4 duration-500">
-							<CardHeader>
+						<Card className="admin-greeting-card bg-card animate-in fade-in slide-in-from-bottom-4 duration-500 overflow-hidden border-0 shadow-lg">
+							<CardHeader className="bg-primary/5 border-b border-border/40 pb-6">
 								<CardTitle className="flex items-center gap-2">
 									<BarChart3 className="h-5 w-5" /> Business Model
 								</CardTitle>
@@ -781,8 +850,8 @@ function NewPitchPageInner() {
 
 					{/* Step 5: Financials */}
 					{currentStep === 5 && (
-						<Card className="animate-in fade-in slide-in-from-bottom-4 duration-500">
-							<CardHeader>
+						<Card className="admin-greeting-card bg-card animate-in fade-in slide-in-from-bottom-4 duration-500 overflow-hidden border-0 shadow-lg">
+							<CardHeader className="bg-primary/5 border-b border-border/40 pb-6">
 								<CardTitle className="flex items-center gap-2">
 									<DollarSign className="h-5 w-5" /> Financial Details
 								</CardTitle>
@@ -839,8 +908,8 @@ function NewPitchPageInner() {
 
 					{/* Step 6: Documents */}
 					{currentStep === 6 && (
-						<Card className="animate-in fade-in slide-in-from-bottom-4 duration-500">
-							<CardHeader>
+						<Card className="admin-greeting-card bg-card animate-in fade-in slide-in-from-bottom-4 duration-500 overflow-hidden border-0 shadow-lg">
+							<CardHeader className="bg-primary/5 border-b border-border/40 pb-6">
 								<CardTitle className="flex items-center gap-2">
 									<FileUp className="h-5 w-5" /> Supporting Documents
 								</CardTitle>
@@ -976,20 +1045,24 @@ function NewPitchPageInner() {
 					)}
 
 					{/* Navigation Buttons */}
-					<div className="mt-8 flex items-center justify-between">
+					<div className="mt-8 flex items-center justify-between sticky bottom-0 z-20 bg-background/80 backdrop-blur-md p-4 sm:p-6 mx-[-16px] sm:mx-0 border-t border-border/40 shadow-[0_-10px_40px_-15px_rgba(0,0,0,0.1)] sm:rounded-b-2xl">
 						<Button
 							variant="outline"
 							onClick={goBack}
 							disabled={currentStep === 1}
+							className="shadow-sm hover:shadow-md transition-all"
 						>
 							← Previous
 						</Button>
 
-						<div className="flex items-center gap-2 text-sm text-muted-foreground">
+						<div className="flex items-center gap-2 text-sm font-medium text-muted-foreground/80 bg-muted/30 px-3 py-1.5 rounded-full">
 							Step {currentStep} of {STEPS.length}
 						</div>
 
-						<Button onClick={goNext}>
+						<Button
+							onClick={goNext}
+							className="shadow-md hover:shadow-lg transition-all"
+						>
 							{currentStep === STEPS.length ? "Review Pitch →" : "Next →"}
 						</Button>
 					</div>

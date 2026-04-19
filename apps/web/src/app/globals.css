@@ -173,7 +173,8 @@
 }
 
 @keyframes admin-float {
-	0%, 100% {
+	0%,
+	100% {
 		transform: translateY(0px);
 	}
 	50% {
@@ -193,7 +194,8 @@
 }
 
 @keyframes admin-gradient-shift {
-	0%, 100% {
+	0%,
+	100% {
 		background-position: 0% 50%;
 	}
 	50% {
@@ -205,12 +207,24 @@
 .admin-stat-grid > * {
 	animation: admin-fade-up 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
-.admin-stat-grid > *:nth-child(1) { animation-delay: 0ms; }
-.admin-stat-grid > *:nth-child(2) { animation-delay: 60ms; }
-.admin-stat-grid > *:nth-child(3) { animation-delay: 120ms; }
-.admin-stat-grid > *:nth-child(4) { animation-delay: 180ms; }
-.admin-stat-grid > *:nth-child(5) { animation-delay: 240ms; }
-.admin-stat-grid > *:nth-child(6) { animation-delay: 300ms; }
+.admin-stat-grid > *:nth-child(1) {
+	animation-delay: 0ms;
+}
+.admin-stat-grid > *:nth-child(2) {
+	animation-delay: 60ms;
+}
+.admin-stat-grid > *:nth-child(3) {
+	animation-delay: 120ms;
+}
+.admin-stat-grid > *:nth-child(4) {
+	animation-delay: 180ms;
+}
+.admin-stat-grid > *:nth-child(5) {
+	animation-delay: 240ms;
+}
+.admin-stat-grid > *:nth-child(6) {
+	animation-delay: 300ms;
+}
 
 /* Modern glassmorphism stat card */
 .admin-stat-card {
@@ -227,13 +241,15 @@
 
 .admin-stat-card:hover {
 	transform: translateY(-3px);
-	box-shadow: 0 12px 40px -8px rgba(0, 0, 0, 0.12),
-	            0 0 0 1px rgba(0, 0, 0, 0.06);
+	box-shadow:
+		0 12px 40px -8px rgba(0, 0, 0, 0.12),
+		0 0 0 1px rgba(0, 0, 0, 0.06);
 }
 
 .dark .admin-stat-card:hover {
-	box-shadow: 0 12px 40px -8px rgba(0, 0, 0, 0.5),
-	            0 0 0 1px rgba(255, 255, 255, 0.08);
+	box-shadow:
+		0 12px 40px -8px rgba(0, 0, 0, 0.5),
+		0 0 0 1px rgba(255, 255, 255, 0.08);
 }
 
 /* Decorative shimmer line across the top of cards */
@@ -244,7 +260,12 @@
 	left: 0;
 	right: 0;
 	height: 2px;
-	background: linear-gradient(90deg, transparent, var(--card-accent, currentColor), transparent);
+	background: linear-gradient(
+		90deg,
+		transparent,
+		var(--card-accent, currentColor),
+		transparent
+	);
 	opacity: 0;
 	transition: opacity 0.35s ease;
 }
@@ -319,7 +340,11 @@
 
 /* Page header gradient text */
 .admin-header-gradient {
-	background: linear-gradient(135deg, var(--foreground) 0%, var(--muted-foreground) 100%);
+	background: linear-gradient(
+		135deg,
+		var(--foreground) 0%,
+		var(--muted-foreground) 100%
+	);
 	-webkit-background-clip: text;
 	-webkit-text-fill-color: transparent;
 	background-clip: text;
@@ -338,10 +363,19 @@
 	inset: 0;
 	padding: 1px;
 	border-radius: 1.25rem;
-	background: linear-gradient(135deg, rgba(59, 130, 246, 0.3), rgba(168, 85, 247, 0.3), rgba(236, 72, 153, 0.3));
-	mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+	background: linear-gradient(
+		135deg,
+		rgba(59, 130, 246, 0.3),
+		rgba(168, 85, 247, 0.3),
+		rgba(236, 72, 153, 0.3)
+	);
+	mask:
+		linear-gradient(#fff 0 0) content-box,
+		linear-gradient(#fff 0 0);
 	mask-composite: exclude;
-	-webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+	-webkit-mask:
+		linear-gradient(#fff 0 0) content-box,
+		linear-gradient(#fff 0 0);
 	-webkit-mask-composite: xor;
 	pointer-events: none;
 	background-size: 200% 200%;
@@ -354,11 +388,21 @@
 }
 
 .admin-table-row:hover {
-	background: linear-gradient(90deg, transparent, rgba(59, 130, 246, 0.03), transparent) !important;
+	background: linear-gradient(
+		90deg,
+		transparent,
+		rgba(59, 130, 246, 0.03),
+		transparent
+	) !important;
 }
 
 .dark .admin-table-row:hover {
-	background: linear-gradient(90deg, transparent, rgba(59, 130, 246, 0.06), transparent) !important;
+	background: linear-gradient(
+		90deg,
+		transparent,
+		rgba(59, 130, 246, 0.06),
+		transparent
+	) !important;
 }
 
 /* Badge glow effect */

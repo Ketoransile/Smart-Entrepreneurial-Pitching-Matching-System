@@ -207,7 +207,10 @@ export default function InvestorFeed() {
 								Browse AI-scored pitches tailored to your investment preferences
 							</p>
 						</div>
-						<Badge variant="outline" className="text-xs font-medium gap-1.5 py-1 px-3 w-fit">
+						<Badge
+							variant="outline"
+							className="text-xs font-medium gap-1.5 py-1 px-3 w-fit"
+						>
 							<Compass className="h-3.5 w-3.5" />
 							{total} Available
 						</Badge>
@@ -223,7 +226,9 @@ export default function InvestorFeed() {
 									<Briefcase className="h-4.5 w-4.5 text-white" />
 								</div>
 								<div className="min-w-0 flex-1">
-									<p className="text-[11px] uppercase tracking-wider font-semibold text-muted-foreground/70">Available Pitches</p>
+									<p className="text-[11px] uppercase tracking-wider font-semibold text-muted-foreground/70">
+										Available Pitches
+									</p>
 									<p className="text-2xl font-bold tracking-tight">{total}</p>
 								</div>
 							</div>
@@ -232,7 +237,10 @@ export default function InvestorFeed() {
 					<div
 						className="admin-stat-card bg-card cursor-pointer"
 						onClick={() => router.push("/investor/saved")}
-						onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") router.push("/investor/saved"); }}
+						onKeyDown={(e) => {
+							if (e.key === "Enter" || e.key === " ")
+								router.push("/investor/saved");
+						}}
 						role="button"
 						tabIndex={0}
 					>
@@ -242,8 +250,12 @@ export default function InvestorFeed() {
 									<Heart className="h-4.5 w-4.5 text-white" />
 								</div>
 								<div className="min-w-0 flex-1">
-									<p className="text-[11px] uppercase tracking-wider font-semibold text-muted-foreground/70">Saved</p>
-									<p className="text-2xl font-bold tracking-tight">{savedPitchIds.size}</p>
+									<p className="text-[11px] uppercase tracking-wider font-semibold text-muted-foreground/70">
+										Saved
+									</p>
+									<p className="text-2xl font-bold tracking-tight">
+										{savedPitchIds.size}
+									</p>
 								</div>
 							</div>
 						</div>
@@ -255,7 +267,9 @@ export default function InvestorFeed() {
 									<MessageSquare className="h-4.5 w-4.5 text-white" />
 								</div>
 								<div className="min-w-0 flex-1">
-									<p className="text-[11px] uppercase tracking-wider font-semibold text-muted-foreground/70">Active Conversations</p>
+									<p className="text-[11px] uppercase tracking-wider font-semibold text-muted-foreground/70">
+										Active Conversations
+									</p>
 									<p className="text-2xl font-bold tracking-tight">0</p>
 								</div>
 							</div>

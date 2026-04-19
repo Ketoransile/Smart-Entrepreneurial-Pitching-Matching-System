@@ -22,8 +22,8 @@ import {
 	Users,
 	XCircle,
 } from "lucide-react";
-import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 import DashboardLayout from "@/components/DashboardLayout";
 import ProtectedRoute from "@/components/ProtectedRoute";
@@ -58,10 +58,8 @@ import {
 	TableRow,
 } from "@/components/ui/table";
 import { Textarea } from "@/components/ui/textarea";
-import { useAuth } from "@/context/AuthContext";
 import { ADMIN_NAV } from "@/constants/navigation";
-
-
+import { useAuth } from "@/context/AuthContext";
 
 interface UserRecord {
 	_id: string;
@@ -331,7 +329,10 @@ export default function AdminUsersPage() {
 								View, search, and manage all platform users
 							</p>
 						</div>
-						<Badge variant="outline" className="text-xs font-medium gap-1.5 py-1 px-3 w-fit">
+						<Badge
+							variant="outline"
+							className="text-xs font-medium gap-1.5 py-1 px-3 w-fit"
+						>
 							<Users className="h-3.5 w-3.5" />
 							{loading ? "..." : `${total} Users`}
 						</Badge>
@@ -424,8 +425,7 @@ export default function AdminUsersPage() {
 								</TableRow>
 							) : (
 								filteredUsers.map((u) => {
-									const isProtected =
-										u.role === "admin" && !isSuperAdmin;
+									const isProtected = u.role === "admin" && !isSuperAdmin;
 									return (
 										<TableRow
 											key={u._id}
@@ -552,7 +552,8 @@ export default function AdminUsersPage() {
 				{totalPages > 1 && (
 					<div className="flex items-center justify-between mt-6">
 						<p className="text-sm text-muted-foreground">
-							Page {page} of {totalPages} · {total} total user{total !== 1 ? "s" : ""}
+							Page {page} of {totalPages} · {total} total user
+							{total !== 1 ? "s" : ""}
 						</p>
 						<div className="flex items-center gap-1">
 							<Button

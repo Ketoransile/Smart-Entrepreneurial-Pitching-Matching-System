@@ -72,6 +72,7 @@ interface UserRecord {
 	role: string;
 	adminLevel?: "super_admin" | "admin" | null;
 	status: string;
+	photoURL?: string;
 	createdAt: string;
 }
 
@@ -527,12 +528,15 @@ export default function AdminOversight() {
 								Admin Overview
 							</h1>
 							<p className="mt-1.5 text-muted-foreground text-sm sm:text-base">
-								Monitor platform health, manage users, and review KYC submissions
+								Monitor platform health, manage users, and review KYC
+								submissions
 							</p>
 						</div>
 						<div className="flex items-center gap-2 shrink-0">
 							<div className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
-							<span className="text-xs font-medium text-muted-foreground">System Online</span>
+							<span className="text-xs font-medium text-muted-foreground">
+								System Online
+							</span>
 						</div>
 					</div>
 				</div>
@@ -583,10 +587,16 @@ export default function AdminOversight() {
 							change: null,
 						},
 					].map((stat) => (
-						<div key={stat.label} className="admin-stat-card bg-card" style={{ '--card-accent': undefined } as React.CSSProperties}>
+						<div
+							key={stat.label}
+							className="admin-stat-card bg-card"
+							style={{ "--card-accent": undefined } as React.CSSProperties}
+						>
 							<div className="p-4 sm:p-5">
 								<div className="flex items-center gap-3">
-									<div className={`admin-icon-glow ${stat.gradient} rounded-xl p-2.5 flex items-center justify-center shadow-sm`}>
+									<div
+										className={`admin-icon-glow ${stat.gradient} rounded-xl p-2.5 flex items-center justify-center shadow-sm`}
+									>
 										{stat.icon}
 									</div>
 									<div className="min-w-0 flex-1">
@@ -594,7 +604,9 @@ export default function AdminOversight() {
 											{stat.label}
 										</p>
 										<div className="flex items-baseline gap-2">
-											<p className="text-2xl font-bold tracking-tight">{stat.value}</p>
+											<p className="text-2xl font-bold tracking-tight">
+												{stat.value}
+											</p>
 											{stat.change === "action" && (
 												<span className="text-[10px] font-semibold text-amber-500 bg-amber-500/10 px-1.5 py-0.5 rounded-full">
 													Needs review
@@ -780,10 +792,19 @@ export default function AdminOversight() {
 													<div className="flex items-center gap-3">
 														<Avatar className="h-8 w-8 border shrink-0">
 															{u.photoURL && (
-																<AvatarImage src={u.photoURL} alt={u.fullName} className="object-cover" />
+																<AvatarImage
+																	src={u.photoURL}
+																	alt={u.fullName}
+																	className="object-cover"
+																/>
 															)}
 															<AvatarFallback className="bg-primary/10 text-primary text-xs font-bold">
-																{(u.fullName || "U").split(" ").map((n: string) => n[0]).join("").toUpperCase().slice(0, 2)}
+																{(u.fullName || "U")
+																	.split(" ")
+																	.map((n: string) => n[0])
+																	.join("")
+																	.toUpperCase()
+																	.slice(0, 2)}
 															</AvatarFallback>
 														</Avatar>
 														<span className="font-medium">{u.fullName}</span>
@@ -817,7 +838,7 @@ export default function AdminOversight() {
 													{new Date(u.createdAt).toLocaleDateString()}
 												</TableCell>
 												<TableCell className="text-right">
-													{(u.role === "admin" && !isSuperAdmin) ? (
+													{u.role === "admin" && !isSuperAdmin ? (
 														<span className="text-xs text-muted-foreground">
 															Protected
 														</span>
@@ -844,7 +865,9 @@ export default function AdminOversight() {
 							{totalUserPages > 1 && (
 								<div className="flex items-center justify-between p-4 border-t border-border/50">
 									<p className="text-sm text-muted-foreground">
-										Showing {(userPage - 1) * ITEMS_PER_PAGE + 1}–{Math.min(userPage * ITEMS_PER_PAGE, users.length)} of {users.length}
+										Showing {(userPage - 1) * ITEMS_PER_PAGE + 1}–
+										{Math.min(userPage * ITEMS_PER_PAGE, users.length)} of{" "}
+										{users.length}
 									</p>
 									<div className="flex items-center gap-1">
 										<Button
@@ -856,7 +879,10 @@ export default function AdminOversight() {
 										>
 											Previous
 										</Button>
-										{Array.from({ length: totalUserPages }, (_, i) => i + 1).map((pg) => (
+										{Array.from(
+											{ length: totalUserPages },
+											(_, i) => i + 1,
+										).map((pg) => (
 											<Button
 												key={pg}
 												variant={pg === userPage ? "default" : "outline"}

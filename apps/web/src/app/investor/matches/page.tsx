@@ -217,7 +217,10 @@ export default function InvestorMatchesPage() {
 							</p>
 						</div>
 						{pendingCount > 0 && (
-							<Badge variant="destructive" className="text-xs font-medium gap-1.5 py-1 px-3 w-fit">
+							<Badge
+								variant="destructive"
+								className="text-xs font-medium gap-1.5 py-1 px-3 w-fit"
+							>
 								{pendingCount} Pending
 							</Badge>
 						)}
@@ -233,8 +236,12 @@ export default function InvestorMatchesPage() {
 									<Sparkles className="h-4.5 w-4.5 text-white" />
 								</div>
 								<div className="min-w-0 flex-1">
-									<p className="text-[11px] uppercase tracking-wider font-semibold text-muted-foreground/70">Pending</p>
-									<p className="text-2xl font-bold tracking-tight">{pendingCount}</p>
+									<p className="text-[11px] uppercase tracking-wider font-semibold text-muted-foreground/70">
+										Pending
+									</p>
+									<p className="text-2xl font-bold tracking-tight">
+										{pendingCount}
+									</p>
 								</div>
 							</div>
 						</div>
@@ -246,7 +253,9 @@ export default function InvestorMatchesPage() {
 									<BadgeCheck className="h-4.5 w-4.5 text-white" />
 								</div>
 								<div className="min-w-0 flex-1">
-									<p className="text-[11px] uppercase tracking-wider font-semibold text-muted-foreground/70">Accepted</p>
+									<p className="text-[11px] uppercase tracking-wider font-semibold text-muted-foreground/70">
+										Accepted
+									</p>
 									<p className="text-2xl font-bold tracking-tight">
 										{matches.filter((m) => m.status === "accepted").length}
 									</p>
@@ -261,8 +270,12 @@ export default function InvestorMatchesPage() {
 									<Briefcase className="h-4.5 w-4.5 text-white" />
 								</div>
 								<div className="min-w-0 flex-1">
-									<p className="text-[11px] uppercase tracking-wider font-semibold text-muted-foreground/70">Total Matches</p>
-									<p className="text-2xl font-bold tracking-tight">{matches.length}</p>
+									<p className="text-[11px] uppercase tracking-wider font-semibold text-muted-foreground/70">
+										Total Matches
+									</p>
+									<p className="text-2xl font-bold tracking-tight">
+										{matches.length}
+									</p>
 								</div>
 							</div>
 						</div>

@@ -51,10 +51,8 @@ import {
 } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useAuth } from "@/context/AuthContext";
 import { ADMIN_NAV } from "@/constants/navigation";
-
-
+import { useAuth } from "@/context/AuthContext";
 
 export default function AdminSettingsPage() {
 	const { user, userProfile, refreshUserProfile, signOut } = useAuth();
@@ -253,8 +251,6 @@ export default function AdminSettingsPage() {
 	return (
 		<ProtectedRoute allowedRoles={["admin"]}>
 			<DashboardLayout navItems={ADMIN_NAV} title="SEPMS Admin">
-	
-
 				<Tabs defaultValue="account" className="space-y-6">
 					<TabsList>
 						<TabsTrigger value="account" className="gap-1.5">
