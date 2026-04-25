@@ -80,6 +80,24 @@ router.post(
  *     responses:
  *       200:
  *         description: Milestones fetched
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: success
+ *                 milestones:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
  */
 router.get(
 	"/",
@@ -105,6 +123,28 @@ router.get(
  *     responses:
  *       200:
  *         description: Milestone returned
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: success
+ *                 milestone:
+ *                   type: object
+ *       404:
+ *         description: Milestone not found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
  */
 router.get(
 	"/:milestoneId",
@@ -149,6 +189,28 @@ router.get(
  *     responses:
  *       200:
  *         description: Milestone updated
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: success
+ *                 milestone:
+ *                   type: object
+ *       404:
+ *         description: Milestone not found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
  */
 router.patch(
 	"/:milestoneId",
@@ -195,6 +257,14 @@ router.patch(
  *     responses:
  *       200:
  *         description: Evidence submitted
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: success
  */
 router.post(
 	"/:milestoneId/evidence",

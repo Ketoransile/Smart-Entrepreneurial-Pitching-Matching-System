@@ -61,6 +61,27 @@ router.post("/", authenticate, FeedbackController.create);
  *     summary: List feedback I have received
  *     security:
  *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Received feedback list
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: success
+ *                 feedback:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
  */
 router.get("/me/received", authenticate, FeedbackController.listReceived);
 
@@ -72,6 +93,27 @@ router.get("/me/received", authenticate, FeedbackController.listReceived);
  *     summary: List feedback I have submitted
  *     security:
  *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Given feedback list
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: success
+ *                 feedback:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
  */
 router.get("/me/given", authenticate, FeedbackController.listGiven);
 
@@ -86,6 +128,22 @@ router.get("/me/given", authenticate, FeedbackController.listGiven);
  *     responses:
  *       200:
  *         description: Feedback summary returned
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: success
+ *                 summary:
+ *                   type: object
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
  */
 router.get("/me/summary", authenticate, FeedbackController.mySummary);
 
