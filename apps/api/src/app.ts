@@ -64,8 +64,8 @@ app.use((req: Request, res: Response, next: NextFunction) => {
 				connectSrc: ["'self'", "https://unpkg.com"],
 			},
 		},
-	}),
-);
+	})(req, res, next);
+});
 
 const allowedOrigins = [
 	process.env.CLIENT_URL,
