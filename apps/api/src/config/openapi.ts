@@ -938,12 +938,7 @@ const swaggerDefinition = {
 	},
 };
 
-const routesTs = path.resolve(process.cwd(), "src/routes/*.ts");
-const routesJs = path.resolve(process.cwd(), "dist/routes/*.js");
-const recRoutesTs = path.resolve(process.cwd(), "src/recommendation/*.ts");
-const recRoutesJs = path.resolve(process.cwd(), "dist/recommendation/*.js");
+export { swaggerDefinition };
 
-export const openApiSpec = swaggerJsdoc({
-	swaggerDefinition,
-	apis: [routesTs, routesJs, recRoutesTs, recRoutesJs],
-});
+// Re-export the pre-generated spec produced at build time by scripts/generate-openapi.ts
+export const openApiSpec = specJson;
