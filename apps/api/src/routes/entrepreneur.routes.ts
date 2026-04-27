@@ -39,27 +39,30 @@ router.use(authorize("entrepreneur"));
  *             properties:
  *               fullName:
  *                 type: string
+ *                 example: "John Doe"
  *               companyName:
  *                 type: string
+ *                 example: "AgriTech Solutions"
  *               companyRegistrationNumber:
  *                 type: string
  *               businessSector:
  *                 type: string
+ *                 enum: [technology, healthcare, agriculture, finance, education, retail, manufacturing, energy, transportation, other]
  *               businessStage:
  *                 type: string
+ *                 enum: [idea, mvp, early-revenue, scaling]
  *     responses:
  *       201:
  *         description: Profile created
  *         content:
  *           application/json:
  *             schema:
- *               type: object
- *               properties:
- *                 status:
- *                   type: string
- *                   example: success
- *                 profile:
- *                   type: object
+ *               allOf:
+ *                 - $ref: '#/components/schemas/SuccessResponse'
+ *                 - type: object
+ *                   properties:
+ *                     profile:
+ *                       $ref: '#/components/schemas/EntrepreneurProfileObject'
  *       400:
  *         description: Validation or duplicate profile error
  *         content:
@@ -105,13 +108,12 @@ router.post(
  *         content:
  *           application/json:
  *             schema:
- *               type: object
- *               properties:
- *                 status:
- *                   type: string
- *                   example: success
- *                 profile:
- *                   type: object
+ *               allOf:
+ *                 - $ref: '#/components/schemas/SuccessResponse'
+ *                 - type: object
+ *                   properties:
+ *                     profile:
+ *                       $ref: '#/components/schemas/EntrepreneurProfileObject'
  *       401:
  *         description: Unauthorized
  *         content:
@@ -150,19 +152,19 @@ router.get("/profile", EntrepreneurController.getProfile);
  *                 type: string
  *               businessStage:
  *                 type: string
+ *                 enum: [idea, mvp, early-revenue, scaling]
  *     responses:
  *       200:
  *         description: Profile updated
  *         content:
  *           application/json:
  *             schema:
- *               type: object
- *               properties:
- *                 status:
- *                   type: string
- *                   example: success
- *                 profile:
- *                   type: object
+ *               allOf:
+ *                 - $ref: '#/components/schemas/SuccessResponse'
+ *                 - type: object
+ *                   properties:
+ *                     profile:
+ *                       $ref: '#/components/schemas/EntrepreneurProfileObject'
  *       400:
  *         description: Validation error
  *         content:
@@ -202,13 +204,13 @@ router.put(
  *         content:
  *           application/json:
  *             schema:
- *               type: object
- *               properties:
- *                 status:
- *                   type: string
- *                   example: success
- *                 exists:
- *                   type: boolean
+ *               allOf:
+ *                 - $ref: '#/components/schemas/SuccessResponse'
+ *                 - type: object
+ *                   properties:
+ *                     exists:
+ *                       type: boolean
+ *                       example: true
  *       401:
  *         description: Unauthorized
  *         content:

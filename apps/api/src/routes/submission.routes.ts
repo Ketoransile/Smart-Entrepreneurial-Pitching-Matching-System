@@ -33,8 +33,10 @@ const router = Router();
  *             properties:
  *               title:
  *                 type: string
+ *                 example: "AI-Powered Crop Analytics"
  *               sector:
  *                 type: string
+ *                 enum: [technology, healthcare, fintech, education, agriculture, energy, real_estate, manufacturing, retail, other]
  *               stage:
  *                 type: string
  *                 enum: [idea, mvp, early-revenue, scaling]
@@ -44,13 +46,12 @@ const router = Router();
  *         content:
  *           application/json:
  *             schema:
- *               type: object
- *               properties:
- *                 status:
- *                   type: string
- *                   example: success
- *                 submission:
- *                   type: object
+ *               allOf:
+ *                 - $ref: '#/components/schemas/SuccessResponse'
+ *                 - type: object
+ *                   properties:
+ *                     submission:
+ *                       $ref: '#/components/schemas/SubmissionObject'
  *       403:
  *         description: User is not verified
  *         content:
@@ -86,15 +87,14 @@ router.post(
  *         content:
  *           application/json:
  *             schema:
- *               type: object
- *               properties:
- *                 status:
- *                   type: string
- *                   example: success
- *                 submissions:
- *                   type: array
- *                   items:
- *                     type: object
+ *               allOf:
+ *                 - $ref: '#/components/schemas/SuccessResponse'
+ *                 - type: object
+ *                   properties:
+ *                     submissions:
+ *                       type: array
+ *                       items:
+ *                         $ref: '#/components/schemas/SubmissionObject'
  *       500:
  *         description: Internal server error
  *         content:
@@ -141,15 +141,14 @@ router.get(
  *         content:
  *           application/json:
  *             schema:
- *               type: object
- *               properties:
- *                 status:
- *                   type: string
- *                   example: success
- *                 submissions:
- *                   type: array
- *                   items:
- *                     type: object
+ *               allOf:
+ *                 - $ref: '#/components/schemas/SuccessResponse'
+ *                 - type: object
+ *                   properties:
+ *                     submissions:
+ *                       type: array
+ *                       items:
+ *                         $ref: '#/components/schemas/SubmissionObject'
  *       500:
  *         description: Internal server error
  *         content:
@@ -198,7 +197,7 @@ router.get(
  *                     submissions:
  *                       type: array
  *                       items:
- *                         type: object
+ *                         $ref: '#/components/schemas/SubmissionObject'
  *       500:
  *         description: Internal server error
  *         content:
@@ -233,13 +232,12 @@ router.get(
  *         content:
  *           application/json:
  *             schema:
- *               type: object
- *               properties:
- *                 status:
- *                   type: string
- *                   example: success
- *                 submission:
- *                   type: object
+ *               allOf:
+ *                 - $ref: '#/components/schemas/SuccessResponse'
+ *                 - type: object
+ *                   properties:
+ *                     submission:
+ *                       $ref: '#/components/schemas/SubmissionObject'
  *       404:
  *         description: Submission not found
  *         content:
@@ -295,13 +293,12 @@ router.get("/:id", authenticate, SubmissionController.getOne);
  *         content:
  *           application/json:
  *             schema:
- *               type: object
- *               properties:
- *                 status:
- *                   type: string
- *                   example: success
- *                 submission:
- *                   type: object
+ *               allOf:
+ *                 - $ref: '#/components/schemas/SuccessResponse'
+ *                 - type: object
+ *                   properties:
+ *                     submission:
+ *                       $ref: '#/components/schemas/SubmissionObject'
  *       400:
  *         description: Validation or status error
  *         content:
@@ -343,15 +340,12 @@ router.patch(
  *         content:
  *           application/json:
  *             schema:
- *               type: object
- *               properties:
- *                 status:
- *                   type: string
- *                   example: success
- *                 message:
- *                   type: string
- *                 submission:
- *                   type: object
+ *               allOf:
+ *                 - $ref: '#/components/schemas/SuccessResponse'
+ *                 - type: object
+ *                   properties:
+ *                     submission:
+ *                       $ref: '#/components/schemas/SubmissionObject'
  *       400:
  *         description: Incomplete or invalid draft
  *         content:
@@ -392,13 +386,24 @@ router.post(
  *         content:
  *           application/json:
  *             schema:
- *               type: object
- *               properties:
- *                 status:
- *                   type: string
- *                   example: success
- *                 completeness:
- *                   type: object
+ *               allOf:
+ *                 - $ref: '#/components/schemas/SuccessResponse'
+ *                 - type: object
+ *                   properties:
+ *                     completeness:
+ *                       type: object
+ *                       properties:
+ *                         score:
+ *                           type: number
+ *                           example: 0.75
+ *                         missing:
+ *                           type: array
+ *                           items:
+ *                             type: string
+ *                         required:
+ *                           type: array
+ *                           items:
+ *                             type: string
  *       500:
  *         description: Internal server error
  *         content:
@@ -433,13 +438,7 @@ router.get(
  *         content:
  *           application/json:
  *             schema:
- *               type: object
- *               properties:
- *                 status:
- *                   type: string
- *                   example: success
- *                 message:
- *                   type: string
+ *               $ref: '#/components/schemas/SuccessResponse'
  *       404:
  *         description: Draft not found
  *         content:
@@ -485,21 +484,19 @@ router.delete(
  *                 enum: [approved, rejected, suspended]
  *               reason:
  *                 type: string
+ *                 description: Reason for rejection or suspension
  *     responses:
  *       200:
  *         description: Status updated
  *         content:
  *           application/json:
  *             schema:
- *               type: object
- *               properties:
- *                 status:
- *                   type: string
- *                   example: success
- *                 message:
- *                   type: string
- *                 submission:
- *                   type: object
+ *               allOf:
+ *                 - $ref: '#/components/schemas/SuccessResponse'
+ *                 - type: object
+ *                   properties:
+ *                     submission:
+ *                       $ref: '#/components/schemas/SubmissionObject'
  *       400:
  *         description: Invalid status value
  *         content:

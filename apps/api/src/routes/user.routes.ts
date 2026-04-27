@@ -43,27 +43,21 @@ const avatarUpload = multer({
  *         content:
  *           application/json:
  *             schema:
- *               type: object
- *               properties:
- *                 status:
- *                   type: string
- *                   example: success
- *                 user:
- *                   type: object
+ *               allOf:
+ *                 - $ref: '#/components/schemas/SuccessResponse'
+ *                 - type: object
  *                   properties:
- *                     id:
- *                       type: string
- *                     email:
- *                       type: string
- *                     fullName:
- *                       type: string
- *                     role:
- *                       type: string
- *                     status:
- *                       type: string
- *                 profile:
- *                   type: object
+ *                     user:
+ *                       $ref: '#/components/schemas/UserObject'
+ *                     profile:
+ *                       nullable: true
+ *                       oneOf:
+ *                         - $ref: '#/components/schemas/EntrepreneurProfileObject'
+ *                         - $ref: '#/components/schemas/InvestorProfileObject'
  *                   nullable: true
+ *                   oneOf:
+ *                     - $ref: '#/components/schemas/EntrepreneurProfileObject'
+ *                     - $ref: '#/components/schemas/InvestorProfileObject'
  *       404:
  *         description: User not found
  *         content:
@@ -128,24 +122,35 @@ router.get(
  *         application/json:
  *           schema:
  *             type: object
- *             additionalProperties: true
+ *             description: Role-specific profile fields (entrepreneur or investor)
+ *             properties:
+ *               fullName:
+ *                 type: string
+ *               companyName:
+ *                 type: string
+ *               businessStage:
+ *                 type: string
+ *                 enum: [idea, mvp, early-revenue, scaling]
+ *               nationalIdUrl:
+ *                 type: string
+ *               businessLicenseUrl:
+ *                 type: string
  *     responses:
  *       200:
  *         description: Profile updated
  *         content:
  *           application/json:
  *             schema:
- *               type: object
- *               properties:
- *                 status:
- *                   type: string
- *                   example: success
- *                 message:
- *                   type: string
- *                 user:
- *                   type: object
- *                 profile:
- *                   type: object
+ *               allOf:
+ *                 - $ref: '#/components/schemas/SuccessResponse'
+ *                 - type: object
+ *                   properties:
+ *                     user:
+ *                       $ref: '#/components/schemas/UserObject'
+ *                     profile:
+ *                       oneOf:
+ *                         - $ref: '#/components/schemas/EntrepreneurProfileObject'
+ *                         - $ref: '#/components/schemas/InvestorProfileObject'
  *       400:
  *         description: Invalid role for profile
  *         content:
@@ -265,15 +270,12 @@ router.put(
  *         content:
  *           application/json:
  *             schema:
- *               type: object
- *               properties:
- *                 status:
- *                   type: string
- *                   example: success
- *                 message:
- *                   type: string
- *                 user:
- *                   $ref: '#/components/schemas/UserObject'
+ *               allOf:
+ *                 - $ref: '#/components/schemas/SuccessResponse'
+ *                 - type: object
+ *                   properties:
+ *                     user:
+ *                       $ref: '#/components/schemas/UserObject'
  *       400:
  *         description: Invalid payload
  *         content:
@@ -382,17 +384,14 @@ router.patch(
  *         content:
  *           application/json:
  *             schema:
- *               type: object
- *               properties:
- *                 status:
- *                   type: string
- *                   example: success
- *                 message:
- *                   type: string
- *                 photoURL:
- *                   type: string
- *                 user:
- *                   $ref: '#/components/schemas/UserObject'
+ *               allOf:
+ *                 - $ref: '#/components/schemas/SuccessResponse'
+ *                 - type: object
+ *                   properties:
+ *                     photoURL:
+ *                       type: string
+ *                     user:
+ *                       $ref: '#/components/schemas/UserObject'
  *       400:
  *         description: Missing or invalid file
  *         content:

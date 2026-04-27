@@ -30,14 +30,12 @@ router.use(authenticate, authorize("admin"));
  *         content:
  *           application/json:
  *             schema:
- *               type: object
- *               properties:
- *                 status:
- *                   type: string
- *                   example: success
- *                 data:
- *                   type: object
- *                   description: Aggregate statistics
+ *               allOf:
+ *                 - $ref: '#/components/schemas/SuccessResponse'
+ *                 - type: object
+ *                   properties:
+ *                     data:
+ *                       $ref: '#/components/schemas/DashboardStatsData'
  *       401:
  *         description: Unauthorized
  *         content:
@@ -74,15 +72,14 @@ router.get("/dashboard/stats", AdminAnalyticsController.getDashboardStats);
  *         content:
  *           application/json:
  *             schema:
- *               type: object
- *               properties:
- *                 status:
- *                   type: string
- *                   example: success
- *                 actions:
- *                   type: array
- *                   items:
- *                     type: object
+ *               allOf:
+ *                 - $ref: '#/components/schemas/SuccessResponse'
+ *                 - type: object
+ *                   properties:
+ *                     actions:
+ *                       type: array
+ *                       items:
+ *                         $ref: '#/components/schemas/AdminActionObject'
  *       401:
  *         description: Unauthorized
  *         content:
@@ -119,15 +116,14 @@ router.get("/analytics/actions", AdminAnalyticsController.listAuditActions);
  *         content:
  *           application/json:
  *             schema:
- *               type: object
- *               properties:
- *                 status:
- *                   type: string
- *                   example: success
- *                 users:
- *                   type: array
- *                   items:
- *                     $ref: '#/components/schemas/AdminUserSummary'
+ *               allOf:
+ *                 - $ref: '#/components/schemas/SuccessResponse'
+ *                 - type: object
+ *                   properties:
+ *                     users:
+ *                       type: array
+ *                       items:
+ *                         $ref: '#/components/schemas/AdminUserSummary'
  *       401:
  *         description: Unauthorized
  *         content:
@@ -169,16 +165,17 @@ router.get("/users", AdminUserController.listUsers);
  *         content:
  *           application/json:
  *             schema:
- *               type: object
- *               properties:
- *                 status:
- *                   type: string
- *                   example: success
- *                 user:
- *                   $ref: '#/components/schemas/AdminUserSummary'
- *                 profile:
- *                   type: object
- *                   nullable: true
+ *               allOf:
+ *                 - $ref: '#/components/schemas/SuccessResponse'
+ *                 - type: object
+ *                   properties:
+ *                     user:
+ *                       $ref: '#/components/schemas/AdminUserSummary'
+ *                     profile:
+ *                       oneOf:
+ *                         - $ref: '#/components/schemas/EntrepreneurProfileObject'
+ *                         - $ref: '#/components/schemas/InvestorProfileObject'
+ *                       nullable: true
  *       404:
  *         description: User not found
  *         content:
@@ -214,16 +211,17 @@ router.get("/users/:userId", AdminUserController.getUser);
  *         content:
  *           application/json:
  *             schema:
- *               type: object
- *               properties:
- *                 status:
- *                   type: string
- *                   example: success
- *                 user:
- *                   $ref: '#/components/schemas/AdminUserSummary'
- *                 profile:
- *                   type: object
- *                   nullable: true
+ *               allOf:
+ *                 - $ref: '#/components/schemas/SuccessResponse'
+ *                 - type: object
+ *                   properties:
+ *                     user:
+ *                       $ref: '#/components/schemas/AdminUserSummary'
+ *                     profile:
+ *                       oneOf:
+ *                         - $ref: '#/components/schemas/EntrepreneurProfileObject'
+ *                         - $ref: '#/components/schemas/InvestorProfileObject'
+ *                       nullable: true
  *       404:
  *         description: User not found
  *         content:
@@ -266,21 +264,19 @@ router.get("/users/:userId/profile", AdminUserController.getUser);
  *                 enum: [unverified, pending, verified, suspended]
  *               reason:
  *                 type: string
+ *                 description: Rejection reason (used when setting status to unverified)
  *     responses:
  *       200:
  *         description: User status updated
  *         content:
  *           application/json:
  *             schema:
- *               type: object
- *               properties:
- *                 status:
- *                   type: string
- *                   example: success
- *                 message:
- *                   type: string
- *                 user:
- *                   $ref: '#/components/schemas/UserObject'
+ *               allOf:
+ *                 - $ref: '#/components/schemas/SuccessResponse'
+ *                 - type: object
+ *                   properties:
+ *                     user:
+ *                       $ref: '#/components/schemas/UserObject'
  *       400:
  *         description: Invalid request
  *         content:
@@ -332,13 +328,7 @@ router.patch("/users/:userId/status", AdminUserController.updateUserStatus);
  *         content:
  *           application/json:
  *             schema:
- *               type: object
- *               properties:
- *                 status:
- *                   type: string
- *                   example: success
- *                 message:
- *                   type: string
+ *               $ref: '#/components/schemas/SuccessResponse'
  *       400:
  *         description: Invalid request
  *         content:
@@ -374,15 +364,14 @@ router.patch("/users/:userId/active", AdminUserController.setUserActive);
  *         content:
  *           application/json:
  *             schema:
- *               type: object
- *               properties:
- *                 status:
- *                   type: string
- *                   example: success
- *                 submissions:
- *                   type: array
- *                   items:
- *                     type: object
+ *               allOf:
+ *                 - $ref: '#/components/schemas/SuccessResponse'
+ *                 - type: object
+ *                   properties:
+ *                     submissions:
+ *                       type: array
+ *                       items:
+ *                         $ref: '#/components/schemas/SubmissionObject'
  *       500:
  *         description: Internal server error
  *         content:
@@ -412,20 +401,24 @@ router.get("/submissions", AdminSubmissionController.listSubmissions);
  *         application/json:
  *           schema:
  *             type: object
- *             additionalProperties: true
+ *             required: [decision]
+ *             properties:
+ *               decision:
+ *                 type: string
+ *                 enum: [approve, reject]
+ *               reason:
+ *                 type: string
+ *                 description: Reason for the moderation decision
+ *               notes:
+ *                 type: string
+ *                 description: Additional reviewer notes
  *     responses:
  *       200:
  *         description: Submission reviewed
  *         content:
  *           application/json:
  *             schema:
- *               type: object
- *               properties:
- *                 status:
- *                   type: string
- *                   example: success
- *                 message:
- *                   type: string
+ *               $ref: '#/components/schemas/SuccessResponse'
  *       404:
  *         description: Submission not found
  *         content:
@@ -464,13 +457,7 @@ router.patch(
  *         content:
  *           application/json:
  *             schema:
- *               type: object
- *               properties:
- *                 status:
- *                   type: string
- *                   example: success
- *                 message:
- *                   type: string
+ *               $ref: '#/components/schemas/SuccessResponse'
  *       404:
  *         description: Submission not found
  *         content:
@@ -503,15 +490,14 @@ router.patch(
  *         content:
  *           application/json:
  *             schema:
- *               type: object
- *               properties:
- *                 status:
- *                   type: string
- *                   example: success
- *                 documents:
- *                   type: array
- *                   items:
- *                     type: object
+ *               allOf:
+ *                 - $ref: '#/components/schemas/SuccessResponse'
+ *                 - type: object
+ *                   properties:
+ *                     documents:
+ *                       type: array
+ *                       items:
+ *                         $ref: '#/components/schemas/DocumentObject'
  *       500:
  *         description: Internal server error
  *         content:
@@ -541,20 +527,21 @@ router.get("/documents", AdminSubmissionController.listDocuments);
  *         application/json:
  *           schema:
  *             type: object
- *             additionalProperties: true
+ *             required: [decision]
+ *             properties:
+ *               decision:
+ *                 type: string
+ *                 enum: [approve, reject]
+ *               reason:
+ *                 type: string
+ *                 description: Reason for the review decision
  *     responses:
  *       200:
  *         description: Document reviewed
  *         content:
  *           application/json:
  *             schema:
- *               type: object
- *               properties:
- *                 status:
- *                   type: string
- *                   example: success
- *                 message:
- *                   type: string
+ *               $ref: '#/components/schemas/SuccessResponse'
  *       404:
  *         description: Document not found
  *         content:
