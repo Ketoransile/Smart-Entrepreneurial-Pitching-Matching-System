@@ -49,31 +49,23 @@ const router = Router();
  *         content:
  *           application/json:
  *             schema:
- *               type: object
- *               properties:
- *                 status:
- *                   type: string
- *                   example: success
- *                 message:
- *                   type: string
- *                   example: User already registered
- *                 user:
- *                   $ref: '#/components/schemas/UserObject'
+ *               allOf:
+ *                 - $ref: '#/components/schemas/SuccessResponse'
+ *                 - type: object
+ *                   properties:
+ *                     user:
+ *                       $ref: '#/components/schemas/UserObject'
  *       201:
  *         description: New user registered successfully
  *         content:
  *           application/json:
  *             schema:
- *               type: object
- *               properties:
- *                 status:
- *                   type: string
- *                   example: success
- *                 message:
- *                   type: string
- *                   example: User registered successfully
- *                 user:
- *                   $ref: '#/components/schemas/UserObject'
+ *               allOf:
+ *                 - $ref: '#/components/schemas/SuccessResponse'
+ *                 - type: object
+ *                   properties:
+ *                     user:
+ *                       $ref: '#/components/schemas/UserObject'
  *       401:
  *         description: Missing or invalid Firebase token
  *         content:
@@ -226,14 +218,12 @@ router.post(
  *         content:
  *           application/json:
  *             schema:
- *               type: object
- *               required: [status, user]
- *               properties:
- *                 status:
- *                   type: string
- *                   example: success
- *                 user:
- *                   $ref: '#/components/schemas/UserObject'
+ *               allOf:
+ *                 - $ref: '#/components/schemas/SuccessResponse'
+ *                 - type: object
+ *                   properties:
+ *                     user:
+ *                       $ref: '#/components/schemas/UserObject'
  *             example:
  *               status: success
  *               user:
@@ -356,16 +346,12 @@ router.get(
  *         content:
  *           application/json:
  *             schema:
- *               type: object
- *               properties:
- *                 status:
- *                   type: string
- *                   example: success
- *                 message:
- *                   type: string
- *                   example: Role updated successfully
- *                 user:
- *                   $ref: '#/components/schemas/UserObject'
+ *               allOf:
+ *                 - $ref: '#/components/schemas/SuccessResponse'
+ *                 - type: object
+ *                   properties:
+ *                     user:
+ *                       $ref: '#/components/schemas/UserObject'
  *       400:
  *         description: Invalid role supplied
  *         content:
@@ -599,16 +585,12 @@ router.get(
  *         content:
  *           application/json:
  *             schema:
- *               type: object
- *               properties:
- *                 status:
- *                   type: string
- *                   example: success
- *                 message:
- *                   type: string
- *                   example: User status updated
- *                 user:
- *                   $ref: '#/components/schemas/UserObject'
+ *               allOf:
+ *                 - $ref: '#/components/schemas/SuccessResponse'
+ *                 - type: object
+ *                   properties:
+ *                     user:
+ *                       $ref: '#/components/schemas/UserObject'
  *       400:
  *         description: Invalid status value
  *         content:
@@ -728,15 +710,14 @@ router.patch(
  *         content:
  *           application/json:
  *             schema:
- *               type: object
- *               properties:
- *                 status:
- *                   type: string
- *                   example: success
- *                 admins:
- *                   type: array
- *                   items:
- *                     $ref: '#/components/schemas/AdminUserSummary'
+ *               allOf:
+ *                 - $ref: '#/components/schemas/SuccessResponse'
+ *                 - type: object
+ *                   properties:
+ *                     admins:
+ *                       type: array
+ *                       items:
+ *                         $ref: '#/components/schemas/AdminUserSummary'
  *       403:
  *         description: Forbidden — super admin only
  *         content:
@@ -800,20 +781,16 @@ router.get(
  *         content:
  *           application/json:
  *             schema:
- *               type: object
- *               properties:
- *                 status:
- *                   type: string
- *                   example: success
- *                 message:
- *                   type: string
- *                   example: Invite link generated
- *                 inviteLink:
- *                   type: string
- *                   example: https://sepms.vercel.app/admin-invite/abc123
- *                 expiresAt:
- *                   type: string
- *                   format: date-time
+ *               allOf:
+ *                 - $ref: '#/components/schemas/SuccessResponse'
+ *                 - type: object
+ *                   properties:
+ *                     inviteLink:
+ *                       type: string
+ *                       example: https://sepms.vercel.app/admin-invite/abc123
+ *                     expiresAt:
+ *                       type: string
+ *                       format: date-time
  *       403:
  *         description: Forbidden — super admin only
  *         content:
@@ -886,13 +863,12 @@ router.post(
  *         content:
  *           application/json:
  *             schema:
- *               type: object
- *               properties:
- *                 status:
- *                   type: string
- *                   example: success
- *                 invite:
- *                   $ref: '#/components/schemas/AdminInviteInfo'
+ *               allOf:
+ *                 - $ref: '#/components/schemas/SuccessResponse'
+ *                 - type: object
+ *                   properties:
+ *                     invite:
+ *                       $ref: '#/components/schemas/AdminInviteInfo'
  *       404:
  *         description: Invite token invalid or expired
  *         content:
@@ -963,16 +939,12 @@ router.get(
  *         content:
  *           application/json:
  *             schema:
- *               type: object
- *               properties:
- *                 status:
- *                   type: string
- *                   example: success
- *                 message:
- *                   type: string
- *                   example: You are now an admin!
- *                 user:
- *                   $ref: '#/components/schemas/UserObject'
+ *               allOf:
+ *                 - $ref: '#/components/schemas/SuccessResponse'
+ *                 - type: object
+ *                   properties:
+ *                     user:
+ *                       $ref: '#/components/schemas/UserObject'
  *       400:
  *         description: Already a super admin
  *         content:
@@ -1088,14 +1060,7 @@ router.post(
  *         content:
  *           application/json:
  *             schema:
- *               type: object
- *               properties:
- *                 status:
- *                   type: string
- *                   example: success
- *                 message:
- *                   type: string
- *                   example: Jane Doe has been removed as admin
+ *               $ref: '#/components/schemas/SuccessResponse'
  *       400:
  *         description: User is not an admin
  *         content:
@@ -1196,16 +1161,12 @@ router.delete(
  *         content:
  *           application/json:
  *             schema:
- *               type: object
- *               properties:
- *                 status:
- *                   type: string
- *                   example: success
- *                 message:
- *                   type: string
- *                   example: Jane Doe has been promoted to admin.
- *                 user:
- *                   $ref: '#/components/schemas/UserObject'
+ *               allOf:
+ *                 - $ref: '#/components/schemas/SuccessResponse'
+ *                 - type: object
+ *                   properties:
+ *                     user:
+ *                       $ref: '#/components/schemas/UserObject'
  *       400:
  *         description: User is already an admin or email missing
  *         content:

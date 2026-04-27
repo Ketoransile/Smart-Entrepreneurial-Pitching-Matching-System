@@ -192,8 +192,8 @@ router.get(
  *                   type: string
  *                   example: success
  *                 match:
- *                   type: object
  *                   nullable: true
+ *                   $ref: '#/components/schemas/MatchResultObject'
  *       500:
  *         description: Internal server error
  *         content:
@@ -273,7 +273,7 @@ router.post(
  *                 matches:
  *                   type: array
  *                   items:
- *                     type: object
+ *                     $ref: '#/components/schemas/MatchResultObject'
  *       500:
  *         description: Failed to fetch matches
  *         content:
@@ -353,7 +353,7 @@ router.get(
  *                 message:
  *                   type: string
  *                 match:
- *                   type: object
+ *                   $ref: '#/components/schemas/MatchResultObject'
  *                 conversationId:
  *                   type: string
  *                   nullable: true

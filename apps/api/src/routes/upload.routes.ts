@@ -66,30 +66,27 @@ const upload = multer({
  *         content:
  *           application/json:
  *             schema:
- *               type: object
- *               properties:
- *                 status:
- *                   type: string
- *                   example: success
- *                 message:
- *                   type: string
- *                 file:
- *                   type: object
+ *               allOf:
+ *                 - $ref: '#/components/schemas/SuccessResponse'
+ *                 - type: object
  *                   properties:
- *                     name:
- *                       type: string
- *                     url:
- *                       type: string
- *                     cloudinaryId:
- *                       type: string
- *                     type:
- *                       type: string
- *                     size:
- *                       type: integer
- *                     format:
- *                       type: string
- *                     resourceType:
- *                       type: string
+ *                     file:
+ *                       type: object
+ *                       properties:
+ *                         name:
+ *                           type: string
+ *                         url:
+ *                           type: string
+ *                         cloudinaryId:
+ *                           type: string
+ *                         type:
+ *                           type: string
+ *                         size:
+ *                           type: integer
+ *                         format:
+ *                           type: string
+ *                         resourceType:
+ *                           type: string
  *       400:
  *         description: No file provided
  *         content:
@@ -190,15 +187,12 @@ router.post(
  *         content:
  *           application/json:
  *             schema:
- *               type: object
- *               properties:
- *                 status:
- *                   type: string
- *                   example: success
- *                 message:
- *                   type: string
- *                 result:
- *                   type: object
+ *               allOf:
+ *                 - $ref: '#/components/schemas/SuccessResponse'
+ *                 - type: object
+ *                   properties:
+ *                     result:
+ *                       type: object
  *       500:
  *         description: Internal server error
  *         content:

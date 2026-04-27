@@ -47,6 +47,20 @@ app.use(
 	helmet({
 		crossOriginOpenerPolicy: false, // Set this completely to false
 		crossOriginResourcePolicy: { policy: "cross-origin" },
+		contentSecurityPolicy: {
+			directives: {
+				defaultSrc: ["'self'"],
+				scriptSrc: ["'self'", "'unsafe-inline'", "https://unpkg.com"],
+				styleSrc: ["'self'", "'unsafe-inline'", "https://unpkg.com"],
+				imgSrc: [
+					"'self'",
+					"data:",
+					"https://unpkg.com",
+					"https://res.cloudinary.com",
+				],
+				connectSrc: ["'self'", "https://unpkg.com"],
+			},
+		},
 	}),
 );
 

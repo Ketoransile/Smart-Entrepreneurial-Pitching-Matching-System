@@ -50,6 +50,30 @@ const router = Router();
  *             category: "communication"
  *             comment: "Fast responses and very constructive follow-ups."
  *             invitationId: "65f2c7f0b295a9b0ff654321"
+ *     responses:
+ *       201:
+ *         description: Feedback created
+ *         content:
+ *           application/json:
+ *             schema:
+ *               allOf:
+ *                 - $ref: '#/components/schemas/SuccessResponse'
+ *                 - type: object
+ *                   properties:
+ *                     feedback:
+ *                       $ref: '#/components/schemas/FeedbackObject'
+ *       400:
+ *         description: Validation error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
  */
 router.post("/", authenticate, FeedbackController.create);
 
@@ -67,15 +91,14 @@ router.post("/", authenticate, FeedbackController.create);
  *         content:
  *           application/json:
  *             schema:
- *               type: object
- *               properties:
- *                 status:
- *                   type: string
- *                   example: success
- *                 feedback:
- *                   type: array
- *                   items:
- *                     type: object
+ *               allOf:
+ *                 - $ref: '#/components/schemas/SuccessResponse'
+ *                 - type: object
+ *                   properties:
+ *                     feedback:
+ *                       type: array
+ *                       items:
+ *                         $ref: '#/components/schemas/FeedbackObject'
  *       500:
  *         description: Internal server error
  *         content:
@@ -99,15 +122,14 @@ router.get("/me/received", authenticate, FeedbackController.listReceived);
  *         content:
  *           application/json:
  *             schema:
- *               type: object
- *               properties:
- *                 status:
- *                   type: string
- *                   example: success
- *                 feedback:
- *                   type: array
- *                   items:
- *                     type: object
+ *               allOf:
+ *                 - $ref: '#/components/schemas/SuccessResponse'
+ *                 - type: object
+ *                   properties:
+ *                     feedback:
+ *                       type: array
+ *                       items:
+ *                         $ref: '#/components/schemas/FeedbackObject'
  *       500:
  *         description: Internal server error
  *         content:
@@ -131,13 +153,12 @@ router.get("/me/given", authenticate, FeedbackController.listGiven);
  *         content:
  *           application/json:
  *             schema:
- *               type: object
- *               properties:
- *                 status:
- *                   type: string
- *                   example: success
- *                 summary:
- *                   type: object
+ *               allOf:
+ *                 - $ref: '#/components/schemas/SuccessResponse'
+ *                 - type: object
+ *                   properties:
+ *                     summary:
+ *                       $ref: '#/components/schemas/FeedbackSummary'
  *       500:
  *         description: Internal server error
  *         content:
@@ -162,6 +183,15 @@ router.get("/me/summary", authenticate, FeedbackController.mySummary);
  *     responses:
  *       200:
  *         description: Feedback summary returned
+ *         content:
+ *           application/json:
+ *             schema:
+ *               allOf:
+ *                 - $ref: '#/components/schemas/SuccessResponse'
+ *                 - type: object
+ *                   properties:
+ *                     summary:
+ *                       $ref: '#/components/schemas/FeedbackSummary'
  */
 router.get("/users/:userId/summary", FeedbackController.userSummary);
 

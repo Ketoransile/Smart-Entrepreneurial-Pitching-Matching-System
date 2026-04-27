@@ -34,25 +34,26 @@ const router = Router();
  *             properties:
  *               limit:
  *                 type: integer
+ *                 description: Maximum number of matches to return
  *               minScore:
  *                 type: number
  *                 minimum: 0
  *                 maximum: 1
+ *                 description: Minimum match score threshold
  *     responses:
  *       200:
  *         description: Matching completed
  *         content:
  *           application/json:
  *             schema:
- *               type: object
- *               properties:
- *                 status:
- *                   type: string
- *                   example: success
- *                 matches:
- *                   type: array
- *                   items:
- *                     type: object
+ *               allOf:
+ *                 - $ref: '#/components/schemas/SuccessResponse'
+ *                 - type: object
+ *                   properties:
+ *                     matches:
+ *                       type: array
+ *                       items:
+ *                         $ref: '#/components/schemas/MatchResultObject'
  *       500:
  *         description: Internal server error
  *         content:
@@ -87,15 +88,14 @@ router.post(
  *         content:
  *           application/json:
  *             schema:
- *               type: object
- *               properties:
- *                 status:
- *                   type: string
- *                   example: success
- *                 matches:
- *                   type: array
- *                   items:
- *                     type: object
+ *               allOf:
+ *                 - $ref: '#/components/schemas/SuccessResponse'
+ *                 - type: object
+ *                   properties:
+ *                     matches:
+ *                       type: array
+ *                       items:
+ *                         $ref: '#/components/schemas/MatchResultObject'
  *       500:
  *         description: Internal server error
  *         content:
@@ -129,15 +129,14 @@ router.get(
  *         content:
  *           application/json:
  *             schema:
- *               type: object
- *               properties:
- *                 status:
- *                   type: string
- *                   example: success
- *                 matches:
- *                   type: array
- *                   items:
- *                     type: object
+ *               allOf:
+ *                 - $ref: '#/components/schemas/SuccessResponse'
+ *                 - type: object
+ *                   properties:
+ *                     matches:
+ *                       type: array
+ *                       items:
+ *                         $ref: '#/components/schemas/MatchResultObject'
  *       500:
  *         description: Internal server error
  *         content:
@@ -183,13 +182,12 @@ router.get(
  *         content:
  *           application/json:
  *             schema:
- *               type: object
- *               properties:
- *                 status:
- *                   type: string
- *                   example: success
- *                 match:
- *                   type: object
+ *               allOf:
+ *                 - $ref: '#/components/schemas/SuccessResponse'
+ *                 - type: object
+ *                   properties:
+ *                     match:
+ *                       $ref: '#/components/schemas/MatchResultObject'
  *       400:
  *         description: Invalid status
  *         content:

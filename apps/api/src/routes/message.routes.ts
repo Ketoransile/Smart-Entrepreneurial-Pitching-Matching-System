@@ -29,23 +29,25 @@ const router = Router();
  *             properties:
  *               otherUserId:
  *                 type: string
+ *                 description: The MongoDB ID of the other participant
  *               matchResultId:
  *                 type: string
+ *                 description: Optional match result to link to the conversation
  *               submissionId:
  *                 type: string
+ *                 description: Optional submission to link to the conversation
  *     responses:
  *       200:
  *         description: Conversation returned
  *         content:
  *           application/json:
  *             schema:
- *               type: object
- *               properties:
- *                 status:
- *                   type: string
- *                   example: success
- *                 conversation:
- *                   type: object
+ *               allOf:
+ *                 - $ref: '#/components/schemas/SuccessResponse'
+ *                 - type: object
+ *                   properties:
+ *                     conversation:
+ *                       $ref: '#/components/schemas/ConversationObject'
  *       500:
  *         description: Internal server error
  *         content:
@@ -73,15 +75,14 @@ router.post(
  *         content:
  *           application/json:
  *             schema:
- *               type: object
- *               properties:
- *                 status:
- *                   type: string
- *                   example: success
- *                 conversations:
- *                   type: array
- *                   items:
- *                     type: object
+ *               allOf:
+ *                 - $ref: '#/components/schemas/SuccessResponse'
+ *                 - type: object
+ *                   properties:
+ *                     conversations:
+ *                       type: array
+ *                       items:
+ *                         $ref: '#/components/schemas/ConversationObject'
  *       500:
  *         description: Internal server error
  *         content:
@@ -111,13 +112,12 @@ router.get("/conversations", authenticate, MessageController.listConversations);
  *         content:
  *           application/json:
  *             schema:
- *               type: object
- *               properties:
- *                 status:
- *                   type: string
- *                   example: success
- *                 conversation:
- *                   type: object
+ *               allOf:
+ *                 - $ref: '#/components/schemas/SuccessResponse'
+ *                 - type: object
+ *                   properties:
+ *                     conversation:
+ *                       $ref: '#/components/schemas/ConversationObject'
  *       404:
  *         description: Conversation not found
  *         content:
@@ -159,15 +159,14 @@ router.get(
  *         content:
  *           application/json:
  *             schema:
- *               type: object
- *               properties:
- *                 status:
- *                   type: string
- *                   example: success
- *                 messages:
- *                   type: array
- *                   items:
- *                     type: object
+ *               allOf:
+ *                 - $ref: '#/components/schemas/SuccessResponse'
+ *                 - type: object
+ *                   properties:
+ *                     messages:
+ *                       type: array
+ *                       items:
+ *                         $ref: '#/components/schemas/MessageObject'
  *       500:
  *         description: Internal server error
  *         content:
@@ -201,27 +200,31 @@ router.get(
  *         application/json:
  *           schema:
  *             type: object
+ *             required: [body]
  *             properties:
  *               body:
  *                 type: string
+ *                 description: Message text content
+ *                 example: "Hello, let's discuss the pitch."
  *               type:
  *                 type: string
  *                 enum: [text, file]
+ *                 default: text
  *               attachmentUrl:
  *                 type: string
+ *                 description: URL to an attached file (when type is file)
  *     responses:
  *       201:
  *         description: Message sent
  *         content:
  *           application/json:
  *             schema:
- *               type: object
- *               properties:
- *                 status:
- *                   type: string
- *                   example: success
- *                 message:
- *                   type: object
+ *               allOf:
+ *                 - $ref: '#/components/schemas/SuccessResponse'
+ *                 - type: object
+ *                   properties:
+ *                     message:
+ *                       $ref: '#/components/schemas/MessageObject'
  *       500:
  *         description: Internal server error
  *         content:
@@ -269,11 +272,7 @@ router.delete(
  *         content:
  *           application/json:
  *             schema:
- *               type: object
- *               properties:
- *                 status:
- *                   type: string
- *                   example: success
+ *               $ref: '#/components/schemas/SuccessResponse'
  *       500:
  *         description: Internal server error
  *         content:
@@ -311,21 +310,22 @@ router.post(
  *             properties:
  *               reason:
  *                 type: string
+ *                 description: Short description of the misconduct
  *               details:
  *                 type: string
+ *                 description: Additional details about the report
  *     responses:
  *       201:
  *         description: Report created, conversation frozen, and admins alerted
  *         content:
  *           application/json:
  *             schema:
- *               type: object
- *               properties:
- *                 status:
- *                   type: string
- *                   example: success
- *                 report:
- *                   type: object
+ *               allOf:
+ *                 - $ref: '#/components/schemas/SuccessResponse'
+ *                 - type: object
+ *                   properties:
+ *                     report:
+ *                       $ref: '#/components/schemas/MisconductReportObject'
  *       500:
  *         description: Internal server error
  *         content:
@@ -353,14 +353,13 @@ router.post(
  *         content:
  *           application/json:
  *             schema:
- *               type: object
- *               properties:
- *                 status:
- *                   type: string
- *                   example: success
- *                 unreadCount:
- *                   type: integer
- *                   example: 5
+ *               allOf:
+ *                 - $ref: '#/components/schemas/SuccessResponse'
+ *                 - type: object
+ *                   properties:
+ *                     unreadCount:
+ *                       type: integer
+ *                       example: 5
  *       500:
  *         description: Internal server error
  *         content:
@@ -384,15 +383,14 @@ router.get("/unread-count", authenticate, MessageController.getUnreadCount);
  *         content:
  *           application/json:
  *             schema:
- *               type: object
- *               properties:
- *                 status:
- *                   type: string
- *                   example: success
- *                 notifications:
- *                   type: array
- *                   items:
- *                     type: object
+ *               allOf:
+ *                 - $ref: '#/components/schemas/SuccessResponse'
+ *                 - type: object
+ *                   properties:
+ *                     notifications:
+ *                       type: array
+ *                       items:
+ *                         $ref: '#/components/schemas/NotificationObject'
  *       500:
  *         description: Internal server error
  *         content:
@@ -422,11 +420,7 @@ router.get("/notifications", authenticate, MessageController.listNotifications);
  *         content:
  *           application/json:
  *             schema:
- *               type: object
- *               properties:
- *                 status:
- *                   type: string
- *                   example: success
+ *               $ref: '#/components/schemas/SuccessResponse'
  *       500:
  *         description: Internal server error
  *         content:
@@ -460,15 +454,14 @@ router.patch(
  *         content:
  *           application/json:
  *             schema:
- *               type: object
- *               properties:
- *                 status:
- *                   type: string
- *                   example: success
- *                 reports:
- *                   type: array
- *                   items:
- *                     type: object
+ *               allOf:
+ *                 - $ref: '#/components/schemas/SuccessResponse'
+ *                 - type: object
+ *                   properties:
+ *                     reports:
+ *                       type: array
+ *                       items:
+ *                         $ref: '#/components/schemas/MisconductReportObject'
  *       500:
  *         description: Internal server error
  *         content:
@@ -508,19 +501,19 @@ router.get(
  *               action:
  *                 type: string
  *                 enum: [unfreeze, keep_frozen]
+ *                 description: Whether to unfreeze or keep the conversation frozen
  *     responses:
  *       200:
  *         description: Report resolved
  *         content:
  *           application/json:
  *             schema:
- *               type: object
- *               properties:
- *                 status:
- *                   type: string
- *                   example: success
- *                 report:
- *                   type: object
+ *               allOf:
+ *                 - $ref: '#/components/schemas/SuccessResponse'
+ *                 - type: object
+ *                   properties:
+ *                     report:
+ *                       $ref: '#/components/schemas/MisconductReportObject'
  *       404:
  *         description: Report not found
  *         content:

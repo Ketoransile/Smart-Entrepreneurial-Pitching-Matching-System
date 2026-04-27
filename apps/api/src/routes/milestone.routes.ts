@@ -33,11 +33,13 @@ const router = Router();
  *                 type: string
  *               title:
  *                 type: string
+ *                 example: "MVP Launch"
  *               description:
  *                 type: string
  *               amount:
  *                 type: number
  *                 minimum: 0.01
+ *                 example: 25000
  *               currency:
  *                 type: string
  *                 example: USD
@@ -47,6 +49,27 @@ const router = Router();
  *     responses:
  *       201:
  *         description: Milestone created and escrow held
+ *         content:
+ *           application/json:
+ *             schema:
+ *               allOf:
+ *                 - $ref: '#/components/schemas/SuccessResponse'
+ *                 - type: object
+ *                   properties:
+ *                     milestone:
+ *                       $ref: '#/components/schemas/MilestoneObject'
+ *       400:
+ *         description: Validation error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
  */
 router.post(
 	"/",
@@ -83,15 +106,14 @@ router.post(
  *         content:
  *           application/json:
  *             schema:
- *               type: object
- *               properties:
- *                 status:
- *                   type: string
- *                   example: success
- *                 milestones:
- *                   type: array
- *                   items:
- *                     type: object
+ *               allOf:
+ *                 - $ref: '#/components/schemas/SuccessResponse'
+ *                 - type: object
+ *                   properties:
+ *                     milestones:
+ *                       type: array
+ *                       items:
+ *                         $ref: '#/components/schemas/MilestoneObject'
  *       500:
  *         description: Internal server error
  *         content:
@@ -126,13 +148,12 @@ router.get(
  *         content:
  *           application/json:
  *             schema:
- *               type: object
- *               properties:
- *                 status:
- *                   type: string
- *                   example: success
- *                 milestone:
- *                   type: object
+ *               allOf:
+ *                 - $ref: '#/components/schemas/SuccessResponse'
+ *                 - type: object
+ *                   properties:
+ *                     milestone:
+ *                       $ref: '#/components/schemas/MilestoneObject'
  *       404:
  *         description: Milestone not found
  *         content:
@@ -192,13 +213,12 @@ router.get(
  *         content:
  *           application/json:
  *             schema:
- *               type: object
- *               properties:
- *                 status:
- *                   type: string
- *                   example: success
- *                 milestone:
- *                   type: object
+ *               allOf:
+ *                 - $ref: '#/components/schemas/SuccessResponse'
+ *                 - type: object
+ *                   properties:
+ *                     milestone:
+ *                       $ref: '#/components/schemas/MilestoneObject'
  *       404:
  *         description: Milestone not found
  *         content:
@@ -260,11 +280,24 @@ router.patch(
  *         content:
  *           application/json:
  *             schema:
- *               type: object
- *               properties:
- *                 status:
- *                   type: string
- *                   example: success
+ *               allOf:
+ *                 - $ref: '#/components/schemas/SuccessResponse'
+ *                 - type: object
+ *                   properties:
+ *                     milestone:
+ *                       $ref: '#/components/schemas/MilestoneObject'
+ *       404:
+ *         description: Milestone not found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
  */
 router.post(
 	"/:milestoneId/evidence",
@@ -297,11 +330,34 @@ router.post(
  *             properties:
  *               approved:
  *                 type: boolean
+ *                 description: Whether the milestone is approved for payment release
  *               notes:
  *                 type: string
+ *                 description: Verification notes or rejection reason
  *     responses:
  *       200:
  *         description: Milestone verification handled
+ *         content:
+ *           application/json:
+ *             schema:
+ *               allOf:
+ *                 - $ref: '#/components/schemas/SuccessResponse'
+ *                 - type: object
+ *                   properties:
+ *                     milestone:
+ *                       $ref: '#/components/schemas/MilestoneObject'
+ *       404:
+ *         description: Milestone not found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
  */
 router.post(
 	"/:milestoneId/verify",

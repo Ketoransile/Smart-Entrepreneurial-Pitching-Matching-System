@@ -43,13 +43,12 @@ const router = Router();
  *         content:
  *           application/json:
  *             schema:
- *               type: object
- *               properties:
- *                 status:
- *                   type: string
- *                   example: success
- *                 meeting:
- *                   type: object
+ *               allOf:
+ *                 - $ref: '#/components/schemas/SuccessResponse'
+ *                 - type: object
+ *                   properties:
+ *                     meeting:
+ *                       $ref: '#/components/schemas/MeetingObject'
  *       400:
  *         description: Invalid request
  *         content:
@@ -85,15 +84,14 @@ router.post("/", authenticate, MeetingController.schedule);
  *         content:
  *           application/json:
  *             schema:
- *               type: object
- *               properties:
- *                 status:
- *                   type: string
- *                   example: success
- *                 meetings:
- *                   type: array
- *                   items:
- *                     type: object
+ *               allOf:
+ *                 - $ref: '#/components/schemas/SuccessResponse'
+ *                 - type: object
+ *                   properties:
+ *                     meetings:
+ *                       type: array
+ *                       items:
+ *                         $ref: '#/components/schemas/MeetingObject'
  *       500:
  *         description: Internal server error
  *         content:
@@ -136,13 +134,12 @@ router.get("/", authenticate, MeetingController.listMine);
  *         content:
  *           application/json:
  *             schema:
- *               type: object
- *               properties:
- *                 status:
- *                   type: string
- *                   example: success
- *                 meeting:
- *                   type: object
+ *               allOf:
+ *                 - $ref: '#/components/schemas/SuccessResponse'
+ *                 - type: object
+ *                   properties:
+ *                     meeting:
+ *                       $ref: '#/components/schemas/MeetingObject'
  *       404:
  *         description: Meeting not found
  *         content:
@@ -182,13 +179,12 @@ router.patch(
  *         content:
  *           application/json:
  *             schema:
- *               type: object
- *               properties:
- *                 status:
- *                   type: string
- *                   example: success
- *                 token:
- *                   type: string
+ *               allOf:
+ *                 - $ref: '#/components/schemas/SuccessResponse'
+ *                 - type: object
+ *                   properties:
+ *                     token:
+ *                       type: string
  *       404:
  *         description: Meeting not found
  *         content:
