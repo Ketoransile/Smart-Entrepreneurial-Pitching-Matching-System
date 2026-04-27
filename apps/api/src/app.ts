@@ -50,8 +50,22 @@ app.use((req: Request, res: Response, next: NextFunction) => {
 	return helmet({
 		crossOriginOpenerPolicy: false,
 		crossOriginResourcePolicy: { policy: "cross-origin" },
-	})(req, res, next);
-});
+		contentSecurityPolicy: {
+			directives: {
+				defaultSrc: ["'self'"],
+				scriptSrc: ["'self'", "'unsafe-inline'", "https://unpkg.com"],
+				styleSrc: ["'self'", "'unsafe-inline'", "https://unpkg.com"],
+				imgSrc: [
+					"'self'",
+					"data:",
+					"https://unpkg.com",
+					"https://res.cloudinary.com",
+				],
+				connectSrc: ["'self'", "https://unpkg.com"],
+			},
+		},
+	}),
+);
 
 const allowedOrigins = [
 	process.env.CLIENT_URL,

@@ -9,7 +9,6 @@ import {
 
 const router = Router();
 
-// All investor routes require authentication
 router.use(authenticate);
 router.use(authorize("investor"));
 
@@ -20,7 +19,6 @@ router.use(authorize("investor"));
  *     description: Investor profile management
  */
 
-// Profile routes
 /**
  * @openapi
  * /api/investor/profile:
@@ -35,38 +33,63 @@ router.use(authorize("investor"));
  *         application/json:
  *           schema:
  *             type: object
- *             required: [fullName, preferredSectors, preferredStages, investmentRange, investmentType]
+ *             required: [fullName, preferredSectors, preferredStages, investmentRange]
  *             properties:
  *               fullName:
+ *                 type: string
+ *                 example: "Jane Smith"
+ *               investmentFirm:
+ *                 type: string
+ *               position:
  *                 type: string
  *               preferredSectors:
  *                 type: array
  *                 items:
  *                   type: string
+ *                   enum: [technology, healthcare, agriculture, finance, education, retail, manufacturing, energy, transportation, other]
  *               preferredStages:
  *                 type: array
  *                 items:
- *                   $ref: '#/components/schemas/InvestmentStage'
+ *                   type: string
+ *                   enum: [idea, mvp, early-revenue, scaling]
  *               investmentRange:
  *                 type: object
  *                 properties:
  *                   min:
  *                     type: integer
+ *                     example: 10000
  *                   max:
  *                     type: integer
+ *                     example: 500000
  *               investmentType:
  *                 type: array
  *                 items:
  *                   type: string
+ *                   enum: [equity, debt, grant, convertible-note]
  *     responses:
  *       201:
  *         description: Profile created
+ *         content:
+ *           application/json:
+ *             schema:
+ *               allOf:
+ *                 - $ref: '#/components/schemas/SuccessResponse'
+ *                 - type: object
+ *                   properties:
+ *                     profile:
+ *                       $ref: '#/components/schemas/InvestorProfileObject'
  *       400:
  *         description: Validation or duplicate profile error
- *       401:
- *         description: Unauthorized
- *       403:
- *         description: Forbidden
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
  */
 router.post(
 	"/profile",
@@ -85,10 +108,21 @@ router.post(
  *     responses:
  *       200:
  *         description: Profile fetched
- *       401:
- *         description: Unauthorized
+ *         content:
+ *           application/json:
+ *             schema:
+ *               allOf:
+ *                 - $ref: '#/components/schemas/SuccessResponse'
+ *                 - type: object
+ *                   properties:
+ *                     profile:
+ *                       $ref: '#/components/schemas/InvestorProfileObject'
  *       404:
  *         description: Profile not found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
  */
 router.get("/profile", InvestorController.getProfile);
 
@@ -109,6 +143,10 @@ router.get("/profile", InvestorController.getProfile);
  *             properties:
  *               fullName:
  *                 type: string
+ *               investmentFirm:
+ *                 type: string
+ *               position:
+ *                 type: string
  *               preferredSectors:
  *                 type: array
  *                 items:
@@ -116,7 +154,7 @@ router.get("/profile", InvestorController.getProfile);
  *               preferredStages:
  *                 type: array
  *                 items:
- *                   $ref: '#/components/schemas/InvestmentStage'
+ *                   type: string
  *               investmentRange:
  *                 type: object
  *                 properties:
@@ -124,15 +162,34 @@ router.get("/profile", InvestorController.getProfile);
  *                     type: integer
  *                   max:
  *                     type: integer
+ *               investmentType:
+ *                 type: array
+ *                 items:
+ *                   type: string
  *     responses:
  *       200:
  *         description: Profile updated
+ *         content:
+ *           application/json:
+ *             schema:
+ *               allOf:
+ *                 - $ref: '#/components/schemas/SuccessResponse'
+ *                 - type: object
+ *                   properties:
+ *                     profile:
+ *                       $ref: '#/components/schemas/InvestorProfileObject'
  *       400:
  *         description: Validation error
- *       401:
- *         description: Unauthorized
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
  *       404:
  *         description: Profile not found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
  */
 router.put(
 	"/profile",
@@ -142,37 +199,123 @@ router.put(
 
 /**
  * @openapi
- * /api/investor/saved-pitches:
+ * /api/investor/profile/check:
  *   get:
  *     tags: [Investor]
- *     summary: Get all saved pitches for current investor
+ *     summary: Check if current investor has a profile
  *     security:
  *       - bearerAuth: []
  *     responses:
  *       200:
- *         description: Saved pitches fetched successfully
+ *         description: Profile existence returned
+ *         content:
+ *           application/json:
+ *             schema:
+ *               allOf:
+ *                 - $ref: '#/components/schemas/SuccessResponse'
+ *                 - type: object
+ *                   properties:
+ *                     exists:
+ *                       type: boolean
+ *                       example: true
+ */
+router.get("/profile/check", async (req, res) => {
+	const { InvestorProfile } = await import("../models/InvestorProfile");
+	const profile = await InvestorProfile.findOne({
+		userId: (req as any).user?._id,
+	});
+	res.json({ status: "success", exists: !!profile });
+});
+
+/**
+ * @openapi
+ * /api/investor/saved-pitches:
+ *   get:
+ *     tags: [Investor]
+ *     summary: List saved pitches
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Saved pitches fetched
+ *         content:
+ *           application/json:
+ *             schema:
+ *               allOf:
+ *                 - $ref: '#/components/schemas/SuccessResponse'
+ *                 - type: object
+ *                   properties:
+ *                     submissions:
+ *                       type: array
+ *                       items:
+ *                         $ref: '#/components/schemas/SubmissionObject'
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
  */
 router.get("/saved-pitches", InvestorController.getSavedPitches);
 
 /**
  * @openapi
- * /api/investor/saved-pitches/{id}:
+ * /api/investor/saved-pitches/{submissionId}:
  *   post:
  *     tags: [Investor]
- *     summary: Toggle a saved pitch
+ *     summary: Save a pitch to bookmarks
  *     security:
  *       - bearerAuth: []
  *     parameters:
  *       - in: path
- *         name: id
+ *         name: submissionId
  *         required: true
  *         schema:
  *           type: string
- *         description: The Pitch / Submission ID
  *     responses:
  *       200:
- *         description: Pitch saved/unsaved successfully
+ *         description: Pitch saved
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/SuccessResponse'
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
  */
 router.post("/saved-pitches/:id", InvestorController.toggleSavedPitch);
+
+/**
+ * @openapi
+ * /api/investor/saved-pitches/{submissionId}:
+ *   delete:
+ *     tags: [Investor]
+ *     summary: Remove a pitch from bookmarks
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: submissionId
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Pitch removed
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/SuccessResponse'
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ */
+router.delete("/saved-pitches/:id", InvestorController.toggleSavedPitch);
 
 export default router;

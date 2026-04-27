@@ -50,6 +50,30 @@ const router = Router();
  *             category: "communication"
  *             comment: "Fast responses and very constructive follow-ups."
  *             invitationId: "65f2c7f0b295a9b0ff654321"
+ *     responses:
+ *       201:
+ *         description: Feedback created
+ *         content:
+ *           application/json:
+ *             schema:
+ *               allOf:
+ *                 - $ref: '#/components/schemas/SuccessResponse'
+ *                 - type: object
+ *                   properties:
+ *                     feedback:
+ *                       $ref: '#/components/schemas/FeedbackObject'
+ *       400:
+ *         description: Validation error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
  */
 router.post("/", authenticate, FeedbackController.create);
 
@@ -61,6 +85,26 @@ router.post("/", authenticate, FeedbackController.create);
  *     summary: List feedback I have received
  *     security:
  *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Received feedback list
+ *         content:
+ *           application/json:
+ *             schema:
+ *               allOf:
+ *                 - $ref: '#/components/schemas/SuccessResponse'
+ *                 - type: object
+ *                   properties:
+ *                     feedback:
+ *                       type: array
+ *                       items:
+ *                         $ref: '#/components/schemas/FeedbackObject'
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
  */
 router.get("/me/received", authenticate, FeedbackController.listReceived);
 
@@ -72,6 +116,26 @@ router.get("/me/received", authenticate, FeedbackController.listReceived);
  *     summary: List feedback I have submitted
  *     security:
  *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Given feedback list
+ *         content:
+ *           application/json:
+ *             schema:
+ *               allOf:
+ *                 - $ref: '#/components/schemas/SuccessResponse'
+ *                 - type: object
+ *                   properties:
+ *                     feedback:
+ *                       type: array
+ *                       items:
+ *                         $ref: '#/components/schemas/FeedbackObject'
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
  */
 router.get("/me/given", authenticate, FeedbackController.listGiven);
 
@@ -86,6 +150,21 @@ router.get("/me/given", authenticate, FeedbackController.listGiven);
  *     responses:
  *       200:
  *         description: Feedback summary returned
+ *         content:
+ *           application/json:
+ *             schema:
+ *               allOf:
+ *                 - $ref: '#/components/schemas/SuccessResponse'
+ *                 - type: object
+ *                   properties:
+ *                     summary:
+ *                       $ref: '#/components/schemas/FeedbackSummary'
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
  */
 router.get("/me/summary", authenticate, FeedbackController.mySummary);
 
@@ -104,6 +183,15 @@ router.get("/me/summary", authenticate, FeedbackController.mySummary);
  *     responses:
  *       200:
  *         description: Feedback summary returned
+ *         content:
+ *           application/json:
+ *             schema:
+ *               allOf:
+ *                 - $ref: '#/components/schemas/SuccessResponse'
+ *                 - type: object
+ *                   properties:
+ *                     summary:
+ *                       $ref: '#/components/schemas/FeedbackSummary'
  */
 router.get("/users/:userId/summary", FeedbackController.userSummary);
 

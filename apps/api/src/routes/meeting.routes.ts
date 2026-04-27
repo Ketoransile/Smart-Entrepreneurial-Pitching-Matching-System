@@ -40,6 +40,27 @@ const router = Router();
  *     responses:
  *       201:
  *         description: Meeting created
+ *         content:
+ *           application/json:
+ *             schema:
+ *               allOf:
+ *                 - $ref: '#/components/schemas/SuccessResponse'
+ *                 - type: object
+ *                   properties:
+ *                     meeting:
+ *                       $ref: '#/components/schemas/MeetingObject'
+ *       400:
+ *         description: Invalid request
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
  */
 router.post("/", authenticate, MeetingController.schedule);
 
@@ -60,6 +81,23 @@ router.post("/", authenticate, MeetingController.schedule);
  *     responses:
  *       200:
  *         description: Meetings fetched
+ *         content:
+ *           application/json:
+ *             schema:
+ *               allOf:
+ *                 - $ref: '#/components/schemas/SuccessResponse'
+ *                 - type: object
+ *                   properties:
+ *                     meetings:
+ *                       type: array
+ *                       items:
+ *                         $ref: '#/components/schemas/MeetingObject'
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
  */
 router.get("/", authenticate, MeetingController.listMine);
 
@@ -93,6 +131,27 @@ router.get("/", authenticate, MeetingController.listMine);
  *     responses:
  *       200:
  *         description: Meeting updated
+ *         content:
+ *           application/json:
+ *             schema:
+ *               allOf:
+ *                 - $ref: '#/components/schemas/SuccessResponse'
+ *                 - type: object
+ *                   properties:
+ *                     meeting:
+ *                       $ref: '#/components/schemas/MeetingObject'
+ *       404:
+ *         description: Meeting not found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
  */
 router.patch(
 	"/:meetingId/status",
@@ -117,6 +176,27 @@ router.patch(
  *     responses:
  *       200:
  *         description: LiveKit JWT token
+ *         content:
+ *           application/json:
+ *             schema:
+ *               allOf:
+ *                 - $ref: '#/components/schemas/SuccessResponse'
+ *                 - type: object
+ *                   properties:
+ *                     token:
+ *                       type: string
+ *       404:
+ *         description: Meeting not found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
  */
 router.get("/:meetingId/token", authenticate, MeetingController.getToken);
 

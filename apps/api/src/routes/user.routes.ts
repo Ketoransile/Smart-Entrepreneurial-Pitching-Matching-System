@@ -40,8 +40,36 @@ const avatarUpload = multer({
  *     responses:
  *       200:
  *         description: Profile fetched
+ *         content:
+ *           application/json:
+ *             schema:
+ *               allOf:
+ *                 - $ref: '#/components/schemas/SuccessResponse'
+ *                 - type: object
+ *                   properties:
+ *                     user:
+ *                       $ref: '#/components/schemas/UserObject'
+ *                     profile:
+ *                       nullable: true
+ *                       oneOf:
+ *                         - $ref: '#/components/schemas/EntrepreneurProfileObject'
+ *                         - $ref: '#/components/schemas/InvestorProfileObject'
+ *                   nullable: true
+ *                   oneOf:
+ *                     - $ref: '#/components/schemas/EntrepreneurProfileObject'
+ *                     - $ref: '#/components/schemas/InvestorProfileObject'
  *       404:
  *         description: User not found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
  */
 router.get(
 	"/me/profile",
@@ -94,12 +122,47 @@ router.get(
  *         application/json:
  *           schema:
  *             type: object
- *             additionalProperties: true
+ *             description: Role-specific profile fields (entrepreneur or investor)
+ *             properties:
+ *               fullName:
+ *                 type: string
+ *               companyName:
+ *                 type: string
+ *               businessStage:
+ *                 type: string
+ *                 enum: [idea, mvp, early-revenue, scaling]
+ *               nationalIdUrl:
+ *                 type: string
+ *               businessLicenseUrl:
+ *                 type: string
  *     responses:
  *       200:
  *         description: Profile updated
+ *         content:
+ *           application/json:
+ *             schema:
+ *               allOf:
+ *                 - $ref: '#/components/schemas/SuccessResponse'
+ *                 - type: object
+ *                   properties:
+ *                     user:
+ *                       $ref: '#/components/schemas/UserObject'
+ *                     profile:
+ *                       oneOf:
+ *                         - $ref: '#/components/schemas/EntrepreneurProfileObject'
+ *                         - $ref: '#/components/schemas/InvestorProfileObject'
  *       400:
  *         description: Invalid role for profile
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
  */
 router.put(
 	"/me/profile",
@@ -204,10 +267,33 @@ router.put(
  *     responses:
  *       200:
  *         description: User profile updated
+ *         content:
+ *           application/json:
+ *             schema:
+ *               allOf:
+ *                 - $ref: '#/components/schemas/SuccessResponse'
+ *                 - type: object
+ *                   properties:
+ *                     user:
+ *                       $ref: '#/components/schemas/UserObject'
  *       400:
  *         description: Invalid payload
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
  *       404:
  *         description: User not found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
  */
 router.patch(
 	"/me",
@@ -295,10 +381,35 @@ router.patch(
  *     responses:
  *       200:
  *         description: Avatar uploaded
+ *         content:
+ *           application/json:
+ *             schema:
+ *               allOf:
+ *                 - $ref: '#/components/schemas/SuccessResponse'
+ *                 - type: object
+ *                   properties:
+ *                     photoURL:
+ *                       type: string
+ *                     user:
+ *                       $ref: '#/components/schemas/UserObject'
  *       400:
  *         description: Missing or invalid file
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
  *       413:
- *         description: File too large
+ *         description: File too large (max 2MB)
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
  */
 router.post(
 	"/me/avatar",

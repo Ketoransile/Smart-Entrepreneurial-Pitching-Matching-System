@@ -63,8 +63,42 @@ const upload = multer({
  *     responses:
  *       200:
  *         description: File uploaded successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               allOf:
+ *                 - $ref: '#/components/schemas/SuccessResponse'
+ *                 - type: object
+ *                   properties:
+ *                     file:
+ *                       type: object
+ *                       properties:
+ *                         name:
+ *                           type: string
+ *                         url:
+ *                           type: string
+ *                         cloudinaryId:
+ *                           type: string
+ *                         type:
+ *                           type: string
+ *                         size:
+ *                           type: integer
+ *                         format:
+ *                           type: string
+ *                         resourceType:
+ *                           type: string
  *       400:
  *         description: No file provided
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
  */
 router.post(
 	"/",
@@ -150,6 +184,21 @@ router.post(
  *     responses:
  *       200:
  *         description: File deleted successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               allOf:
+ *                 - $ref: '#/components/schemas/SuccessResponse'
+ *                 - type: object
+ *                   properties:
+ *                     result:
+ *                       type: object
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
  */
 router.delete(
 	"/:publicId",

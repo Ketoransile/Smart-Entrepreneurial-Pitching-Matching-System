@@ -29,13 +29,31 @@ const router = Router();
  *             properties:
  *               otherUserId:
  *                 type: string
+ *                 description: The MongoDB ID of the other participant
  *               matchResultId:
  *                 type: string
+ *                 description: Optional match result to link to the conversation
  *               submissionId:
  *                 type: string
+ *                 description: Optional submission to link to the conversation
  *     responses:
  *       200:
  *         description: Conversation returned
+ *         content:
+ *           application/json:
+ *             schema:
+ *               allOf:
+ *                 - $ref: '#/components/schemas/SuccessResponse'
+ *                 - type: object
+ *                   properties:
+ *                     conversation:
+ *                       $ref: '#/components/schemas/ConversationObject'
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
  */
 router.post(
 	"/conversations",
@@ -54,6 +72,23 @@ router.post(
  *     responses:
  *       200:
  *         description: Conversations fetched
+ *         content:
+ *           application/json:
+ *             schema:
+ *               allOf:
+ *                 - $ref: '#/components/schemas/SuccessResponse'
+ *                 - type: object
+ *                   properties:
+ *                     conversations:
+ *                       type: array
+ *                       items:
+ *                         $ref: '#/components/schemas/ConversationObject'
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
  */
 router.get("/conversations", authenticate, MessageController.listConversations);
 
@@ -74,6 +109,21 @@ router.get("/conversations", authenticate, MessageController.listConversations);
  *     responses:
  *       200:
  *         description: Conversation fetched
+ *         content:
+ *           application/json:
+ *             schema:
+ *               allOf:
+ *                 - $ref: '#/components/schemas/SuccessResponse'
+ *                 - type: object
+ *                   properties:
+ *                     conversation:
+ *                       $ref: '#/components/schemas/ConversationObject'
+ *       404:
+ *         description: Conversation not found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
  */
 router.get(
 	"/conversations/:conversationId",
@@ -106,6 +156,23 @@ router.get(
  *     responses:
  *       200:
  *         description: Messages fetched
+ *         content:
+ *           application/json:
+ *             schema:
+ *               allOf:
+ *                 - $ref: '#/components/schemas/SuccessResponse'
+ *                 - type: object
+ *                   properties:
+ *                     messages:
+ *                       type: array
+ *                       items:
+ *                         $ref: '#/components/schemas/MessageObject'
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
  */
 router.get(
 	"/conversations/:conversationId/messages",
@@ -133,17 +200,37 @@ router.get(
  *         application/json:
  *           schema:
  *             type: object
+ *             required: [body]
  *             properties:
  *               body:
  *                 type: string
+ *                 description: Message text content
+ *                 example: "Hello, let's discuss the pitch."
  *               type:
  *                 type: string
  *                 enum: [text, file]
+ *                 default: text
  *               attachmentUrl:
  *                 type: string
+ *                 description: URL to an attached file (when type is file)
  *     responses:
  *       201:
  *         description: Message sent
+ *         content:
+ *           application/json:
+ *             schema:
+ *               allOf:
+ *                 - $ref: '#/components/schemas/SuccessResponse'
+ *                 - type: object
+ *                   properties:
+ *                     message:
+ *                       $ref: '#/components/schemas/MessageObject'
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
  */
 router.post(
 	"/conversations/:conversationId/messages",
@@ -182,6 +269,16 @@ router.delete(
  *     responses:
  *       200:
  *         description: Conversation marked as read
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/SuccessResponse'
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
  */
 router.post(
 	"/conversations/:conversationId/read",
@@ -213,11 +310,28 @@ router.post(
  *             properties:
  *               reason:
  *                 type: string
+ *                 description: Short description of the misconduct
  *               details:
  *                 type: string
+ *                 description: Additional details about the report
  *     responses:
  *       201:
  *         description: Report created, conversation frozen, and admins alerted
+ *         content:
+ *           application/json:
+ *             schema:
+ *               allOf:
+ *                 - $ref: '#/components/schemas/SuccessResponse'
+ *                 - type: object
+ *                   properties:
+ *                     report:
+ *                       $ref: '#/components/schemas/MisconductReportObject'
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
  */
 router.post(
 	"/conversations/:conversationId/report",
@@ -236,6 +350,22 @@ router.post(
  *     responses:
  *       200:
  *         description: Unread count fetched
+ *         content:
+ *           application/json:
+ *             schema:
+ *               allOf:
+ *                 - $ref: '#/components/schemas/SuccessResponse'
+ *                 - type: object
+ *                   properties:
+ *                     unreadCount:
+ *                       type: integer
+ *                       example: 5
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
  */
 router.get("/unread-count", authenticate, MessageController.getUnreadCount);
 
@@ -250,6 +380,23 @@ router.get("/unread-count", authenticate, MessageController.getUnreadCount);
  *     responses:
  *       200:
  *         description: Notifications fetched
+ *         content:
+ *           application/json:
+ *             schema:
+ *               allOf:
+ *                 - $ref: '#/components/schemas/SuccessResponse'
+ *                 - type: object
+ *                   properties:
+ *                     notifications:
+ *                       type: array
+ *                       items:
+ *                         $ref: '#/components/schemas/NotificationObject'
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
  */
 router.get("/notifications", authenticate, MessageController.listNotifications);
 
@@ -270,6 +417,16 @@ router.get("/notifications", authenticate, MessageController.listNotifications);
  *     responses:
  *       200:
  *         description: Notification updated
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/SuccessResponse'
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
  */
 router.patch(
 	"/notifications/:notificationId/read",
@@ -294,6 +451,23 @@ router.patch(
  *     responses:
  *       200:
  *         description: Reports fetched
+ *         content:
+ *           application/json:
+ *             schema:
+ *               allOf:
+ *                 - $ref: '#/components/schemas/SuccessResponse'
+ *                 - type: object
+ *                   properties:
+ *                     reports:
+ *                       type: array
+ *                       items:
+ *                         $ref: '#/components/schemas/MisconductReportObject'
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
  */
 router.get(
 	"/admin/reports",
@@ -327,9 +501,31 @@ router.get(
  *               action:
  *                 type: string
  *                 enum: [unfreeze, keep_frozen]
+ *                 description: Whether to unfreeze or keep the conversation frozen
  *     responses:
  *       200:
  *         description: Report resolved
+ *         content:
+ *           application/json:
+ *             schema:
+ *               allOf:
+ *                 - $ref: '#/components/schemas/SuccessResponse'
+ *                 - type: object
+ *                   properties:
+ *                     report:
+ *                       $ref: '#/components/schemas/MisconductReportObject'
+ *       404:
+ *         description: Report not found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
  */
 router.patch(
 	"/admin/reports/:reportId/resolve",
