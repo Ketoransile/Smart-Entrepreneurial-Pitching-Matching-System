@@ -51,8 +51,16 @@
 			"description": "Funding milestone tracking and simulated payment release workflow"
 		},
 		{
+			"name": "Payments",
+			"description": "Chapa payment integration for milestones"
+		},
+		{
 			"name": "Submissions",
 			"description": "Entrepreneur pitch drafting and submission workflows"
+		},
+		{
+			"name": "Transactions",
+			"description": "Simulated payment transaction logs for milestones"
 		},
 		{
 			"name": "Upload",
@@ -1125,6 +1133,35 @@
 				}
 			}
 		},
+		"/api/documents/{id}/signed-url": {
+			"get": {
+				"tags": ["Documents"],
+				"summary": "Get a signed download URL for a document",
+				"security": [
+					{
+						"bearerAuth": []
+					}
+				],
+				"parameters": [
+					{
+						"in": "path",
+						"name": "id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "Signed URL generated"
+					},
+					"404": {
+						"description": "Document not found"
+					}
+				}
+			}
+		},
 		"/api/entrepreneur/profile": {
 			"post": {
 				"tags": ["Entrepreneur"],
@@ -1814,6 +1851,49 @@
 				}
 			}
 		},
+		"/api/matching/respond/{submissionId}": {
+			"patch": {
+				"tags": ["Matching"],
+				"summary": "Investor accepts or declines a project directly from feed",
+				"security": [
+					{
+						"bearerAuth": []
+					}
+				],
+				"parameters": [
+					{
+						"in": "path",
+						"name": "submissionId",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"type": "object",
+								"required": ["status"],
+								"properties": {
+									"status": {
+										"type": "string",
+										"enum": ["accepted", "declined"]
+									}
+								}
+							}
+						}
+					}
+				},
+				"responses": {
+					"200": {
+						"description": "Match status updated (or match created)"
+					}
+				}
+			}
+		},
 		"/api/matching/{matchId}/status": {
 			"patch": {
 				"tags": ["Matching"],
@@ -1844,6 +1924,48 @@
 									"status": {
 										"type": "string",
 										"enum": ["accepted", "declined"]
+									}
+								}
+							}
+						}
+					}
+				},
+				"responses": {
+					"200": {
+						"description": "Match status updated"
+					}
+				}
+			}
+		},
+		"/api/matching/matches/{matchId}/approve": {
+			"patch": {
+				"tags": ["Matching"],
+				"summary": "Entrepreneur approves or declines an investment request",
+				"security": [
+					{
+						"bearerAuth": []
+					}
+				],
+				"parameters": [
+					{
+						"in": "path",
+						"name": "matchId",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"type": "object",
+								"required": ["approved"],
+								"properties": {
+									"approved": {
+										"type": "boolean"
 									}
 								}
 							}
@@ -1977,6 +2099,32 @@
 				"responses": {
 					"200": {
 						"description": "Meeting updated"
+					}
+				}
+			}
+		},
+		"/api/meetings/{meetingId}/token": {
+			"get": {
+				"tags": ["Communication"],
+				"summary": "Get a LiveKit access token for a meeting",
+				"security": [
+					{
+						"bearerAuth": []
+					}
+				],
+				"parameters": [
+					{
+						"in": "path",
+						"name": "meetingId",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "LiveKit JWT token"
 					}
 				}
 			}
@@ -2248,6 +2396,22 @@
 				}
 			}
 		},
+		"/api/messages/notifications/read-all": {
+			"patch": {
+				"tags": ["Communication"],
+				"summary": "Mark all unread notifications as read",
+				"security": [
+					{
+						"bearerAuth": []
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "All notifications marked as read"
+					}
+				}
+			}
+		},
 		"/api/messages/notifications/{notificationId}/read": {
 			"patch": {
 				"tags": ["Communication"],
@@ -2346,7 +2510,7 @@
 		"/api/milestones": {
 			"post": {
 				"tags": ["Milestones"],
-				"summary": "Create a new funding milestone for an accepted match",
+				"summary": "Create a new funding milestone (Entrepreneur only)",
 				"security": [
 					{
 						"bearerAuth": []
@@ -2397,7 +2561,7 @@
 				},
 				"responses": {
 					"201": {
-						"description": "Milestone created and escrow held"
+						"description": "Milestone created"
 					}
 				}
 			},
@@ -2436,7 +2600,10 @@
 								"approved",
 								"rejected",
 								"paid",
-								"cancelled"
+								"cancelled",
+								"pending",
+								"submitted_for_review",
+								"verified_paid"
 							]
 						}
 					}
@@ -2448,10 +2615,10 @@
 				}
 			}
 		},
-		"/api/milestones/{milestoneId}": {
+		"/api/milestones/single/{id}": {
 			"get": {
 				"tags": ["Milestones"],
-				"summary": "Get milestone details",
+				"summary": "Get single milestone details",
 				"security": [
 					{
 						"bearerAuth": []
@@ -2460,7 +2627,7 @@
 				"parameters": [
 					{
 						"in": "path",
-						"name": "milestoneId",
+						"name": "id",
 						"required": true,
 						"schema": {
 							"type": "string"
@@ -2472,10 +2639,38 @@
 						"description": "Milestone returned"
 					}
 				}
-			},
-			"patch": {
+			}
+		},
+		"/api/milestones/{projectId}": {
+			"get": {
 				"tags": ["Milestones"],
-				"summary": "Update milestone details or move to in_progress/cancelled",
+				"summary": "Get all milestones for a project (submissionId)",
+				"security": [
+					{
+						"bearerAuth": []
+					}
+				],
+				"parameters": [
+					{
+						"in": "path",
+						"name": "projectId",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "Project milestones returned"
+					}
+				}
+			}
+		},
+		"/api/milestones/{milestoneId}": {
+			"put": {
+				"tags": ["Milestones"],
+				"summary": "Update milestone details (only when status is \"pending\")",
 				"security": [
 					{
 						"bearerAuth": []
@@ -2525,12 +2720,170 @@
 						"description": "Milestone updated"
 					}
 				}
+			},
+			"delete": {
+				"tags": ["Milestones"],
+				"summary": "Delete a pending milestone (Investor or Admin only)",
+				"security": [
+					{
+						"bearerAuth": []
+					}
+				],
+				"parameters": [
+					{
+						"in": "path",
+						"name": "milestoneId",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "Milestone deleted"
+					},
+					"400": {
+						"description": "Milestone is not in pending status"
+					},
+					"403": {
+						"description": "Only the investor can delete this milestone"
+					}
+				}
+			}
+		},
+		"/api/milestones/{milestoneId}/status": {
+			"patch": {
+				"tags": ["Milestones"],
+				"summary": "Transition milestone status (centralized workflow)",
+				"description": "State machine:\n- **submitted_for_review**: Entrepreneur only, milestone must be \"pending\"\n- **verified_paid**: Investor only, milestone must be \"submitted_for_review\" — triggers simulated payment and creates a TransactionLog\n- **rejected**: Investor only, milestone must be \"submitted_for_review\" — saves feedback\n",
+				"security": [
+					{
+						"bearerAuth": []
+					}
+				],
+				"parameters": [
+					{
+						"in": "path",
+						"name": "milestoneId",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"type": "object",
+								"required": ["status"],
+								"properties": {
+									"status": {
+										"type": "string",
+										"enum": [
+											"submitted_for_review",
+											"verified_paid",
+											"rejected"
+										]
+									},
+									"feedback": {
+										"type": "string",
+										"description": "Optional feedback (used when rejecting)"
+									}
+								}
+							}
+						}
+					}
+				},
+				"responses": {
+					"200": {
+						"description": "Status transitioned"
+					},
+					"400": {
+						"description": "Invalid status or transition not allowed"
+					},
+					"403": {
+						"description": "Role not permitted for this transition"
+					}
+				}
+			}
+		},
+		"/api/milestones/{milestoneId}/proof": {
+			"post": {
+				"tags": ["Milestones"],
+				"summary": "Upload or attach proof (Entrepreneur only)",
+				"security": [
+					{
+						"bearerAuth": []
+					}
+				],
+				"parameters": [
+					{
+						"in": "path",
+						"name": "milestoneId",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"type": "object",
+								"required": ["proof"],
+								"properties": {
+									"proof": {
+										"type": "string",
+										"description": "Proof URL or descriptive text"
+									}
+								}
+							}
+						}
+					}
+				},
+				"responses": {
+					"200": {
+						"description": "Proof attached"
+					},
+					"403": {
+						"description": "Only the entrepreneur can upload proof"
+					}
+				}
+			},
+			"get": {
+				"tags": ["Milestones"],
+				"summary": "Retrieve milestone proof",
+				"security": [
+					{
+						"bearerAuth": []
+					}
+				],
+				"parameters": [
+					{
+						"in": "path",
+						"name": "milestoneId",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "Proof retrieved"
+					}
+				}
 			}
 		},
 		"/api/milestones/{milestoneId}/evidence": {
 			"post": {
 				"tags": ["Milestones"],
-				"summary": "Submit completion evidence for milestone verification",
+				"summary": "Submit completion evidence documents for verification",
 				"security": [
 					{
 						"bearerAuth": []
@@ -2595,7 +2948,7 @@
 		"/api/milestones/{milestoneId}/verify": {
 			"post": {
 				"tags": ["Milestones"],
-				"summary": "Verify milestone and release simulated payout",
+				"summary": "Verify milestone and release simulated payout (Investor only)",
 				"security": [
 					{
 						"bearerAuth": []
@@ -2633,6 +2986,71 @@
 				"responses": {
 					"200": {
 						"description": "Milestone verification handled"
+					}
+				}
+			}
+		},
+		"/api/payments/initiate": {
+			"post": {
+				"tags": ["Payments"],
+				"summary": "Initiate a Chapa payment for a milestone",
+				"security": [
+					{
+						"bearerAuth": []
+					}
+				],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"type": "object",
+								"required": ["milestoneId"],
+								"properties": {
+									"milestoneId": {
+										"type": "string"
+									}
+								}
+							}
+						}
+					}
+				},
+				"responses": {
+					"200": {
+						"description": "Checkout URL generated"
+					}
+				}
+			}
+		},
+		"/api/payments/webhook": {
+			"post": {
+				"tags": ["Payments"],
+				"summary": "Chapa webhook endpoint",
+				"description": "Endpoint for Chapa to send payment notifications"
+			}
+		},
+		"/api/payments/verify/{tx_ref}": {
+			"get": {
+				"tags": ["Payments"],
+				"summary": "Manually verify a payment status",
+				"security": [
+					{
+						"bearerAuth": []
+					}
+				],
+				"parameters": [
+					{
+						"in": "path",
+						"name": "tx_ref",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "Verification result"
 					}
 				}
 			}
@@ -2990,6 +3408,116 @@
 				}
 			}
 		},
+		"/api/transactions/{projectId}": {
+			"get": {
+				"tags": ["Transactions"],
+				"summary": "Get all transaction logs for a project",
+				"description": "Returns all simulated payment transactions tied to a project (submissionId or matchResultId).",
+				"security": [
+					{
+						"bearerAuth": []
+					}
+				],
+				"parameters": [
+					{
+						"in": "path",
+						"name": "projectId",
+						"required": true,
+						"schema": {
+							"type": "string"
+						},
+						"description": "The project ID (submissionId or matchResultId)"
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "Transaction logs returned",
+						"content": {
+							"application/json": {
+								"schema": {
+									"type": "object",
+									"properties": {
+										"status": {
+											"type": "string",
+											"example": "success"
+										},
+										"count": {
+											"type": "integer"
+										},
+										"transactions": {
+											"type": "array",
+											"items": {
+												"type": "object",
+												"properties": {
+													"_id": {
+														"type": "string"
+													},
+													"milestoneId": {
+														"type": "string"
+													},
+													"projectId": {
+														"type": "string"
+													},
+													"amount": {
+														"type": "number"
+													},
+													"currency": {
+														"type": "string"
+													},
+													"status": {
+														"type": "string",
+														"enum": ["simulated"]
+													},
+													"providerReference": {
+														"type": "string"
+													},
+													"simulatedAt": {
+														"type": "string",
+														"format": "date-time"
+													}
+												}
+											}
+										}
+									}
+								}
+							}
+						}
+					},
+					"401": {
+						"description": "Unauthorized"
+					}
+				}
+			}
+		},
+		"/api/transactions/milestone/{milestoneId}": {
+			"get": {
+				"tags": ["Transactions"],
+				"summary": "Get all transaction logs for a specific milestone",
+				"security": [
+					{
+						"bearerAuth": []
+					}
+				],
+				"parameters": [
+					{
+						"in": "path",
+						"name": "milestoneId",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "Transaction logs for milestone returned"
+					},
+					"401": {
+						"description": "Unauthorized"
+					}
+				}
+			}
+		},
 		"/api/upload": {
 			"post": {
 				"tags": ["Upload"],
@@ -3179,6 +3707,36 @@
 					},
 					"413": {
 						"description": "File too large"
+					}
+				}
+			}
+		},
+		"/api/users/{userId}/investor-profile": {
+			"get": {
+				"tags": ["Users"],
+				"summary": "Get a public investor profile by user ID",
+				"description": "Returns non-sensitive public profile fields for an investor. Available to any authenticated user (e.g. entrepreneur reviewing an invitation).",
+				"security": [
+					{
+						"bearerAuth": []
+					}
+				],
+				"parameters": [
+					{
+						"in": "path",
+						"name": "userId",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "Investor profile returned"
+					},
+					"404": {
+						"description": "Profile not found"
 					}
 				}
 			}
