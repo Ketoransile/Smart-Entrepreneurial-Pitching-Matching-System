@@ -1,16 +1,20 @@
 import {
+	BarChart3,
 	CalendarDays,
 	Compass,
 	FileText,
 	Gauge,
 	Heart,
+	Mail,
 	MessageCircle,
 	PenTool,
+	PieChart,
 	Settings,
 	ShieldAlert,
 	Sparkles,
 	UserCircle,
 	Users,
+	Wallet,
 } from "lucide-react";
 
 /* ── Entrepreneur Sidebar Navigation ── */
@@ -36,6 +40,21 @@ export const ENTREPRENEUR_NAV = [
 		icon: <CalendarDays className="h-4 w-4" />,
 	},
 	{
+		label: "Milestones",
+		href: "/entrepreneur/milestones",
+		icon: <FileText className="h-4 w-4" />,
+	},
+	{
+		label: "Earnings",
+		href: "/entrepreneur/earnings",
+		icon: <Wallet className="h-4 w-4" />,
+	},
+	{
+		label: "Invitations",
+		href: "/entrepreneur/invitations",
+		icon: <Mail className="h-4 w-4" />,
+	},
+	{
 		label: "Profile",
 		href: "/entrepreneur/profile",
 		icon: <UserCircle className="h-4 w-4" />,
@@ -53,6 +72,21 @@ export const INVESTOR_NAV = [
 		label: "My Matches",
 		href: "/investor/matches",
 		icon: <Sparkles className="h-4 w-4" />,
+	},
+	{
+		label: "Portfolio",
+		href: "/investor/portfolio",
+		icon: <PieChart className="h-4 w-4" />,
+	},
+	{
+		label: "Milestones",
+		href: "/investor/milestones",
+		icon: <FileText className="h-4 w-4" />,
+	},
+	{
+		label: "Invitations",
+		href: "/investor/invitations",
+		icon: <Mail className="h-4 w-4" />,
 	},
 	{
 		label: "Saved",
@@ -77,6 +111,11 @@ export const ADMIN_NAV = [
 		label: "Overview",
 		href: "/admin/oversight",
 		icon: <Gauge className="h-4 w-4" />,
+	},
+	{
+		label: "Finance",
+		href: "/admin/finance",
+		icon: <BarChart3 className="h-4 w-4" />,
 	},
 	{
 		label: "Users",

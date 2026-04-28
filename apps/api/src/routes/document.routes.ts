@@ -1,21 +1,21 @@
 import { Router } from "express";
-import multer from "multer";
+
 import { DocumentController } from "../controllers/document.controller";
 import { authenticate, authorize } from "../middleware/auth";
-import { handleMulterError } from "../middleware/upload";
+import {
+	multipleDocumentUpload,
+	singleDocumentUpload,
+} from "../middleware/upload";
 
 const router = Router();
 
-const docUpload = multer({
-	storage: multer.memoryStorage(),
-	limits: { fileSize: 50 * 1024 * 1024 },
-});
+router.use(authenticate);
 
 /**
  * @openapi
  * tags:
  *   - name: Documents
- *     description: File upload, AI processing, and document management
+ *     description: Document upload and processing
  */
 
 /**
@@ -23,7 +23,7 @@ const docUpload = multer({
  * /api/documents:
  *   post:
  *     tags: [Documents]
- *     summary: Upload a document
+ *     summary: Upload document
  *     security:
  *       - bearerAuth: []
  *     requestBody:
@@ -32,49 +32,94 @@ const docUpload = multer({
  *         multipart/form-data:
  *           schema:
  *             type: object
- *             required: [file, type]
+ *             required: [file]
  *             properties:
  *               file:
  *                 type: string
  *                 format: binary
- *                 description: The file to upload (PDF, image, video)
  *               type:
- *                 type: string
- *                 enum: [pitch_deck, financial_model, product_demo, customer_testimonials, other]
+ *                 $ref: '#/components/schemas/DocumentType'
  *               submissionId:
  *                 type: string
- *                 description: Optional submission to attach document to
  *     responses:
  *       201:
  *         description: Document uploaded
- *         content:
- *           application/json:
- *             schema:
- *               allOf:
- *                 - $ref: '#/components/schemas/SuccessResponse'
- *                 - type: object
- *                   properties:
- *                     document:
- *                       $ref: '#/components/schemas/DocumentObject'
  *       400:
- *         description: Missing file or invalid type
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/ErrorResponse'
- *       500:
- *         description: Internal server error
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/ErrorResponse'
+ *         description: Validation error
+ *       401:
+ *         description: Unauthorized
  */
 router.post(
 	"/",
-	authenticate,
-	authorize("entrepreneur"),
-	docUpload.single("file"),
+	authorize("entrepreneur", "investor"),
+	singleDocumentUpload,
 	DocumentController.upload,
+);
+
+/**
+ * @openapi
+ * /api/documents/upload:
+ *   post:
+ *     tags: [Documents]
+ *     summary: Upload single document
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         multipart/form-data:
+ *           schema:
+ *             type: object
+ *             required: [file]
+ *             properties:
+ *               file:
+ *                 type: string
+ *                 format: binary
+ *               type:
+ *                 $ref: '#/components/schemas/DocumentType'
+ *     responses:
+ *       201:
+ *         description: Document uploaded
+ */
+router.post(
+	"/upload",
+	authorize("entrepreneur", "investor"),
+	singleDocumentUpload,
+	DocumentController.uploadSingle,
+);
+
+/**
+ * @openapi
+ * /api/documents/upload-multiple:
+ *   post:
+ *     tags: [Documents]
+ *     summary: Upload multiple documents
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         multipart/form-data:
+ *           schema:
+ *             type: object
+ *             required: [files]
+ *             properties:
+ *               files:
+ *                 type: array
+ *                 items:
+ *                   type: string
+ *                   format: binary
+ *               type:
+ *                 $ref: '#/components/schemas/DocumentType'
+ *     responses:
+ *       201:
+ *         description: Documents uploaded
+ */
+router.post(
+	"/upload-multiple",
+	authorize("entrepreneur", "investor"),
+	multipleDocumentUpload,
+	DocumentController.uploadMultiple,
 );
 
 /**
@@ -85,147 +130,118 @@ router.post(
  *     summary: List my documents
  *     security:
  *       - bearerAuth: []
- *     parameters:
- *       - in: query
- *         name: submissionId
- *         schema:
- *           type: string
- *       - in: query
- *         name: type
- *         schema:
- *           type: string
- *           enum: [pitch_deck, financial_model, product_demo, customer_testimonials, other]
  *     responses:
  *       200:
- *         description: Documents fetched
- *         content:
- *           application/json:
- *             schema:
- *               allOf:
- *                 - $ref: '#/components/schemas/SuccessResponse'
- *                 - type: object
- *                   properties:
- *                     documents:
- *                       type: array
- *                       items:
- *                         $ref: '#/components/schemas/DocumentObject'
- *       500:
- *         description: Internal server error
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/ErrorResponse'
+ *         description: Documents list
  */
-router.get("/", authenticate, DocumentController.listMyDocuments);
+router.get(
+	"/",
+	authorize("entrepreneur", "investor", "admin"),
+	DocumentController.listMyDocuments,
+);
 
 /**
  * @openapi
- * /api/documents/{documentId}:
+ * /api/documents/{id}:
  *   get:
  *     tags: [Documents]
- *     summary: Get document details
+ *     summary: Get document by id
  *     security:
  *       - bearerAuth: []
  *     parameters:
  *       - in: path
- *         name: documentId
+ *         name: id
  *         required: true
  *         schema:
  *           type: string
  *     responses:
  *       200:
- *         description: Document details returned
- *         content:
- *           application/json:
- *             schema:
- *               allOf:
- *                 - $ref: '#/components/schemas/SuccessResponse'
- *                 - type: object
- *                   properties:
- *                     document:
- *                       $ref: '#/components/schemas/DocumentObject'
+ *         description: Document fetched
  *       404:
- *         description: Document not found
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/ErrorResponse'
+ *         description: Not found
  */
-router.get("/:id", authenticate, DocumentController.getById);
+router.get(
+	"/:id",
+	authorize("entrepreneur", "investor", "admin"),
+	DocumentController.getById,
+);
 
 /**
  * @openapi
- * /api/documents/{documentId}:
- *   delete:
+ * /api/documents/{id}/validation:
+ *   get:
  *     tags: [Documents]
- *     summary: Delete a document and its cloud storage
+ *     summary: Get validation/processing status for a document
  *     security:
  *       - bearerAuth: []
  *     parameters:
  *       - in: path
- *         name: documentId
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Validation status fetched
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ValidationStatusResponse'
+ *       404:
+ *         description: Not found
+ */
+router.get(
+	"/:id/validation",
+	authorize("entrepreneur", "investor", "admin"),
+	DocumentController.getValidationStatus,
+);
+
+/**
+ * @openapi
+ * /api/documents/{id}:
+ *   delete:
+ *     tags: [Documents]
+ *     summary: Delete owned document
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
  *         required: true
  *         schema:
  *           type: string
  *     responses:
  *       200:
  *         description: Document deleted
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/SuccessResponse'
  *       404:
- *         description: Document not found
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/ErrorResponse'
- *       500:
- *         description: Internal server error
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/ErrorResponse'
+ *         description: Not found
  */
 router.delete(
 	"/:id",
-	authenticate,
-	authorize("entrepreneur"),
+	authorize("entrepreneur", "investor"),
 	DocumentController.remove,
 );
 
 /**
  * @openapi
- * /api/documents/{documentId}/validation-status:
- *   get:
+ * /api/documents/{id}/override:
+ *   post:
  *     tags: [Documents]
- *     summary: Get AI processing/validation status for a document
+ *     summary: Administrator override of AI failure/flag (UC-14)
  *     security:
  *       - bearerAuth: []
  *     parameters:
  *       - in: path
- *         name: documentId
+ *         name: id
  *         required: true
- *         schema:
- *           type: string
  *     responses:
  *       200:
- *         description: Validation status returned
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/ValidationStatusResponse'
- *       404:
- *         description: Document not found
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/ErrorResponse'
+ *         description: Document status successfully overridden
  */
-router.get(
-	"/:id/validation-status",
-	authenticate,
-	DocumentController.getValidationStatus,
+router.post(
+	"/:id/override",
+	authorize("admin", "super_admin"),
+	DocumentController.overrideStatus,
 );
 
 export default router;

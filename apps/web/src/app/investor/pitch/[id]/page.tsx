@@ -277,29 +277,49 @@ export default function InvestorPitchViewPage() {
 	}, [user, pitchId, api, router]);
 
 	const handleRespond = async (status: "accepted" | "declined") => {
-		if (!user || !matchContext) return;
+		if (!user || (!matchContext && !pitch)) return;
 		setResponding(true);
 		try {
 			const token = await user.getIdToken();
-			const res = await fetch(
-				`${api}/recommendation/matches/${matchContext._id}/respond`,
-				{
-					method: "PATCH",
-					headers: {
-						Authorization: `Bearer ${token}`,
-						"Content-Type": "application/json",
-					},
-					body: JSON.stringify({ status }),
+
+			const endpoint = matchContext
+				? `${api}/recommendation/matches/${matchContext._id}/respond`
+				: `${api}/matching/direct-respond/${pitch?._id}`;
+
+			console.log("Responding to project:", {
+				status,
+				endpoint,
+				submissionId: pitch?._id,
+			});
+
+			const res = await fetch(endpoint, {
+				method: "PATCH",
+				headers: {
+					Authorization: `Bearer ${token}`,
+					"Content-Type": "application/json",
 				},
-			);
+				body: JSON.stringify({ status }),
+			});
 			const data = await res.json();
 			if (data.status === "success") {
 				toast.success(
 					status === "accepted"
-						? "Match accepted — invitation sent"
+						? "Investment request sent to entrepreneur"
 						: "Match declined",
 				);
-				setMatchContext((prev) => (prev ? { ...prev, status } : prev));
+				if (matchContext) {
+					// Backend now sets this to "requested" instead of "accepted"
+					setMatchContext((prev) =>
+						prev
+							? {
+									...prev,
+									status: status === "accepted" ? "requested" : "declined",
+								}
+							: prev,
+					);
+				} else if (data.match) {
+					setMatchContext(data.match);
+				}
 				// After accepting, prompt investor to schedule a meeting
 				if (status === "accepted") {
 					setShowScheduleModal(true);
@@ -457,13 +477,40 @@ export default function InvestorPitchViewPage() {
 					</div>
 				</div>
 
-				{/* AI match context — shown when a MatchResult exists for this investor */}
-				{matchContext && (
+				{/* AI match context or Feed response — shown when we need investor decision */}
+				{matchContext ? (
 					<MatchContextBanner
 						match={matchContext}
 						onRespond={handleRespond}
 						responding={responding}
 					/>
+				) : (
+					<Card className="mb-8 border-primary/20 bg-muted/30">
+						<CardContent className="p-6 flex flex-col sm:flex-row items-center justify-between gap-4">
+							<div>
+								<h3 className="text-lg font-bold">Invest in this Project?</h3>
+								<p className="text-sm text-muted-foreground">
+									Send an investment request to the entrepreneur to start
+									funding.
+								</p>
+							</div>
+							<div className="flex gap-2">
+								<Button
+									variant="outline"
+									disabled={responding}
+									onClick={() => handleRespond("declined")}
+								>
+									Decline
+								</Button>
+								<Button
+									disabled={responding}
+									onClick={() => handleRespond("accepted")}
+								>
+									Request to Invest
+								</Button>
+							</div>
+						</CardContent>
+					</Card>
 				)}
 
 				<div className="grid gap-6 md:grid-cols-3">
@@ -682,7 +729,7 @@ export default function InvestorPitchViewPage() {
 												].includes(doc.type);
 											return (
 												<div
-													key={doc.name}
+													key={doc.url}
 													className="flex flex-col rounded-lg border overflow-hidden group"
 												>
 													<div className="flex items-center justify-between p-3 bg-card hover:bg-muted/50 transition-colors">

@@ -36,19 +36,16 @@ export const resolveInvitationCounterparty = (payload: {
 	throw new InvitationServiceError("You are not part of this match", 403);
 };
 
-export class InvitationService {
-	static createError(
-		message: string,
-		statusCode: number,
-	): InvitationServiceError {
+export const InvitationService = {
+	createError(message: string, statusCode: number): InvitationServiceError {
 		return new InvitationServiceError(message, statusCode);
-	}
+	},
 
-	static isServiceError(error: unknown): error is InvitationServiceError {
+	isServiceError(error: unknown): error is InvitationServiceError {
 		return error instanceof InvitationServiceError;
-	}
+	},
 
-	static async sendInvitation(payload: {
+	async sendInvitation(payload: {
 		matchId: string;
 		senderId: string;
 		message?: string;
@@ -116,9 +113,9 @@ export class InvitationService {
 		});
 
 		return invitation;
-	}
+	},
 
-	static async listInvitationsForUser(payload: {
+	async listInvitationsForUser(payload: {
 		userId: string;
 		status?: InvitationStatus;
 		direction?: "sent" | "received" | "all";
@@ -146,9 +143,9 @@ export class InvitationService {
 			.populate("receiverId", "fullName email role")
 			.populate("submissionId", "title status")
 			.populate("matchResultId", "score status");
-	}
+	},
 
-	static async respondToInvitation(payload: {
+	async respondToInvitation(payload: {
 		invitationId: string;
 		userId: string;
 		status: "accepted" | "declined";
@@ -203,12 +200,9 @@ export class InvitationService {
 		});
 
 		return invitation;
-	}
+	},
 
-	static async cancelInvitation(payload: {
-		invitationId: string;
-		userId: string;
-	}) {
+	async cancelInvitation(payload: { invitationId: string; userId: string }) {
 		const invitation = await Invitation.findById(payload.invitationId);
 		if (!invitation) {
 			throw InvitationService.createError("Invitation not found", 404);
@@ -233,5 +227,5 @@ export class InvitationService {
 		await invitation.save();
 
 		return invitation;
-	}
-}
+	},
+};

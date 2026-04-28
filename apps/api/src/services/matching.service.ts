@@ -85,19 +85,16 @@ export const shouldAutoSendInvitation = (
 	nextStatus: Extract<MatchStatus, "accepted" | "declined">,
 ) => previousStatus !== "accepted" && nextStatus === "accepted";
 
-export class MatchingService {
-	static createError(
-		message: string,
-		statusCode: number,
-	): MatchingServiceError {
+export const MatchingService = {
+	createError(message: string, statusCode: number): MatchingServiceError {
 		return new MatchingServiceError(message, statusCode);
-	}
+	},
 
-	static isServiceError(error: unknown): error is MatchingServiceError {
+	isServiceError(error: unknown): error is MatchingServiceError {
 		return error instanceof MatchingServiceError;
-	}
+	},
 
-	static async analyzeSubmission(submissionId: string) {
+	async analyzeSubmission(submissionId: string) {
 		const submission = await Submission.findById(submissionId);
 		if (!submission) {
 			throw MatchingService.createError("Submission not found", 404);
@@ -173,9 +170,9 @@ export class MatchingService {
 		await submission.save();
 
 		return { submission, embedding: embeddingEntry };
-	}
+	},
 
-	static async runMatchingForSubmission(
+	async runMatchingForSubmission(
 		submissionId: string,
 		options?: { limit?: number; minScore?: number },
 	) {
@@ -349,9 +346,9 @@ export class MatchingService {
 			count: persistedMatches.length,
 			matches: persistedMatches,
 		};
-	}
+	},
 
-	static async getSubmissionMatches(
+	async getSubmissionMatches(
 		submissionId: string,
 		requester: IUser,
 	): Promise<Awaited<ReturnType<typeof MatchResult.find>>> {
@@ -377,9 +374,9 @@ export class MatchingService {
 			.sort({ rank: 1, score: -1 })
 			.populate("investorId", "fullName email")
 			.populate("submissionId", "title sector stage targetAmount status");
-	}
+	},
 
-	static async getInvestorMatches(payload: {
+	async getInvestorMatches(payload: {
 		investorId: string;
 		status?: MatchStatus;
 	}) {
@@ -395,164 +392,9 @@ export class MatchingService {
 				"title summary sector stage targetAmount status",
 			)
 			.populate("entrepreneurId", "fullName email");
-	}
+	},
 
-	/**
-	 * When a new investor completes onboarding, run matching against all
-	 * existing approved/under_review submissions so they immediately see
-	 * relevant pitches in their match queue — not just future ones.
-	 */
-	static async runMatchingForNewInvestor(
-		investorUserId: string,
-		options?: { limit?: number; minScore?: number },
-	) {
-		const minScore = options?.minScore ?? 0.3;
-		const limitPerSubmission = options?.limit ?? 10;
-
-		// Find the investor profile
-		const investor = await InvestorProfile.findOne({ userId: investorUserId });
-		if (!investor) return;
-
-		// Find all submissions that are approved or under_review and have an embedding
-		const submissions = await Submission.find({
-			status: { $in: ["approved", "under_review"] },
-		})
-			.sort({ submittedAt: -1 })
-			.limit(100); // cap to avoid overwhelming on large datasets
-
-		console.log(
-			`[MATCHING:NEW_INVESTOR] investor=${investorUserId} checking ${submissions.length} existing submissions`,
-		);
-
-		const investorText = buildInvestorText(investor);
-		const investorEmbeddingResult = await AIService.generateEmbedding({
-			text: investorText,
-			targetType: "investorProfile",
-			targetId: investor._id.toString(),
-		});
-
-		// Upsert investor embedding
-		await EmbeddingEntry.findOneAndUpdate(
-			{
-				targetId: investor._id,
-				targetType: "investorProfile",
-				modelVersion: investorEmbeddingResult.modelVersion,
-			},
-			{
-				targetId: investor._id,
-				targetType: "investorProfile",
-				modelVersion: investorEmbeddingResult.modelVersion,
-				vector: investorEmbeddingResult.vector,
-				dimensions: investorEmbeddingResult.vector.length,
-				sourceHash: createHash("sha1").update(investorText).digest("hex"),
-				metadata: {
-					fullName: investor.fullName,
-					updatedAt: investor.updatedAt,
-				},
-				generatedAt: new Date(),
-			},
-			{ upsert: true, new: true },
-		);
-
-		let matched = 0;
-		for (const submission of submissions) {
-			// Skip if a MatchResult already exists for this pair
-			const existing = await MatchResult.findOne({
-				submissionId: submission._id,
-				investorId: investorUserId,
-			});
-			if (existing) continue;
-
-			// Get or generate submission embedding
-			let submissionEmbedding = await EmbeddingEntry.findOne({
-				targetId: submission._id,
-				targetType: "submission",
-			}).lean();
-
-			if (!submissionEmbedding?.vector?.length) {
-				// Submission has no embedding yet — generate it now
-				const submissionText = buildSubmissionText(submission);
-				const embResult = await AIService.generateEmbedding({
-					text: submissionText,
-					targetType: "submission",
-					targetId: submission._id.toString(),
-				});
-				submissionEmbedding = await EmbeddingEntry.findOneAndUpdate(
-					{
-						targetId: submission._id,
-						targetType: "submission",
-						modelVersion: embResult.modelVersion,
-					},
-					{
-						targetId: submission._id,
-						targetType: "submission",
-						modelVersion: embResult.modelVersion,
-						vector: embResult.vector,
-						dimensions: embResult.vector.length,
-						sourceHash: createHash("sha1")
-							.update(buildSubmissionText(submission))
-							.digest("hex"),
-						metadata: {
-							title: submission.title,
-							sector: submission.sector,
-							stage: submission.stage,
-						},
-						generatedAt: new Date(),
-					},
-					{ upsert: true, new: true },
-				);
-			}
-
-			// Guard: skip if embedding still unavailable after upsert
-			if (!submissionEmbedding?.vector?.length) continue;
-
-			const scoredResult = await AIService.computeMatchScore({
-				submissionId: submission._id.toString(),
-				investorId: investorUserId,
-				submissionEmbedding: submissionEmbedding.vector,
-				investorEmbedding: investorEmbeddingResult.vector,
-				submissionSector: submission.sector,
-				submissionStage: submission.stage,
-				targetAmount: submission.targetAmount,
-				preferredSectors: investor.preferredSectors,
-				preferredStages: investor.preferredStages,
-				investmentRangeMin: investor.investmentRange?.min,
-				investmentRangeMax: investor.investmentRange?.max,
-			});
-
-			if (scoredResult.score < minScore) continue;
-
-			await MatchResult.create({
-				submissionId: submission._id,
-				entrepreneurId: submission.entrepreneurId,
-				investorId: investorUserId,
-				score: scoredResult.score,
-				rank: matched + 1,
-				aiRationale: scoredResult.rationale,
-				scoreBreakdown: scoredResult.breakdown,
-				status: "pending",
-				matchedAt: new Date(),
-				expiresAt: new Date(Date.now() + 1000 * 60 * 60 * 24 * 14),
-			});
-
-			await NotificationService.createNotification({
-				userId: investorUserId,
-				type: "match_found",
-				title: "New match found",
-				body: `A pitch matching your investment profile is available: "${submission.title}".`,
-				metadata: { submissionId: submission._id },
-			});
-
-			matched++;
-			if (matched >= limitPerSubmission) break;
-		}
-
-		console.log(
-			`[MATCHING:NEW_INVESTOR] Done: ${matched} matches created for investor ${investorUserId}`,
-		);
-	}
-
-	static async updateMatchStatus(payload: {
+	async updateMatchStatus(payload: {
 		matchId: string;
 		investorId: string;
 		status: Extract<MatchStatus, "accepted" | "declined">;
@@ -571,51 +413,95 @@ export class MatchingService {
 		}
 
 		const previousStatus = match.status;
-		match.status = payload.status;
+
+		// If investor says "accepted", we set it to "requested" for entrepreneur approval
+		const targetStatus: MatchStatus =
+			payload.status === "accepted" ? "requested" : "declined";
+
+		match.status = targetStatus;
 		await match.save();
 
-		if (payload.status === "accepted") {
-			await Submission.findByIdAndUpdate(match.submissionId, {
-				$set: { status: "matched" },
-			});
-
-			if (shouldAutoSendInvitation(previousStatus, payload.status)) {
-				try {
-					await InvitationService.sendInvitation({
-						matchId: match._id.toString(),
-						senderId: payload.investorId,
-						message:
-							"Thanks for accepting this match. I would like to connect and discuss next steps.",
-						expiresInDays: 14,
-					});
-				} catch (error) {
-					if (
-						!InvitationService.isServiceError(error) ||
-						(error.statusCode !== 409 && error.statusCode !== 400)
-					) {
-						console.error("Auto-invitation creation failed", error);
-					}
-				}
-			}
-
+		if (targetStatus === "requested") {
+			// Notify entrepreneur about the investment request
 			await NotificationService.createNotification({
 				userId: match.entrepreneurId.toString(),
 				type: "match_found",
-				title: "Match accepted",
-				body: "An investor accepted your match. You can now send an invitation.",
+				title: "Investment Request Received",
+				body: "An investor has requested to invest in your project. Please review and approve the request.",
 				metadata: {
 					matchId: match._id,
 					submissionId: match.submissionId,
 				},
 			});
+
+			// Optional: auto-send invitation to start conversation
+			if (shouldAutoSendInvitation(previousStatus, "accepted")) {
+				try {
+					await InvitationService.sendInvitation({
+						matchId: match._id.toString(),
+						senderId: payload.investorId,
+						message:
+							"I am interested in investing in your project and would like to discuss the next steps.",
+						expiresInDays: 14,
+					});
+				} catch (error) {
+					console.error("Auto-invitation creation failed:", error);
+				}
+			}
 		}
 
-		if (payload.status === "declined") {
+		return match;
+	},
+
+	async approveInvestmentRequest(payload: {
+		matchId: string;
+		entrepreneurId: string;
+		approved: boolean;
+	}) {
+		const match = await MatchResult.findOne({
+			_id: payload.matchId,
+			entrepreneurId: payload.entrepreneurId,
+		});
+
+		if (!match) {
+			throw MatchingService.createError("Match request not found", 404);
+		}
+
+		if (match.status !== "requested") {
+			throw MatchingService.createError(
+				"Match is not in a requested state",
+				400,
+			);
+		}
+
+		if (payload.approved) {
+			match.status = "accepted";
+			await match.save();
+
+			// side effects for acceptance
+			await Submission.findByIdAndUpdate(match.submissionId, {
+				$set: { status: "matched" },
+			});
+
 			await NotificationService.createNotification({
-				userId: match.entrepreneurId.toString(),
-				type: "milestone_updated",
-				title: "Match declined",
-				body: "An investor declined your match. We will continue searching.",
+				userId: match.investorId.toString(),
+				type: "match_found", // Reuse match_found or create new type
+				title: "Investment Request Approved",
+				body: "The entrepreneur has approved your investment request. You can now create milestones and manage funding.",
+				metadata: {
+					matchId: match._id,
+					submissionId: match.submissionId,
+				},
+			});
+		} else {
+			match.status = "declined";
+			await match.save();
+
+			await NotificationService.createNotification({
+				userId: match.investorId.toString(),
+				type: "match_found",
+				title: "Investment Request Declined",
+				body: "The entrepreneur has declined your investment request.",
 				metadata: {
 					matchId: match._id,
 					submissionId: match.submissionId,
@@ -624,5 +510,68 @@ export class MatchingService {
 		}
 
 		return match;
-	}
-}
+	},
+
+	async respondToSubmission(payload: {
+		submissionId: string;
+		investorId: string;
+		status: Extract<MatchStatus, "accepted" | "declined">;
+	}) {
+		let match = await MatchResult.findOne({
+			submissionId: payload.submissionId,
+			investorId: payload.investorId,
+		});
+
+		if (match) {
+			// If match already exists, reuse updateMatchStatus logic
+			return MatchingService.updateMatchStatus({
+				matchId: match._id.toString(),
+				investorId: payload.investorId,
+				status: payload.status,
+			});
+		}
+
+		// Create a new match record directly
+		const submission = await Submission.findById(payload.submissionId);
+		if (!submission) {
+			throw MatchingService.createError("Submission not found", 404);
+		}
+
+		match = await MatchResult.create({
+			submissionId: submission._id,
+			entrepreneurId: submission.entrepreneurId,
+			investorId: payload.investorId,
+			score: 0.5, // Placeholder score for manual engagement
+			status: payload.status === "accepted" ? "requested" : "declined",
+			matchedAt: new Date(),
+		});
+
+		// Apply same side-effects as updateMatchStatus
+		if (match.status === "requested") {
+			try {
+				await InvitationService.sendInvitation({
+					matchId: match._id.toString(),
+					senderId: payload.investorId,
+					message:
+						"I discovered your project in the feed and would like to request to invest.",
+					expiresInDays: 14,
+				});
+			} catch (error) {
+				console.error("Auto-invitation creation failed:", error);
+			}
+
+			await NotificationService.createNotification({
+				userId: match.entrepreneurId.toString(),
+				type: "match_found",
+				title: "Investment Request Received",
+				body: "An investor discovered your project in the feed and requested to invest. Please review and approve.",
+				metadata: {
+					matchId: match._id,
+					submissionId: match.submissionId,
+				},
+			});
+		}
+
+		return match;
+	},
+};

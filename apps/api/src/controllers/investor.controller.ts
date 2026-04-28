@@ -2,7 +2,6 @@ import type { Response } from "express";
 import mongoose from "mongoose";
 import type { AuthRequest } from "../middleware/auth";
 import { InvestorProfile } from "../models/InvestorProfile";
-import { MatchingService } from "../services/matching.service";
 import { ProfileService } from "../services/profile.service";
 
 export class InvestorController {
@@ -33,21 +32,11 @@ export class InvestorController {
 				message: "Investor profile created successfully",
 				data: profile,
 			});
-
-			// Fire matching against existing pitches in the background — never block the response
-			setImmediate(() => {
-				MatchingService.runMatchingForNewInvestor(userId, {
-					limit: 10,
-					minScore: 0.3,
-				}).catch((err) => {
-					console.error(
-						"Background matching for new investor failed:",
-						err?.message ?? err,
-					);
-				});
-			});
-		} catch (error: any) {
-			if (error.message === "Profile already exists") {
+		} catch (error: unknown) {
+			if (
+				error instanceof Error &&
+				error.message === "Profile already exists"
+			) {
 				return res.status(400).json({ message: error.message });
 			}
 			console.error("Create investor profile error:", error);
@@ -72,8 +61,8 @@ export class InvestorController {
 				success: true,
 				data: profile,
 			});
-		} catch (error: any) {
-			if (error.message === "Profile not found") {
+		} catch (error: unknown) {
+			if (error instanceof Error && error.message === "Profile not found") {
 				return res.status(404).json({ message: "Profile not found" });
 			}
 			console.error("Get investor profile error:", error);
@@ -102,8 +91,8 @@ export class InvestorController {
 				message: "Profile updated successfully",
 				data: profile,
 			});
-		} catch (error: any) {
-			if (error.message === "Profile not found") {
+		} catch (error: unknown) {
+			if (error instanceof Error && error.message === "Profile not found") {
 				return res.status(404).json({ message: "Profile not found" });
 			}
 			console.error("Update investor profile error:", error);

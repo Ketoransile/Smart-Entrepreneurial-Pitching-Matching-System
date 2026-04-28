@@ -40,16 +40,16 @@ class AdminUserServiceError extends Error {
 	}
 }
 
-export class AdminUserService {
-	static createError(message: string, statusCode: number) {
+export const AdminUserService = {
+	createError(message: string, statusCode: number) {
 		return new AdminUserServiceError(message, statusCode);
-	}
+	},
 
-	static isServiceError(error: unknown): error is AdminUserServiceError {
+	isServiceError(error: unknown): error is AdminUserServiceError {
 		return error instanceof AdminUserServiceError;
-	}
+	},
 
-	static async listUsers(payload: {
+	async listUsers(payload: {
 		page?: number;
 		limit?: number;
 		role?: "entrepreneur" | "investor" | "admin";
@@ -88,9 +88,9 @@ export class AdminUserService {
 				totalPages: Math.ceil(total / limit),
 			},
 		};
-	}
+	},
 
-	static async getUserDetails(userId: string) {
+	async getUserDetails(userId: string) {
 		const user = await User.findById(userId);
 		if (!user) {
 			throw AdminUserService.createError("User not found", 404);
@@ -105,9 +105,9 @@ export class AdminUserService {
 		}
 
 		return { user, profile };
-	}
+	},
 
-	static async updateUserStatus(payload: {
+	async updateUserStatus(payload: {
 		adminId: string;
 		userId: string;
 		status: "unverified" | "pending" | "verified" | "suspended";
@@ -167,9 +167,9 @@ export class AdminUserService {
 		});
 
 		return user;
-	}
+	},
 
-	static async setUserActive(payload: {
+	async setUserActive(payload: {
 		adminId: string;
 		userId: string;
 		isActive: boolean;
@@ -200,5 +200,5 @@ export class AdminUserService {
 		});
 
 		return user;
-	}
-}
+	},
+};

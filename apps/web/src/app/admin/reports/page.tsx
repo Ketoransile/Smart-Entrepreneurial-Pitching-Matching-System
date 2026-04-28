@@ -3,15 +3,11 @@
 import {
 	AlertTriangle,
 	CheckCircle2,
-	ClipboardList,
 	Eye,
-	LayoutDashboard,
 	Loader2,
 	MessageSquare,
-	Settings,
 	ShieldAlert,
 	Unlock,
-	Users,
 	XCircle,
 } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
@@ -21,7 +17,7 @@ import ProtectedRoute from "@/components/ProtectedRoute";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import {
 	Dialog,
 	DialogContent,
@@ -50,7 +46,7 @@ interface ReportUser {
 
 interface Report {
 	_id: string;
-	conversationId: any;
+	conversationId: string;
 	reporterId: ReportUser;
 	reportedUserIds: ReportUser[];
 	reason: string;
@@ -124,7 +120,7 @@ export default function AdminReportsPage() {
 				const err = await res.json();
 				toast.error(err.message || "Failed to resolve report");
 			}
-		} catch (err) {
+		} catch (_err) {
 			toast.error("Failed to resolve report");
 		} finally {
 			setResolving(false);

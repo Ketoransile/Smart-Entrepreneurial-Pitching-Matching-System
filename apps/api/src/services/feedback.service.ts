@@ -116,19 +116,16 @@ class FeedbackServiceError extends Error {
 	}
 }
 
-export class FeedbackService {
-	static createError(
-		message: string,
-		statusCode: number,
-	): FeedbackServiceError {
+export const FeedbackService = {
+	createError(message: string, statusCode: number): FeedbackServiceError {
 		return new FeedbackServiceError(message, statusCode);
-	}
+	},
 
-	static isServiceError(error: unknown): error is FeedbackServiceError {
+	isServiceError(error: unknown): error is FeedbackServiceError {
 		return error instanceof FeedbackServiceError;
-	}
+	},
 
-	static async createFeedback(payload: {
+	async createFeedback(payload: {
 		fromUserId: string;
 		toUserId: string;
 		rating: number;
@@ -219,29 +216,29 @@ export class FeedbackService {
 		});
 
 		return feedback;
-	}
+	},
 
-	static async listReceivedFeedback(userId: string) {
+	async listReceivedFeedback(userId: string) {
 		return Feedback.find({ toUserId: userId })
 			.sort({ createdAt: -1 })
 			.populate("fromUserId", "fullName email role")
 			.populate("invitationId", "status")
 			.populate("submissionId", "title status");
-	}
+	},
 
-	static async listGivenFeedback(userId: string) {
+	async listGivenFeedback(userId: string) {
 		return Feedback.find({ fromUserId: userId })
 			.sort({ createdAt: -1 })
 			.populate("toUserId", "fullName email role")
 			.populate("invitationId", "status")
 			.populate("submissionId", "title status");
-	}
+	},
 
-	static async getFeedbackSummary(userId: string) {
+	async getFeedbackSummary(userId: string) {
 		const feedbackEntries = await Feedback.find({ toUserId: userId })
 			.select("rating category")
 			.lean<Array<{ rating: number; category: FeedbackCategory }>>();
 
 		return calculateFeedbackSummary(feedbackEntries);
-	}
-}
+	},
+};

@@ -83,8 +83,45 @@ const client = axios.create({
 	timeout: 30_000,
 });
 
-export class AIService {
-	static async analyzeDocument(
+const fallbackEmbedding = (text: string): number[] => {
+	const normalized = text.trim().toLowerCase() || "empty";
+	const dimensions = 24;
+	const vector = Array.from({ length: dimensions }, () => 0);
+
+	for (let i = 0; i < normalized.length; i += 1) {
+		const code = normalized.charCodeAt(i);
+		vector[i % dimensions] += (code % 97) / 100;
+	}
+
+	const norm =
+		Math.sqrt(vector.reduce((acc, value) => acc + value * value, 0)) || 1;
+	return vector.map((value) => value / norm);
+};
+
+const cosineSimilarity = (a: number[], b: number[]): number => {
+	if (a.length === 0 || b.length === 0 || a.length !== b.length) {
+		return 0.5;
+	}
+
+	let dot = 0;
+	let normA = 0;
+	let normB = 0;
+	for (let i = 0; i < a.length; i += 1) {
+		dot += a[i] * b[i];
+		normA += a[i] * a[i];
+		normB += b[i] * b[i];
+	}
+
+	if (normA === 0 || normB === 0) {
+		return 0.5;
+	}
+
+	const raw = dot / (Math.sqrt(normA) * Math.sqrt(normB));
+	return Math.max(0, Math.min(1, (raw + 1) / 2));
+};
+
+export const AIService = {
+	async analyzeDocument(
 		payload: AnalyzeDocumentRequest,
 	): Promise<AnalyzeDocumentResponse> {
 		try {
@@ -157,9 +194,9 @@ export class AIService {
 				validation: { passed: true },
 			};
 		}
-	}
+	},
 
-	static async generateEmbedding(
+	async generateEmbedding(
 		payload: GenerateEmbeddingRequest,
 	): Promise<GenerateEmbeddingResponse> {
 		try {
@@ -169,12 +206,12 @@ export class AIService {
 			);
 			return response.data;
 		} catch {
-			const vector = AIService.fallbackEmbedding(payload.text);
+			const vector = fallbackEmbedding(payload.text);
 			return { vector, modelVersion: "fallback-v1" };
 		}
-	}
+	},
 
-	static async analyzeSubmission(
+	async analyzeSubmission(
 		payload: AnalyzeSubmissionRequest,
 	): Promise<AnalyzeSubmissionResponse> {
 		try {
@@ -215,9 +252,9 @@ export class AIService {
 				].filter(Boolean),
 			};
 		}
-	}
+	},
 
-	static async computeMatchScore(
+	async computeMatchScore(
 		payload: ComputeMatchRequest,
 	): Promise<ComputeMatchResponse> {
 		try {
@@ -255,7 +292,7 @@ export class AIService {
 
 			const embeddingScore =
 				payload.submissionEmbedding && payload.investorEmbedding
-					? AIService.cosineSimilarity(
+					? cosineSimilarity(
 							payload.submissionEmbedding,
 							payload.investorEmbedding,
 						)
@@ -281,26 +318,9 @@ export class AIService {
 				},
 			};
 		}
-	}
+	},
 
-	private static fallbackEmbedding(text: string): number[] {
-		const normalized = text.trim().toLowerCase() || "empty";
-		const dimensions = 24;
-		const vector = Array.from({ length: dimensions }, () => 0);
-
-		for (let i = 0; i < normalized.length; i += 1) {
-			const code = normalized.charCodeAt(i);
-			vector[i % dimensions] += (code % 97) / 100;
-		}
-
-		const norm =
-			Math.sqrt(vector.reduce((acc, value) => acc + value * value, 0)) || 1;
-		return vector.map((value) => value / norm);
-	}
-
-	static async classifyPitch(
-		pitchText: string,
-	): Promise<ClassifyPitchResponse> {
+	async classifyPitch(pitchText: string): Promise<ClassifyPitchResponse> {
 		try {
 			const response = await client.post<ClassifyPitchResponse>(
 				"/classify-pitch",
@@ -313,27 +333,5 @@ export class AIService {
 			// AI service unavailable — return neutral score
 			return { trust_score_percentage: 50, ai_flag: "Pending Admin Review" };
 		}
-	}
-
-	private static cosineSimilarity(a: number[], b: number[]): number {
-		if (a.length === 0 || b.length === 0 || a.length !== b.length) {
-			return 0.5;
-		}
-
-		let dot = 0;
-		let normA = 0;
-		let normB = 0;
-		for (let i = 0; i < a.length; i += 1) {
-			dot += a[i] * b[i];
-			normA += a[i] * a[i];
-			normB += b[i] * b[i];
-		}
-
-		if (normA === 0 || normB === 0) {
-			return 0.5;
-		}
-
-		const raw = dot / (Math.sqrt(normA) * Math.sqrt(normB));
-		return Math.max(0, Math.min(1, (raw + 1) / 2));
-	}
-}
+	},
+};

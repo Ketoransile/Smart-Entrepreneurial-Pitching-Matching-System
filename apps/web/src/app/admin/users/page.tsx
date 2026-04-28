@@ -2,23 +2,17 @@
 
 import {
 	AlertCircle,
-	BarChart3,
 	CheckCircle2,
 	ChevronLeft,
 	ChevronRight,
-	ClipboardList,
 	Crown,
 	ExternalLink,
 	FileText,
-	LayoutDashboard,
 	Loader2,
 	MessageSquare,
-	PenLine,
 	Search,
-	Settings,
 	ShieldCheck,
 	ShieldX,
-	User as UserIcon,
 	Users,
 	XCircle,
 } from "lucide-react";
@@ -30,7 +24,7 @@ import ProtectedRoute from "@/components/ProtectedRoute";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card } from "@/components/ui/card";
 import {
 	Dialog,
 	DialogContent,
@@ -226,7 +220,7 @@ export default function AdminUsersPage() {
 	// Reset page when filters change
 	useEffect(() => {
 		setPage(1);
-	}, [roleFilter, statusFilter]);
+	}, []);
 
 	const fetchUserProfile = async (userId: string) => {
 		if (!user) return;
@@ -294,7 +288,7 @@ export default function AdminUsersPage() {
 			});
 			if (res.ok) {
 				const data = await res.json();
-				if (data.conversation && data.conversation._id) {
+				if (data.conversation?._id) {
 					router.push(`/admin/messages?open=${data.conversation._id}`);
 				} else {
 					toast.error("Failed to start conversation");

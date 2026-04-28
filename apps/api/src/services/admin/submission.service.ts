@@ -16,16 +16,16 @@ export const reviewDecisionToStatus = (decision: "approve" | "reject") => {
 	return decision === "approve" ? "approved" : "rejected";
 };
 
-export class AdminSubmissionService {
-	static createError(message: string, statusCode: number) {
+export const AdminSubmissionService = {
+	createError(message: string, statusCode: number) {
 		return new AdminSubmissionServiceError(message, statusCode);
-	}
+	},
 
-	static isServiceError(error: unknown): error is AdminSubmissionServiceError {
+	isServiceError(error: unknown): error is AdminSubmissionServiceError {
 		return error instanceof AdminSubmissionServiceError;
-	}
+	},
 
-	static async listSubmissions(payload: {
+	async listSubmissions(payload: {
 		page?: number;
 		limit?: number;
 		status?:
@@ -72,9 +72,9 @@ export class AdminSubmissionService {
 				totalPages: Math.ceil(total / limit),
 			},
 		};
-	}
+	},
 
-	static async reviewSubmission(payload: {
+	async reviewSubmission(payload: {
 		adminId: string;
 		submissionId: string;
 		decision: "approve" | "reject";
@@ -108,9 +108,9 @@ export class AdminSubmissionService {
 		});
 
 		return submission;
-	}
+	},
 
-	static async forceCloseSubmission(payload: {
+	async forceCloseSubmission(payload: {
 		adminId: string;
 		submissionId: string;
 		reason?: string;
@@ -140,5 +140,5 @@ export class AdminSubmissionService {
 		});
 
 		return submission;
-	}
-}
+	},
+};

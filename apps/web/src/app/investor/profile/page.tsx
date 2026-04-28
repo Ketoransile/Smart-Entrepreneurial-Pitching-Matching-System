@@ -5,16 +5,12 @@ import {
 	ArrowRight,
 	CheckCircle2,
 	Clock,
-	Compass,
 	FileCheck,
 	FileText,
 	IdCard,
 	Loader2,
-	Mail,
-	MessageSquare,
 	Save,
 	ShieldCheck,
-	Star,
 	Upload,
 	UploadCloud,
 	User as UserIcon,
@@ -27,7 +23,6 @@ import DashboardLayout from "@/components/DashboardLayout";
 import ProfilePictureUpload from "@/components/ProfilePictureUpload";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -238,7 +233,7 @@ function InvestorProfilePageInner() {
 		key: string,
 	) => {
 		if (e.target.files?.[0])
-			setFiles((prev) => ({ ...prev, [key]: e.target.files![0] }));
+			setFiles((prev) => ({ ...prev, [key]: e.target.files?.[0] }));
 	};
 	const removeFile = (key: string) => {
 		setFiles((prev) => {
@@ -313,14 +308,14 @@ function InvestorProfilePageInner() {
 		}
 	};
 
-	const initials = (userProfile?.displayName || "U")
+	const _initials = (userProfile?.displayName || "U")
 		.split(" ")
 		.map((n) => n[0])
 		.join("")
 		.toUpperCase()
 		.slice(0, 2);
-	const hasGovId = !!files.governmentId || !!profileData?.nationalIdUrl;
-	const hasAccreditation =
+	const _hasGovId = !!files.governmentId || !!profileData?.nationalIdUrl;
+	const _hasAccreditation =
 		!!files.accreditation || !!profileData?.accreditationDocumentUrl;
 
 	const steps = [

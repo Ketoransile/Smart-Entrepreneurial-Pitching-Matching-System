@@ -1,12 +1,11 @@
 import { type Document, model, Schema, type Types } from "mongoose";
 
 export type MilestoneStatus =
-	| "planned"
+	| "pending"
 	| "in_progress"
-	| "submitted"
-	| "approved"
+	| "submitted_for_review"
+	| "verified_paid"
 	| "rejected"
-	| "paid"
 	| "cancelled";
 
 export type MilestoneEscrowStatus =
@@ -43,6 +42,10 @@ export interface IMilestone extends Document {
 	paymentReleasedAt?: Date;
 	paymentReference?: string;
 	status: MilestoneStatus;
+	// Simplified workflow fields
+	projectId?: Types.ObjectId;
+	proof?: string;
+	feedback?: string;
 	createdAt: Date;
 	updatedAt: Date;
 }
@@ -121,7 +124,7 @@ const MilestoneSchema = new Schema<IMilestone>(
 		currency: {
 			type: String,
 			required: true,
-			default: "USD",
+			default: "ETB",
 			uppercase: true,
 			trim: true,
 		},
@@ -176,15 +179,29 @@ const MilestoneSchema = new Schema<IMilestone>(
 		status: {
 			type: String,
 			enum: [
-				"planned",
+				"pending",
 				"in_progress",
-				"submitted",
-				"approved",
+				"submitted_for_review",
+				"verified_paid",
 				"rejected",
-				"paid",
 				"cancelled",
 			] satisfies MilestoneStatus[],
-			default: "planned",
+			default: "pending",
+		},
+		// Simplified workflow fields
+		projectId: {
+			type: Schema.Types.ObjectId,
+			default: null,
+			index: true,
+		},
+		proof: {
+			type: String,
+			default: null,
+		},
+		feedback: {
+			type: String,
+			maxlength: 2000,
+			default: null,
 		},
 	},
 	{ timestamps: true },

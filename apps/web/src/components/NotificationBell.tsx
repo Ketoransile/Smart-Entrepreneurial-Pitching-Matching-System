@@ -133,7 +133,7 @@ export default function NotificationBell() {
 			} else {
 				toast.error("Failed to mark as read");
 			}
-		} catch (error) {
+		} catch (_error) {
 			toast.error("Failed to mark as read");
 		}
 	};
@@ -196,16 +196,18 @@ export default function NotificationBell() {
 									userProfile?.role || null,
 								);
 								return (
-									<div
+									<button
+										type="button"
 										key={notif._id}
 										onClick={() => handleNotificationClick(notif)}
+										aria-label={`Open notification: ${notif.title}`}
 										className={`p-4 border-b last:border-0 transition-colors ${
 											link ? "cursor-pointer hover:bg-muted/50" : ""
 										} ${
 											notif.isRead
 												? "bg-background"
 												: "bg-primary/5 border-l-2 border-l-primary"
-										}`}
+										} text-left w-full`}
 									>
 										<div className="flex items-start gap-3">
 											<div className="mt-0.5">
@@ -246,7 +248,7 @@ export default function NotificationBell() {
 												</Button>
 											)}
 										</div>
-									</div>
+									</button>
 								);
 							})}
 						</div>

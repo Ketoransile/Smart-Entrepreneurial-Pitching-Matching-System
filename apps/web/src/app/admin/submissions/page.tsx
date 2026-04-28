@@ -7,12 +7,8 @@ import {
 	Clock,
 	Eye,
 	FileText,
-	LayoutDashboard,
 	Loader2,
 	Search,
-	Settings,
-	ShieldAlert,
-	Users,
 	XCircle,
 } from "lucide-react";
 import { useRouter } from "next/navigation";

@@ -1,13 +1,6 @@
 "use client";
 
-import {
-	BarChart3,
-	FileText,
-	Handshake,
-	Lock,
-	Rocket,
-	Send,
-} from "lucide-react";
+import { FileText, Handshake, Lock, Rocket, Send } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";

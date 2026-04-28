@@ -95,6 +95,7 @@ export default function ProtectedRoute({
 							viewBox="0 0 24 24"
 							stroke="currentColor"
 						>
+							<title>Warning</title>
 							<path
 								strokeLinecap="round"
 								strokeLinejoin="round"
@@ -110,6 +111,7 @@ export default function ProtectedRoute({
 					</p>
 					<div className="flex items-center gap-3 mt-4">
 						<button
+							type="button"
 							onClick={() => window.location.reload()}
 							className="px-4 py-2 bg-primary text-primary-foreground rounded-md text-sm font-medium hover:bg-primary/90 transition-colors"
 						>

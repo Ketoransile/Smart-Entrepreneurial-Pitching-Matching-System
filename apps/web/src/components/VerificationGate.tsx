@@ -1,19 +1,15 @@
 "use client";
 
 import {
-	AlertCircle,
 	ArrowRight,
-	CheckCircle2,
 	Clock,
 	Loader2,
 	ShieldAlert,
 	ShieldCheck,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Progress } from "@/components/ui/progress";
 import { useAuth } from "@/context/AuthContext";
 
 interface VerificationGateProps {

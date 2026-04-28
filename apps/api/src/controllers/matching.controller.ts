@@ -136,4 +136,72 @@ export class MatchingController {
 			handleMatchingError(res, error, "Failed to update match status");
 		}
 	}
+
+	static async respondToSubmission(req: Request, res: Response): Promise<void> {
+		try {
+			if (!req.user) {
+				res.status(401).json({ status: "error", message: "Unauthorized" });
+				return;
+			}
+
+			const status = req.body?.status as "accepted" | "declined";
+			if (!["accepted", "declined"].includes(status)) {
+				res.status(400).json({
+					status: "error",
+					message: "Status must be either accepted or declined",
+				});
+				return;
+			}
+
+			const match = await MatchingService.respondToSubmission({
+				submissionId: req.params.submissionId,
+				investorId: req.user._id.toString(),
+				status,
+			});
+
+			res.status(200).json({
+				status: "success",
+				message: `Submission ${status}`,
+				match,
+			});
+		} catch (error) {
+			handleMatchingError(res, error, "Failed to respond to submission");
+		}
+	}
+
+	static async approveInvestmentRequest(
+		req: Request,
+		res: Response,
+	): Promise<void> {
+		try {
+			if (!req.user) {
+				res.status(401).json({ status: "error", message: "Unauthorized" });
+				return;
+			}
+
+			if (typeof req.body?.approved !== "boolean") {
+				res.status(400).json({
+					status: "error",
+					message: "approved must be boolean",
+				});
+				return;
+			}
+
+			const match = await MatchingService.approveInvestmentRequest({
+				matchId: req.params.matchId,
+				entrepreneurId: req.user._id.toString(),
+				approved: req.body.approved,
+			});
+
+			res.status(200).json({
+				status: "success",
+				message: req.body.approved
+					? "Investment request approved"
+					: "Investment request declined",
+				match,
+			});
+		} catch (error) {
+			handleMatchingError(res, error, "Failed to approve investment request");
+		}
+	}
 }

@@ -1,3 +1,4 @@
+import { Types } from "mongoose";
 import { Conversation } from "../models/Conversation";
 import { Message } from "../models/Message";
 import { MisconductReport } from "../models/MisconductReport";
@@ -33,6 +34,8 @@ export const normalizeMisconductReason = (value: unknown): string =>
 		.slice(0, 1000);
 
 export class MessageService {
+	private constructor() {}
+
 	static createError(message: string, statusCode: number): MessageServiceError {
 		return new MessageServiceError(message, statusCode);
 	}
@@ -80,7 +83,7 @@ export class MessageService {
 	static async getConversationById(
 		conversationId: string,
 		userId: string,
-	): Promise<any> {
+	): Promise<Record<string, unknown> | null> {
 		const conversation = await Conversation.findOne({
 			_id: conversationId,
 			participants: userId,
@@ -90,7 +93,7 @@ export class MessageService {
 
 		if (!conversation) return null;
 
-		const convoObj = conversation.toObject() as any;
+		const convoObj = conversation.toObject() as Record<string, unknown>;
 
 		convoObj.unreadCount = await Message.countDocuments({
 			conversationId: conversation._id,
@@ -147,7 +150,7 @@ export class MessageService {
 		// Enrich each conversation with unreadCount and lastMessage
 		const enriched = await Promise.all(
 			conversations.map(async (convo) => {
-				const convoObj = convo.toObject() as any;
+				const convoObj = convo.toObject() as Record<string, unknown>;
 
 				// Count unread messages (messages not read by this user)
 				convoObj.unreadCount = await Message.countDocuments({
@@ -239,7 +242,7 @@ export class MessageService {
 		targetUserId: string,
 	) {
 		const conversation = await Conversation.findById(conversationId);
-		if (!conversation || !conversation.isGroup) {
+		if (!conversation?.isGroup) {
 			throw MessageService.createError("Group conversation not found", 404);
 		}
 		const authorUser = await User.findById(authorUserId);
@@ -255,7 +258,7 @@ export class MessageService {
 			(p) => p.toString() === targetIdStr,
 		);
 		if (!exists) {
-			conversation.participants.push(targetUserId as any);
+			conversation.participants.push(new Types.ObjectId(targetUserId));
 			await conversation.save();
 		}
 		return conversation;
@@ -267,7 +270,7 @@ export class MessageService {
 		targetUserId: string,
 	) {
 		const conversation = await Conversation.findById(conversationId);
-		if (!conversation || !conversation.isGroup) {
+		if (!conversation?.isGroup) {
 			throw MessageService.createError("Group conversation not found", 404);
 		}
 		const authorUser = await User.findById(authorUserId);
@@ -281,7 +284,7 @@ export class MessageService {
 		const targetIdStr = targetUserId.toString();
 		conversation.participants = conversation.participants.filter(
 			(p) => p.toString() !== targetIdStr,
-		) as any;
+		);
 		await conversation.save();
 		return conversation;
 	}

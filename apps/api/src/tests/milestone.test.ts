@@ -26,11 +26,11 @@ describe("Milestone and payment simulation", () => {
 			createdBy: new mongoose.Types.ObjectId(),
 			title: "Build MVP checkout flow",
 			amount: 25000,
-			currency: "USD",
+			currency: "ETB",
 			dueDate: new Date("2026-06-01T00:00:00.000Z"),
 		});
 
-		expect(milestone.status).toBe("planned");
+		expect(milestone.status).toBe("pending");
 		expect(milestone.escrowStatus).toBe("not_held");
 		expect(milestone.evidenceDocuments).toEqual([]);
 	});

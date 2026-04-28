@@ -4,8 +4,8 @@ import {
 } from "../models/Notification";
 import { emitToUser } from "../socket";
 
-export class NotificationService {
-	static async createNotification(payload: {
+export const NotificationService = {
+	async createNotification(payload: {
 		userId: string;
 		type: NotificationEventType;
 		title: string;
@@ -19,13 +19,13 @@ export class NotificationService {
 		});
 
 		return notification;
-	}
+	},
 
-	static async getUserNotifications(userId: string) {
+	async getUserNotifications(userId: string) {
 		return Notification.find({ userId }).sort({ createdAt: -1 }).limit(100);
-	}
+	},
 
-	static async markAsRead(notificationId: string, userId: string) {
+	async markAsRead(notificationId: string, userId: string) {
 		const notification = await Notification.findOne({
 			_id: notificationId,
 			userId,
@@ -39,12 +39,12 @@ export class NotificationService {
 		await notification.save();
 
 		return notification;
-	}
+	},
 
-	static async markAllAsRead(userId: string) {
+	async markAllAsRead(userId: string) {
 		await Notification.updateMany(
 			{ userId, isRead: false },
 			{ $set: { isRead: true, readAt: new Date() } },
 		);
-	}
-}
+	},
+};
