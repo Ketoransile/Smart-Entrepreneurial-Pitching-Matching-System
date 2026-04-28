@@ -15,16 +15,16 @@ class MeetingServiceError extends Error {
 	}
 }
 
-export class MeetingService {
-	static createError(message: string, statusCode: number): MeetingServiceError {
+export const MeetingService = {
+	createError(message: string, statusCode: number): MeetingServiceError {
 		return new MeetingServiceError(message, statusCode);
-	}
+	},
 
-	static isServiceError(error: unknown): error is MeetingServiceError {
+	isServiceError(error: unknown): error is MeetingServiceError {
 		return error instanceof MeetingServiceError;
-	}
+	},
 
-	static async generateLivekitToken(payload: {
+	async generateLivekitToken(payload: {
 		meetingId: string;
 		userId: string;
 		userName: string;
@@ -66,9 +66,9 @@ export class MeetingService {
 		});
 
 		return await at.toJwt();
-	}
+	},
 
-	static async scheduleMeeting(payload: {
+	async scheduleMeeting(payload: {
 		organizerId: string;
 		participants: string[];
 		title: string;
@@ -124,12 +124,9 @@ export class MeetingService {
 		}
 
 		return meeting;
-	}
+	},
 
-	static async listMeetingsForUser(payload: {
-		userId: string;
-		status?: string;
-	}) {
+	async listMeetingsForUser(payload: { userId: string; status?: string }) {
 		const filter: Record<string, unknown> = {
 			participants: payload.userId,
 		};
@@ -143,9 +140,9 @@ export class MeetingService {
 			.populate("organizerId", "fullName email role")
 			.populate("participants", "fullName email role")
 			.populate("submissionId", "title status");
-	}
+	},
 
-	static async updateMeetingStatus(payload: {
+	async updateMeetingStatus(payload: {
 		meetingId: string;
 		requesterId: string;
 		status: "scheduled" | "ongoing" | "completed" | "cancelled";
@@ -186,9 +183,9 @@ export class MeetingService {
 		}
 
 		return meeting;
-	}
+	},
 
-	static async cancelMeetingsForSuspendedUser(payload: {
+	async cancelMeetingsForSuspendedUser(payload: {
 		userId: string;
 		reason?: string;
 	}) {
@@ -232,5 +229,5 @@ export class MeetingService {
 		}
 
 		return { cancelledCount };
-	}
-}
+	},
+};

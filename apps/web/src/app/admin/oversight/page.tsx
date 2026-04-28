@@ -3,20 +3,17 @@
 import {
 	AlertCircle,
 	CheckCircle2,
-	ClipboardList,
 	Copy,
 	Crown,
 	DollarSign,
 	ExternalLink,
 	FileText,
-	LayoutDashboard,
 	Link2,
 	Loader2,
 	Mail,
 	Plus,
 	Rocket,
 	Send,
-	Settings,
 	ShieldAlert,
 	ShieldCheck,
 	ShieldX,
@@ -33,7 +30,7 @@ import ProtectedRoute from "@/components/ProtectedRoute";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardHeader, CardTitle } from "@/components/ui/card";
 import {
 	Dialog,
 	DialogContent,
@@ -391,7 +388,7 @@ export default function AdminOversight() {
 			} else {
 				toast.error(data.message || "Failed to override document");
 			}
-		} catch (err) {
+		} catch (_err) {
 			toast.error("An error occurred during Admin override");
 		}
 	};
@@ -419,7 +416,7 @@ export default function AdminOversight() {
 			} else {
 				toast.error(data.message || "Failed to update pitch status");
 			}
-		} catch (err) {
+		} catch (_err) {
 			toast.error("An error occurred updating the pitch status");
 		}
 	};
@@ -445,7 +442,7 @@ export default function AdminOversight() {
 			} else {
 				toast.error(data.message);
 			}
-		} catch (err) {
+		} catch (_err) {
 			toast.error("Failed to generate invite");
 		} finally {
 			setInviting(false);
@@ -475,7 +472,7 @@ export default function AdminOversight() {
 			} else {
 				toast.error(data.message);
 			}
-		} catch (err) {
+		} catch (_err) {
 			toast.error("Failed to add admin");
 		} finally {
 			setAddByEmailLoading(false);
@@ -498,7 +495,7 @@ export default function AdminOversight() {
 			} else {
 				toast.error(data.message);
 			}
-		} catch (err) {
+		} catch (_err) {
 			toast.error("Failed to remove admin");
 		} finally {
 			setAdminToRemove(null);

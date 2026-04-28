@@ -7,6 +7,7 @@ import {
 	DollarSign,
 	ExternalLink,
 	FileUp,
+	Handshake,
 	Lightbulb,
 	Loader2,
 	Search,
@@ -14,6 +15,7 @@ import {
 } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useCallback, useEffect, useState } from "react";
+import { toast } from "sonner";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -87,6 +89,18 @@ interface CompletenessResult {
 	missingRequired: string[];
 }
 
+interface MatchRequest {
+	_id: string;
+	investorId: {
+		_id: string;
+		fullName: string;
+		email: string;
+	};
+	score: number;
+	status: string;
+	matchedAt: string;
+}
+
 function ReviewPitchPageInner() {
 	const { user } = useAuth();
 	const router = useRouter();
@@ -100,6 +114,10 @@ function ReviewPitchPageInner() {
 	);
 	const [loading, setLoading] = useState(true);
 	const [submitting, setSubmitting] = useState(false);
+	const [matchRequests, setMatchRequests] = useState<MatchRequest[]>([]);
+	const [respondingMatchId, setRespondingMatchId] = useState<string | null>(
+		null,
+	);
 	const [error, setError] = useState("");
 
 	const API_URL = (
@@ -113,14 +131,16 @@ function ReviewPitchPageInner() {
 			const res = await fetch(`${API_URL}/submissions/${id}`, {
 				headers: { Authorization: `Bearer ${token}` },
 			});
+			let currentSubmission = submission;
 			if (res.ok) {
-				const { submission } = await res.json();
-				setSubmission(submission);
+				const { submission: submissionData } = await res.json();
+				setSubmission(submissionData);
+				currentSubmission = submissionData;
 			}
 
 			// Fetch document statuses
 			const docRes = await fetch(`${API_URL}/documents?submissionId=${id}`, {
-				headers: { Authorization: `Bearer ${await user.getIdToken()}` },
+				headers: { Authorization: `Bearer ${token}` },
 			});
 			if (docRes.ok) {
 				const { documents } = await docRes.json();
@@ -131,18 +151,33 @@ function ReviewPitchPageInner() {
 
 			// Fetch completeness
 			const compRes = await fetch(`${API_URL}/submissions/${id}/completeness`, {
-				headers: { Authorization: `Bearer ${await user.getIdToken()}` },
+				headers: { Authorization: `Bearer ${token}` },
 			});
 			if (compRes.ok) {
 				const { completeness: compData } = await compRes.json();
 				setCompleteness(compData);
 			}
+
+			// Fetch match requests if submitted
+			if (currentSubmission && currentSubmission.status !== "draft") {
+				const matchRes = await fetch(`${API_URL}/matching/submissions/${id}`, {
+					headers: { Authorization: `Bearer ${token}` },
+				});
+				if (matchRes.ok) {
+					const { matches } = await matchRes.json();
+					if (Array.isArray(matches)) {
+						setMatchRequests(
+							matches.filter((m: any) => m.status === "requested"),
+						);
+					}
+				}
+			}
 		} catch (err) {
-			console.error("Failed to load submission:", err);
+			console.error("Failed to load submission data:", err);
 		} finally {
 			setLoading(false);
 		}
-	}, [id, user, API_URL]);
+	}, [id, user, API_URL, submission]);
 
 	useEffect(() => {
 		loadSubmission();
@@ -182,6 +217,37 @@ function ReviewPitchPageInner() {
 
 	const getStageLabel = (value: string) => {
 		return STAGES.find((s) => s.value === value)?.label || value;
+	};
+
+	const handleApproveRequest = async (matchId: string, approved: boolean) => {
+		if (!user) return;
+		setRespondingMatchId(matchId);
+		try {
+			const token = await user.getIdToken();
+			const res = await fetch(
+				`${API_URL}/matching/matches/${matchId}/approve`,
+				{
+					method: "PATCH",
+					headers: {
+						Authorization: `Bearer ${token}`,
+						"Content-Type": "application/json",
+					},
+					body: JSON.stringify({ approved }),
+				},
+			);
+			if (res.ok) {
+				toast.success(approved ? "Request approved!" : "Request declined.");
+				setMatchRequests((prev) => prev.filter((m) => m._id !== matchId));
+			} else {
+				const data = await res.json();
+				toast.error(data.message || "Failed to respond to request");
+			}
+		} catch (err) {
+			console.error("Approval error:", err);
+			toast.error("Network error");
+		} finally {
+			setRespondingMatchId(null);
+		}
 	};
 
 	const hasDocIssues =
@@ -244,6 +310,71 @@ function ReviewPitchPageInner() {
 							</span>
 						</div>
 					</div>
+
+					{/* Investment Requests section */}
+					{matchRequests.length > 0 && (
+						<div className="space-y-4 admin-content-fade">
+							<h2 className="text-xl font-bold flex items-center gap-2">
+								<Handshake className="h-5 w-5 text-primary" />
+								Investment Requests
+							</h2>
+							<div className="grid gap-4">
+								{matchRequests.map((request) => (
+									<Card
+										key={request._id}
+										className="border-primary/20 bg-primary/5 shadow-sm overflow-hidden"
+									>
+										<CardContent className="p-6">
+											<div className="flex flex-col sm:flex-row items-center justify-between gap-6">
+												<div className="flex items-center gap-4">
+													<div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-lg">
+														{request.investorId?.fullName?.charAt(0) || "I"}
+													</div>
+													<div>
+														<h3 className="font-bold text-lg">
+															{request.investorId?.fullName ||
+																"Private Investor"}
+														</h3>
+														<p className="text-sm text-muted-foreground">
+															Match Score: {(request.score * 100).toFixed(0)}%
+														</p>
+														<p className="text-xs text-muted-foreground mt-1">
+															Requested on{" "}
+															{new Date(request.matchedAt).toLocaleDateString()}
+														</p>
+													</div>
+												</div>
+												<div className="flex gap-3 w-full sm:w-auto">
+													<Button
+														variant="outline"
+														className="flex-1 sm:flex-none"
+														disabled={respondingMatchId === request._id}
+														onClick={() =>
+															handleApproveRequest(request._id, false)
+														}
+													>
+														Decline
+													</Button>
+													<Button
+														className="flex-1 sm:flex-none"
+														disabled={respondingMatchId === request._id}
+														onClick={() =>
+															handleApproveRequest(request._id, true)
+														}
+													>
+														{respondingMatchId === request._id
+															? "Processing..."
+															: "Approve Investment"}
+													</Button>
+												</div>
+											</div>
+										</CardContent>
+									</Card>
+								))}
+							</div>
+							<Separator />
+						</div>
+					)}
 
 					<Separator />
 

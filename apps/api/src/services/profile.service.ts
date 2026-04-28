@@ -62,6 +62,8 @@ function pickAllowedFields<
 }
 
 export class ProfileService {
+	private constructor() {}
+
 	// Create entrepreneur profile
 	static async createEntrepreneurProfile(
 		userId: string | mongoose.Types.ObjectId,

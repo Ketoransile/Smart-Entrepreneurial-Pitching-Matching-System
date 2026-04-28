@@ -32,8 +32,11 @@ export class InvestorController {
 				message: "Investor profile created successfully",
 				data: profile,
 			});
-		} catch (error: any) {
-			if (error.message === "Profile already exists") {
+		} catch (error: unknown) {
+			if (
+				error instanceof Error &&
+				error.message === "Profile already exists"
+			) {
 				return res.status(400).json({ message: error.message });
 			}
 			console.error("Create investor profile error:", error);
@@ -58,8 +61,8 @@ export class InvestorController {
 				success: true,
 				data: profile,
 			});
-		} catch (error: any) {
-			if (error.message === "Profile not found") {
+		} catch (error: unknown) {
+			if (error instanceof Error && error.message === "Profile not found") {
 				return res.status(404).json({ message: "Profile not found" });
 			}
 			console.error("Get investor profile error:", error);
@@ -88,8 +91,8 @@ export class InvestorController {
 				message: "Profile updated successfully",
 				data: profile,
 			});
-		} catch (error: any) {
-			if (error.message === "Profile not found") {
+		} catch (error: unknown) {
+			if (error instanceof Error && error.message === "Profile not found") {
 				return res.status(404).json({ message: "Profile not found" });
 			}
 			console.error("Update investor profile error:", error);

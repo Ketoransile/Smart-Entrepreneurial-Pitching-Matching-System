@@ -34,32 +34,13 @@ const router = Router();
  *             properties:
  *               limit:
  *                 type: integer
- *                 description: Maximum number of matches to return
  *               minScore:
  *                 type: number
  *                 minimum: 0
  *                 maximum: 1
- *                 description: Minimum match score threshold
  *     responses:
  *       200:
  *         description: Matching completed
- *         content:
- *           application/json:
- *             schema:
- *               allOf:
- *                 - $ref: '#/components/schemas/SuccessResponse'
- *                 - type: object
- *                   properties:
- *                     matches:
- *                       type: array
- *                       items:
- *                         $ref: '#/components/schemas/MatchResultObject'
- *       500:
- *         description: Internal server error
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/ErrorResponse'
  */
 router.post(
 	"/submissions/:submissionId/run",
@@ -85,23 +66,6 @@ router.post(
  *     responses:
  *       200:
  *         description: Matches fetched
- *         content:
- *           application/json:
- *             schema:
- *               allOf:
- *                 - $ref: '#/components/schemas/SuccessResponse'
- *                 - type: object
- *                   properties:
- *                     matches:
- *                       type: array
- *                       items:
- *                         $ref: '#/components/schemas/MatchResultObject'
- *       500:
- *         description: Internal server error
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/ErrorResponse'
  */
 router.get(
 	"/submissions/:submissionId",
@@ -126,29 +90,48 @@ router.get(
  *     responses:
  *       200:
  *         description: Investor matches fetched
- *         content:
- *           application/json:
- *             schema:
- *               allOf:
- *                 - $ref: '#/components/schemas/SuccessResponse'
- *                 - type: object
- *                   properties:
- *                     matches:
- *                       type: array
- *                       items:
- *                         $ref: '#/components/schemas/MatchResultObject'
- *       500:
- *         description: Internal server error
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/ErrorResponse'
  */
 router.get(
 	"/me/investor",
 	authenticate,
 	authorize("investor"),
 	MatchingController.getInvestorMatches,
+);
+
+/**
+ * @openapi
+ * /api/matching/respond/{submissionId}:
+ *   patch:
+ *     tags: [Matching]
+ *     summary: Investor accepts or declines a project directly from feed
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: submissionId
+ *         required: true
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [status]
+ *             properties:
+ *               status:
+ *                 type: string
+ *                 enum: [accepted, declined]
+ *     responses:
+ *       200:
+ *         description: Match status updated (or match created)
+ */
+router.patch(
+	"/direct-respond/:submissionId",
+	authenticate,
+	authorize("investor"),
+	MatchingController.respondToSubmission,
 );
 
 /**
@@ -179,39 +162,47 @@ router.get(
  *     responses:
  *       200:
  *         description: Match status updated
- *         content:
- *           application/json:
- *             schema:
- *               allOf:
- *                 - $ref: '#/components/schemas/SuccessResponse'
- *                 - type: object
- *                   properties:
- *                     match:
- *                       $ref: '#/components/schemas/MatchResultObject'
- *       400:
- *         description: Invalid status
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/ErrorResponse'
- *       404:
- *         description: Match not found
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/ErrorResponse'
- *       500:
- *         description: Internal server error
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/ErrorResponse'
  */
 router.patch(
 	"/:matchId/status",
 	authenticate,
 	authorize("investor"),
 	MatchingController.updateInvestorMatchStatus,
+);
+
+/**
+ * @openapi
+ * /api/matching/matches/{matchId}/approve:
+ *   patch:
+ *     tags: [Matching]
+ *     summary: Entrepreneur approves or declines an investment request
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: matchId
+ *         required: true
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [approved]
+ *             properties:
+ *               approved:
+ *                 type: boolean
+ *     responses:
+ *       200:
+ *         description: Match status updated
+ */
+router.patch(
+	"/matches/:matchId/approve",
+	authenticate,
+	authorize("entrepreneur"),
+	MatchingController.approveInvestmentRequest,
 );
 
 export default router;

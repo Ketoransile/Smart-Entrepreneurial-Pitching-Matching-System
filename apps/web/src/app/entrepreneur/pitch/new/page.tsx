@@ -381,7 +381,7 @@ function NewPitchPageInner() {
 		if (currentStep > 1) setCurrentStep((prev) => prev - 1);
 	};
 
-	const progress = (currentStep / STEPS.length) * 100;
+	const _progress = (currentStep / STEPS.length) * 100;
 
 	const getDocStatusBadge = (status: string) => {
 		switch (status) {

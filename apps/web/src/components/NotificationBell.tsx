@@ -133,8 +133,31 @@ export default function NotificationBell() {
 			} else {
 				toast.error("Failed to mark as read");
 			}
-		} catch (error) {
+		} catch (_error) {
 			toast.error("Failed to mark as read");
+		}
+	};
+
+	const markAllAsRead = async () => {
+		if (!user) return;
+		try {
+			const token = await user.getIdToken();
+			const res = await fetch(`${api}/messages/notifications/read-all`, {
+				method: "PATCH",
+				headers: { Authorization: `Bearer ${token}` },
+			});
+			if (res.ok) {
+				setNotifications((prev) => prev.map((n) => ({ ...n, isRead: true })));
+			}
+		} catch (_error) {
+			console.error("Failed to mark all as read");
+		}
+	};
+
+	const handleOpenChange = (open: boolean) => {
+		setIsOpen(open);
+		if (!open && notifications.some((n) => !n.isRead)) {
+			markAllAsRead();
 		}
 	};
 
@@ -152,7 +175,7 @@ export default function NotificationBell() {
 	const unreadCount = notifications.filter((n) => !n.isRead).length;
 
 	return (
-		<Popover open={isOpen} onOpenChange={setIsOpen}>
+		<Popover open={isOpen} onOpenChange={handleOpenChange}>
 			<PopoverTrigger asChild>
 				<Button variant="ghost" size="icon" className="relative group">
 					<Bell className="h-5 w-5 text-muted-foreground group-hover:text-foreground transition-colors" />
@@ -196,16 +219,18 @@ export default function NotificationBell() {
 									userProfile?.role || null,
 								);
 								return (
-									<div
+									<button
+										type="button"
 										key={notif._id}
 										onClick={() => handleNotificationClick(notif)}
+										aria-label={`Open notification: ${notif.title}`}
 										className={`p-4 border-b last:border-0 transition-colors ${
 											link ? "cursor-pointer hover:bg-muted/50" : ""
 										} ${
 											notif.isRead
 												? "bg-background"
 												: "bg-primary/5 border-l-2 border-l-primary"
-										}`}
+										} text-left w-full`}
 									>
 										<div className="flex items-start gap-3">
 											<div className="mt-0.5">
@@ -246,7 +271,7 @@ export default function NotificationBell() {
 												</Button>
 											)}
 										</div>
-									</div>
+									</button>
 								);
 							})}
 						</div>

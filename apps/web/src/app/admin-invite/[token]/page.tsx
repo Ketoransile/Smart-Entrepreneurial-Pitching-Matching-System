@@ -24,18 +24,23 @@ import {
 	CardTitle,
 } from "@/components/ui/card";
 import { useAuth } from "@/context/AuthContext";
+
+interface InviteData {
+	createdBy?: string;
+}
+
 import { auth } from "@/lib/firebase";
 
 export default function AdminInvitePage() {
 	const params = useParams();
 	const router = useRouter();
-	const { user, refreshUserProfile } = useAuth();
+	const { refreshUserProfile } = useAuth();
 	const token = params.token as string;
 
 	const [status, setStatus] = useState<
 		"loading" | "valid" | "invalid" | "accepting" | "done"
 	>("loading");
-	const [inviteData, setInviteData] = useState<any>(null);
+	const [inviteData, setInviteData] = useState<InviteData | null>(null);
 	const [error, setError] = useState("");
 
 	const API_URL = (
@@ -94,8 +99,8 @@ export default function AdminInvitePage() {
 				setError(data.message);
 				setStatus("invalid");
 			}
-		} catch (err: any) {
-			setError(err.message || "Failed to accept invite.");
+		} catch (err) {
+			setError(err instanceof Error ? err.message : "Failed to accept invite.");
 			setStatus("invalid");
 		}
 	};

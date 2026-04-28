@@ -1,4 +1,3 @@
-import { DocumentModel } from "../models/Document";
 import { type ISubmission, Submission } from "../models/Submission";
 import type { IUser } from "../models/User";
 import { DocumentValidationService } from "./document-validation.service";
@@ -21,7 +20,31 @@ const parseIntOrDefault = (value: unknown, fallback: number): number => {
 const hasMinLength = (value: unknown, min: number): boolean =>
 	typeof value === "string" && value.trim().length >= min;
 
+const getSubmissionOwnerId = (submission: ISubmission): string | null => {
+	const entrepreneur = submission.entrepreneurId;
+	if (!entrepreneur) {
+		return null;
+	}
+
+	if (typeof entrepreneur === "object") {
+		if ("_id" in entrepreneur && entrepreneur._id) {
+			return entrepreneur._id.toString();
+		}
+		if (
+			"toString" in entrepreneur &&
+			typeof entrepreneur.toString === "function"
+		) {
+			return entrepreneur.toString();
+		}
+		return null;
+	}
+
+	return String(entrepreneur);
+};
+
 export class SubmissionService {
+	private constructor() {}
+
 	static createError(
 		message: string,
 		statusCode: number,
@@ -76,12 +99,7 @@ export class SubmissionService {
 
 		// After .populate(), entrepreneurId is a hydrated object { _id, fullName, email }.
 		// Extract the raw _id for comparison.
-		const ownerId =
-			typeof submission.entrepreneurId === "object" &&
-			submission.entrepreneurId !== null
-				? (submission.entrepreneurId as any)._id?.toString() ||
-					(submission.entrepreneurId as any).toString()
-				: (submission.entrepreneurId as any)?.toString();
+		const ownerId = getSubmissionOwnerId(submission);
 
 		if (user.role === "entrepreneur" && ownerId !== user._id.toString()) {
 			throw SubmissionService.createError("Access denied", 403);
@@ -371,7 +389,7 @@ export class SubmissionService {
 		};
 	}
 
-	static async updateAdminStatus(id: string, status: string, reason?: string) {
+	static async updateAdminStatus(id: string, status: string, _reason?: string) {
 		const submission = await Submission.findById(id);
 		if (!submission) {
 			throw SubmissionService.createError("Submission not found", 404);

@@ -40,36 +40,8 @@ const avatarUpload = multer({
  *     responses:
  *       200:
  *         description: Profile fetched
- *         content:
- *           application/json:
- *             schema:
- *               allOf:
- *                 - $ref: '#/components/schemas/SuccessResponse'
- *                 - type: object
- *                   properties:
- *                     user:
- *                       $ref: '#/components/schemas/UserObject'
- *                     profile:
- *                       nullable: true
- *                       oneOf:
- *                         - $ref: '#/components/schemas/EntrepreneurProfileObject'
- *                         - $ref: '#/components/schemas/InvestorProfileObject'
- *                   nullable: true
- *                   oneOf:
- *                     - $ref: '#/components/schemas/EntrepreneurProfileObject'
- *                     - $ref: '#/components/schemas/InvestorProfileObject'
  *       404:
  *         description: User not found
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/ErrorResponse'
- *       500:
- *         description: Internal server error
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/ErrorResponse'
  */
 router.get(
 	"/me/profile",
@@ -122,47 +94,12 @@ router.get(
  *         application/json:
  *           schema:
  *             type: object
- *             description: Role-specific profile fields (entrepreneur or investor)
- *             properties:
- *               fullName:
- *                 type: string
- *               companyName:
- *                 type: string
- *               businessStage:
- *                 type: string
- *                 enum: [idea, mvp, early-revenue, scaling]
- *               nationalIdUrl:
- *                 type: string
- *               businessLicenseUrl:
- *                 type: string
+ *             additionalProperties: true
  *     responses:
  *       200:
  *         description: Profile updated
- *         content:
- *           application/json:
- *             schema:
- *               allOf:
- *                 - $ref: '#/components/schemas/SuccessResponse'
- *                 - type: object
- *                   properties:
- *                     user:
- *                       $ref: '#/components/schemas/UserObject'
- *                     profile:
- *                       oneOf:
- *                         - $ref: '#/components/schemas/EntrepreneurProfileObject'
- *                         - $ref: '#/components/schemas/InvestorProfileObject'
  *       400:
  *         description: Invalid role for profile
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/ErrorResponse'
- *       500:
- *         description: Internal server error
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/ErrorResponse'
  */
 router.put(
 	"/me/profile",
@@ -267,33 +204,10 @@ router.put(
  *     responses:
  *       200:
  *         description: User profile updated
- *         content:
- *           application/json:
- *             schema:
- *               allOf:
- *                 - $ref: '#/components/schemas/SuccessResponse'
- *                 - type: object
- *                   properties:
- *                     user:
- *                       $ref: '#/components/schemas/UserObject'
  *       400:
  *         description: Invalid payload
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/ErrorResponse'
  *       404:
  *         description: User not found
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/ErrorResponse'
- *       500:
- *         description: Internal server error
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/ErrorResponse'
  */
 router.patch(
 	"/me",
@@ -381,35 +295,10 @@ router.patch(
  *     responses:
  *       200:
  *         description: Avatar uploaded
- *         content:
- *           application/json:
- *             schema:
- *               allOf:
- *                 - $ref: '#/components/schemas/SuccessResponse'
- *                 - type: object
- *                   properties:
- *                     photoURL:
- *                       type: string
- *                     user:
- *                       $ref: '#/components/schemas/UserObject'
  *       400:
  *         description: Missing or invalid file
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/ErrorResponse'
  *       413:
- *         description: File too large (max 2MB)
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/ErrorResponse'
- *       500:
- *         description: Internal server error
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/ErrorResponse'
+ *         description: File too large
  */
 router.post(
 	"/me/avatar",
@@ -433,7 +322,7 @@ router.post(
 			const result = await new Promise<UploadApiResponse>((resolve, reject) => {
 				const uploadStream = cloudinary.uploader.upload_stream(
 					{
-						folder: `sepms/avatars/${req.user!._id}`,
+						folder: `sepms/avatars/${req.user?._id}`,
 						resource_type: "image",
 						allowed_formats: ["jpg", "jpeg", "png", "webp", "gif"],
 						transformation: [
@@ -446,7 +335,7 @@ router.post(
 						else resolve(result as UploadApiResponse);
 					},
 				);
-				uploadStream.end(req.file!.buffer);
+				uploadStream.end(req.file?.buffer);
 			});
 
 			// Update user record
@@ -484,6 +373,59 @@ router.post(
 				status: "error",
 				message: err.message || "Failed to upload profile picture",
 			});
+		}
+	},
+);
+
+/**
+ * @openapi
+ * /api/users/{userId}/investor-profile:
+ *   get:
+ *     tags: [Users]
+ *     summary: Get a public investor profile by user ID
+ *     description: Returns non-sensitive public profile fields for an investor. Available to any authenticated user (e.g. entrepreneur reviewing an invitation).
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: userId
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Investor profile returned
+ *       404:
+ *         description: Profile not found
+ */
+router.get(
+	"/:userId/investor-profile",
+	authenticate,
+	async (req: Request, res: Response): Promise<void> => {
+		try {
+			const profile = await InvestorProfile.findOne({
+				userId: req.params.userId,
+			}).select(
+				"fullName profilePicture investmentFirm position preferredSectors preferredStages investmentRange investmentType yearsExperience industriesExpertise previousInvestments portfolioCount totalInvested",
+			);
+
+			if (!profile) {
+				res
+					.status(404)
+					.json({ status: "error", message: "Investor profile not found" });
+				return;
+			}
+
+			const user = await User.findById(req.params.userId).select(
+				"fullName email photoURL",
+			);
+
+			res.status(200).json({ status: "success", profile, user });
+		} catch (error) {
+			console.error("Fetch investor profile error:", error);
+			res
+				.status(500)
+				.json({ status: "error", message: "Failed to fetch investor profile" });
 		}
 	},
 );

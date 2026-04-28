@@ -3,18 +3,12 @@
 import {
 	AlertCircle,
 	ArrowRight,
-	BarChart3,
 	Building2,
-	Camera,
 	CheckCircle2,
 	Clock,
 	FileCheck,
-	FileText,
 	IdCard,
 	Loader2,
-	Mail,
-	MessageSquare,
-	PenLine,
 	Save,
 	ShieldCheck,
 	Upload,
@@ -29,7 +23,6 @@ import DashboardLayout from "@/components/DashboardLayout";
 import ProfilePictureUpload from "@/components/ProfilePictureUpload";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -274,7 +267,7 @@ function EntrepreneurProfilePageInner() {
 	}, [searchParams]);
 
 	// Form fields
-	const [fullName, setFullName] = useState("");
+	const [_fullName, setFullName] = useState("");
 	const [companyName, setCompanyName] = useState("");
 	const [companyDescription, setCompanyDescription] = useState("");
 
@@ -353,7 +346,7 @@ function EntrepreneurProfilePageInner() {
 		key: string,
 	) => {
 		if (e.target.files?.[0]) {
-			setFiles((prev) => ({ ...prev, [key]: e.target.files![0] }));
+			setFiles((prev) => ({ ...prev, [key]: e.target.files?.[0] }));
 		}
 	};
 
@@ -453,12 +446,12 @@ function EntrepreneurProfilePageInner() {
 	const hasBusinessLicense =
 		!!files.businessLicense || !!profileData?.businessLicenseUrl;
 	const hasTin = !!files.tinCertificate || !!profileData?.tinNumber;
-	const hasAllDocs = hasGovId && hasBusinessLicense && hasTin;
-	const hasNewFiles =
+	const _hasAllDocs = hasGovId && hasBusinessLicense && hasTin;
+	const _hasNewFiles =
 		Object.keys(files).length > 0 ||
 		(!profileData?.nationalIdUrl && !profileData?.businessLicenseUrl);
 	const isVerified = userProfile?.status === "verified";
-	const initials = (userProfile?.displayName || "U")
+	const _initials = (userProfile?.displayName || "U")
 		.split(" ")
 		.map((n) => n[0])
 		.join("")

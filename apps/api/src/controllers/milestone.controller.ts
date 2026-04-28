@@ -45,6 +45,7 @@ export class MilestoneController {
 
 	static async list(req: Request, res: Response): Promise<void> {
 		try {
+			console.log(3333);
 			if (!req.user) {
 				res.status(401).json({ status: "error", message: "Unauthorized" });
 				return;
@@ -56,12 +57,11 @@ export class MilestoneController {
 				submissionId: req.query.submissionId as string | undefined,
 				matchResultId: req.query.matchResultId as string | undefined,
 				status: req.query.status as
-					| "planned"
+					| "pending"
 					| "in_progress"
-					| "submitted"
-					| "approved"
+					| "submitted_for_review"
+					| "verified_paid"
 					| "rejected"
-					| "paid"
 					| "cancelled"
 					| undefined,
 			});
@@ -166,6 +166,125 @@ export class MilestoneController {
 			res.status(200).json({ status: "success", ...result });
 		} catch (error) {
 			handleMilestoneError(res, error, "Failed to verify milestone");
+		}
+	}
+
+	static async listByProject(req: Request, res: Response): Promise<void> {
+		try {
+			if (!req.user) {
+				res.status(401).json({ status: "error", message: "Unauthorized" });
+				return;
+			}
+
+			const milestones = await MilestoneService.getByProject({
+				projectId: req.params.projectId,
+				actorId: req.user._id.toString(),
+				actorRole: req.user.role,
+			});
+
+			res
+				.status(200)
+				.json({ status: "success", count: milestones.length, milestones });
+		} catch (error) {
+			handleMilestoneError(res, error, "Failed to fetch project milestones");
+		}
+	}
+
+	static async transitionStatus(req: Request, res: Response): Promise<void> {
+		try {
+			if (!req.user) {
+				res.status(401).json({ status: "error", message: "Unauthorized" });
+				return;
+			}
+
+			const { status, feedback } = req.body as {
+				status: "submitted_for_review" | "verified_paid" | "rejected";
+				feedback?: string;
+			};
+
+			if (!status) {
+				res
+					.status(400)
+					.json({ status: "error", message: "status is required" });
+				return;
+			}
+
+			const milestone = await MilestoneService.transitionStatus({
+				milestoneId: req.params.milestoneId,
+				actorId: req.user._id.toString(),
+				actorRole: req.user.role,
+				targetStatus: status,
+				feedback,
+			});
+
+			res.status(200).json({ status: "success", milestone });
+		} catch (error) {
+			handleMilestoneError(res, error, "Failed to transition milestone status");
+		}
+	}
+
+	static async uploadProof(req: Request, res: Response): Promise<void> {
+		try {
+			if (!req.user) {
+				res.status(401).json({ status: "error", message: "Unauthorized" });
+				return;
+			}
+
+			const { proof } = req.body as { proof: string };
+
+			if (!proof) {
+				res.status(400).json({ status: "error", message: "proof is required" });
+				return;
+			}
+
+			const milestone = await MilestoneService.attachProof({
+				milestoneId: req.params.milestoneId,
+				actorId: req.user._id.toString(),
+				actorRole: req.user.role,
+				proof,
+			});
+
+			res.status(200).json({ status: "success", milestone });
+		} catch (error) {
+			handleMilestoneError(res, error, "Failed to upload proof");
+		}
+	}
+
+	static async getProof(req: Request, res: Response): Promise<void> {
+		try {
+			if (!req.user) {
+				res.status(401).json({ status: "error", message: "Unauthorized" });
+				return;
+			}
+
+			const result = await MilestoneService.getProof({
+				milestoneId: req.params.milestoneId,
+				actorId: req.user._id.toString(),
+				actorRole: req.user.role,
+			});
+
+			res.status(200).json({ status: "success", proof: result });
+		} catch (error) {
+			handleMilestoneError(res, error, "Failed to retrieve proof");
+		}
+	}
+
+	static async delete(req: Request, res: Response): Promise<void> {
+		try {
+			if (!req.user) {
+				res.status(401).json({ status: "error", message: "Unauthorized" });
+				return;
+			}
+
+			await MilestoneService.deleteMilestone({
+				milestoneId: req.params.milestoneId,
+				actorId: req.user._id.toString(),
+				actorRole: req.user.role,
+			});
+
+			res.status(200).json({ status: "success", message: "Milestone deleted" });
+		} catch (error) {
+			handleMilestoneError(res, error, "Failed to delete milestone");
 		}
 	}
 }

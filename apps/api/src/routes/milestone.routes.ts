@@ -11,12 +11,16 @@ const router = Router();
  *     description: Funding milestone tracking and simulated payment release workflow
  */
 
+// ─────────────────────────────────────────────────────────────────────────────
+// Milestone CRUD
+// ─────────────────────────────────────────────────────────────────────────────
+
 /**
  * @openapi
  * /api/milestones:
  *   post:
  *     tags: [Milestones]
- *     summary: Create a new funding milestone for an accepted match
+ *     summary: Create a new funding milestone (Entrepreneur only)
  *     security:
  *       - bearerAuth: []
  *     requestBody:
@@ -33,13 +37,11 @@ const router = Router();
  *                 type: string
  *               title:
  *                 type: string
- *                 example: "MVP Launch"
  *               description:
  *                 type: string
  *               amount:
  *                 type: number
  *                 minimum: 0.01
- *                 example: 25000
  *               currency:
  *                 type: string
  *                 example: USD
@@ -48,28 +50,7 @@ const router = Router();
  *                 format: date-time
  *     responses:
  *       201:
- *         description: Milestone created and escrow held
- *         content:
- *           application/json:
- *             schema:
- *               allOf:
- *                 - $ref: '#/components/schemas/SuccessResponse'
- *                 - type: object
- *                   properties:
- *                     milestone:
- *                       $ref: '#/components/schemas/MilestoneObject'
- *       400:
- *         description: Validation error
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/ErrorResponse'
- *       500:
- *         description: Internal server error
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/ErrorResponse'
+ *         description: Milestone created
  */
 router.post(
 	"/",
@@ -99,27 +80,10 @@ router.post(
  *         name: status
  *         schema:
  *           type: string
- *           enum: [planned, in_progress, submitted, approved, rejected, paid, cancelled]
+ *           enum: [planned, in_progress, submitted, approved, rejected, paid, cancelled, pending, submitted_for_review, verified_paid]
  *     responses:
  *       200:
  *         description: Milestones fetched
- *         content:
- *           application/json:
- *             schema:
- *               allOf:
- *                 - $ref: '#/components/schemas/SuccessResponse'
- *                 - type: object
- *                   properties:
- *                     milestones:
- *                       type: array
- *                       items:
- *                         $ref: '#/components/schemas/MilestoneObject'
- *       500:
- *         description: Internal server error
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/ErrorResponse'
  */
 router.get(
 	"/",
@@ -128,47 +92,31 @@ router.get(
 	MilestoneController.list,
 );
 
+// ─────────────────────────────────────────────────────────────────────────────
+// IMPORTANT: Static path segments (/single/:id, /:projectId) must be declared
+// BEFORE dynamic /:milestoneId routes to avoid Express route shadowing.
+// ─────────────────────────────────────────────────────────────────────────────
+
 /**
  * @openapi
- * /api/milestones/{milestoneId}:
+ * /api/milestones/single/{id}:
  *   get:
  *     tags: [Milestones]
- *     summary: Get milestone details
+ *     summary: Get single milestone details
  *     security:
  *       - bearerAuth: []
  *     parameters:
  *       - in: path
- *         name: milestoneId
+ *         name: id
  *         required: true
  *         schema:
  *           type: string
  *     responses:
  *       200:
  *         description: Milestone returned
- *         content:
- *           application/json:
- *             schema:
- *               allOf:
- *                 - $ref: '#/components/schemas/SuccessResponse'
- *                 - type: object
- *                   properties:
- *                     milestone:
- *                       $ref: '#/components/schemas/MilestoneObject'
- *       404:
- *         description: Milestone not found
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/ErrorResponse'
- *       500:
- *         description: Internal server error
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/ErrorResponse'
  */
 router.get(
-	"/:milestoneId",
+	"/single/:milestoneId",
 	authenticate,
 	authorize("entrepreneur", "investor", "admin"),
 	MilestoneController.getById,
@@ -176,10 +124,35 @@ router.get(
 
 /**
  * @openapi
- * /api/milestones/{milestoneId}:
- *   patch:
+ * /api/milestones/{projectId}:
+ *   get:
  *     tags: [Milestones]
- *     summary: Update milestone details or move to in_progress/cancelled
+ *     summary: Get all milestones for a project (submissionId)
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: projectId
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Project milestones returned
+ */
+router.get(
+	"/:projectId",
+	authenticate,
+	authorize("entrepreneur", "investor", "admin"),
+	MilestoneController.listByProject,
+);
+
+/**
+ * @openapi
+ * /api/milestones/{milestoneId}:
+ *   put:
+ *     tags: [Milestones]
+ *     summary: Update milestone details (only when status is "pending")
  *     security:
  *       - bearerAuth: []
  *     parameters:
@@ -210,41 +183,143 @@ router.get(
  *     responses:
  *       200:
  *         description: Milestone updated
- *         content:
- *           application/json:
- *             schema:
- *               allOf:
- *                 - $ref: '#/components/schemas/SuccessResponse'
- *                 - type: object
- *                   properties:
- *                     milestone:
- *                       $ref: '#/components/schemas/MilestoneObject'
- *       404:
- *         description: Milestone not found
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/ErrorResponse'
- *       500:
- *         description: Internal server error
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/ErrorResponse'
  */
-router.patch(
+router.put(
 	"/:milestoneId",
 	authenticate,
 	authorize("entrepreneur", "investor", "admin"),
 	MilestoneController.update,
 );
 
+// ─────────────────────────────────────────────────────────────────────────────
+// Milestone Workflow — centralized status transition
+// ─────────────────────────────────────────────────────────────────────────────
+
+/**
+ * @openapi
+ * /api/milestones/{milestoneId}/status:
+ *   patch:
+ *     tags: [Milestones]
+ *     summary: Transition milestone status (centralized workflow)
+ *     description: |
+ *       State machine:
+ *       - **submitted_for_review**: Entrepreneur only, milestone must be "pending"
+ *       - **verified_paid**: Investor only, milestone must be "submitted_for_review" — triggers simulated payment and creates a TransactionLog
+ *       - **rejected**: Investor only, milestone must be "submitted_for_review" — saves feedback
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: milestoneId
+ *         required: true
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [status]
+ *             properties:
+ *               status:
+ *                 type: string
+ *                 enum: [submitted_for_review, verified_paid, rejected]
+ *               feedback:
+ *                 type: string
+ *                 description: Optional feedback (used when rejecting)
+ *     responses:
+ *       200:
+ *         description: Status transitioned
+ *       400:
+ *         description: Invalid status or transition not allowed
+ *       403:
+ *         description: Role not permitted for this transition
+ */
+router.patch(
+	"/:milestoneId/status",
+	authenticate,
+	authorize("entrepreneur", "investor", "admin"),
+	MilestoneController.transitionStatus,
+);
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Proof handling
+// ─────────────────────────────────────────────────────────────────────────────
+
+/**
+ * @openapi
+ * /api/milestones/{milestoneId}/proof:
+ *   post:
+ *     tags: [Milestones]
+ *     summary: Upload or attach proof (Entrepreneur only)
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: milestoneId
+ *         required: true
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [proof]
+ *             properties:
+ *               proof:
+ *                 type: string
+ *                 description: Proof URL or descriptive text
+ *     responses:
+ *       200:
+ *         description: Proof attached
+ *       403:
+ *         description: Only the entrepreneur can upload proof
+ */
+router.post(
+	"/:milestoneId/proof",
+	authenticate,
+	authorize("entrepreneur", "admin"),
+	MilestoneController.uploadProof,
+);
+
+/**
+ * @openapi
+ * /api/milestones/{milestoneId}/proof:
+ *   get:
+ *     tags: [Milestones]
+ *     summary: Retrieve milestone proof
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: milestoneId
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Proof retrieved
+ */
+router.get(
+	"/:milestoneId/proof",
+	authenticate,
+	authorize("entrepreneur", "investor", "admin"),
+	MilestoneController.getProof,
+);
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Evidence documents (rich file-based proof — existing workflow)
+// ─────────────────────────────────────────────────────────────────────────────
+
 /**
  * @openapi
  * /api/milestones/{milestoneId}/evidence:
  *   post:
  *     tags: [Milestones]
- *     summary: Submit completion evidence for milestone verification
+ *     summary: Submit completion evidence documents for verification
  *     security:
  *       - bearerAuth: []
  *     parameters:
@@ -277,27 +352,6 @@ router.patch(
  *     responses:
  *       200:
  *         description: Evidence submitted
- *         content:
- *           application/json:
- *             schema:
- *               allOf:
- *                 - $ref: '#/components/schemas/SuccessResponse'
- *                 - type: object
- *                   properties:
- *                     milestone:
- *                       $ref: '#/components/schemas/MilestoneObject'
- *       404:
- *         description: Milestone not found
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/ErrorResponse'
- *       500:
- *         description: Internal server error
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/ErrorResponse'
  */
 router.post(
 	"/:milestoneId/evidence",
@@ -311,7 +365,7 @@ router.post(
  * /api/milestones/{milestoneId}/verify:
  *   post:
  *     tags: [Milestones]
- *     summary: Verify milestone and release simulated payout
+ *     summary: Verify milestone and release simulated payout (Investor only)
  *     security:
  *       - bearerAuth: []
  *     parameters:
@@ -330,40 +384,47 @@ router.post(
  *             properties:
  *               approved:
  *                 type: boolean
- *                 description: Whether the milestone is approved for payment release
  *               notes:
  *                 type: string
- *                 description: Verification notes or rejection reason
  *     responses:
  *       200:
  *         description: Milestone verification handled
- *         content:
- *           application/json:
- *             schema:
- *               allOf:
- *                 - $ref: '#/components/schemas/SuccessResponse'
- *                 - type: object
- *                   properties:
- *                     milestone:
- *                       $ref: '#/components/schemas/MilestoneObject'
- *       404:
- *         description: Milestone not found
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/ErrorResponse'
- *       500:
- *         description: Internal server error
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/ErrorResponse'
  */
 router.post(
 	"/:milestoneId/verify",
 	authenticate,
 	authorize("investor", "admin"),
 	MilestoneController.verify,
+);
+
+/**
+ * @openapi
+ * /api/milestones/{milestoneId}:
+ *   delete:
+ *     tags: [Milestones]
+ *     summary: Delete a pending milestone (Investor or Admin only)
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: milestoneId
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Milestone deleted
+ *       400:
+ *         description: Milestone is not in pending status
+ *       403:
+ *         description: Only the investor can delete this milestone
+ */
+
+router.delete(
+	"/:milestoneId",
+	authenticate,
+	authorize("investor", "admin"),
+	MilestoneController.delete,
 );
 
 export default router;

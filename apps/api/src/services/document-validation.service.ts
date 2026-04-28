@@ -122,28 +122,99 @@ const ALLOWED_MIMES: Record<string, string[]> = {
 	],
 };
 
-export class DocumentValidationService {
+const checkFileSize = (document: IDocument): ValidationCheck => {
+	const maxSize = MAX_FILE_SIZES[document.type] || MAX_FILE_SIZES.other;
+	const sizeMB = (document.sizeBytes / (1024 * 1024)).toFixed(1);
+	const maxMB = (maxSize / (1024 * 1024)).toFixed(0);
+
+	if (document.sizeBytes > maxSize) {
+		return {
+			name: "file_size",
+			passed: false,
+			message: `File is ${sizeMB}MB, exceeds ${maxMB}MB limit for ${document.type} documents`,
+		};
+	}
+
+	if (document.sizeBytes === 0) {
+		return {
+			name: "file_size",
+			passed: false,
+			message: "File appears to be empty (0 bytes)",
+		};
+	}
+
+	return {
+		name: "file_size",
+		passed: true,
+		message: `File size OK (${sizeMB}MB)`,
+	};
+};
+
+const checkMimeType = (document: IDocument): ValidationCheck => {
+	const allowedMimes = ALLOWED_MIMES[document.type] || ALLOWED_MIMES.other;
+
+	if (!allowedMimes.includes(document.mimeType)) {
+		return {
+			name: "mime_type",
+			passed: false,
+			message: `File type "${document.mimeType}" is not allowed for ${document.type} documents. Allowed: PDF, PPTX, DOCX, etc.`,
+		};
+	}
+
+	return {
+		name: "mime_type",
+		passed: true,
+		message: "File type is valid",
+	};
+};
+
+const checkFilename = (document: IDocument): ValidationCheck => {
+	const filename = document.filename || "";
+
+	if (filename.length === 0) {
+		return {
+			name: "filename",
+			passed: false,
+			message: "Filename is missing",
+		};
+	}
+
+	const suspiciousPatterns = /\.(exe|bat|cmd|sh|ps1|vbs|js|mjs)$/i;
+	if (suspiciousPatterns.test(filename)) {
+		return {
+			name: "filename",
+			passed: false,
+			message: "Executable file types are not allowed",
+		};
+	}
+
+	return {
+		name: "filename",
+		passed: true,
+		message: "Filename is valid",
+	};
+};
+
+export const DocumentValidationService = {
 	/**
 	 * Run all pre-processing validation checks on a single document.
 	 */
-	static validate(document: IDocument): ValidationResult {
+	validate(document: IDocument): ValidationResult {
 		const checks: ValidationCheck[] = [];
 
-		checks.push(DocumentValidationService.checkFileSize(document));
-		checks.push(DocumentValidationService.checkMimeType(document));
-		checks.push(DocumentValidationService.checkFilename(document));
+		checks.push(checkFileSize(document));
+		checks.push(checkMimeType(document));
+		checks.push(checkFilename(document));
 
 		const passed = checks.every((c) => c.passed);
 		return { passed, checks };
-	}
+	},
 
 	/**
 	 * Check completeness of the document checklist for a submission.
 	 * Returns a score and list of missing required documents (UC-05 step 8).
 	 */
-	static async checkCompleteness(
-		submissionId: string,
-	): Promise<CompletenessResult> {
+	async checkCompleteness(submissionId: string): Promise<CompletenessResult> {
 		const docs = await DocumentModel.find({ submissionId }).select(
 			"type status",
 		);
@@ -211,78 +282,5 @@ export class DocumentValidationService {
 			checklist,
 			missingRequired,
 		};
-	}
-
-	private static checkFileSize(document: IDocument): ValidationCheck {
-		const maxSize = MAX_FILE_SIZES[document.type] || MAX_FILE_SIZES.other;
-		const sizeMB = (document.sizeBytes / (1024 * 1024)).toFixed(1);
-		const maxMB = (maxSize / (1024 * 1024)).toFixed(0);
-
-		if (document.sizeBytes > maxSize) {
-			return {
-				name: "file_size",
-				passed: false,
-				message: `File is ${sizeMB}MB, exceeds ${maxMB}MB limit for ${document.type} documents`,
-			};
-		}
-
-		if (document.sizeBytes === 0) {
-			return {
-				name: "file_size",
-				passed: false,
-				message: "File appears to be empty (0 bytes)",
-			};
-		}
-
-		return {
-			name: "file_size",
-			passed: true,
-			message: `File size OK (${sizeMB}MB)`,
-		};
-	}
-
-	private static checkMimeType(document: IDocument): ValidationCheck {
-		const allowedMimes = ALLOWED_MIMES[document.type] || ALLOWED_MIMES.other;
-
-		if (!allowedMimes.includes(document.mimeType)) {
-			return {
-				name: "mime_type",
-				passed: false,
-				message: `File type "${document.mimeType}" is not allowed for ${document.type} documents. Allowed: PDF, PPTX, DOCX, etc.`,
-			};
-		}
-
-		return {
-			name: "mime_type",
-			passed: true,
-			message: "File type is valid",
-		};
-	}
-
-	private static checkFilename(document: IDocument): ValidationCheck {
-		const filename = document.filename || "";
-
-		if (filename.length === 0) {
-			return {
-				name: "filename",
-				passed: false,
-				message: "Filename is missing",
-			};
-		}
-
-		const suspiciousPatterns = /\.(exe|bat|cmd|sh|ps1|vbs|js|mjs)$/i;
-		if (suspiciousPatterns.test(filename)) {
-			return {
-				name: "filename",
-				passed: false,
-				message: "Executable file types are not allowed",
-			};
-		}
-
-		return {
-			name: "filename",
-			passed: true,
-			message: "Filename is valid",
-		};
-	}
-}
+	},
+};

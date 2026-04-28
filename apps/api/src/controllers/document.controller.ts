@@ -92,6 +92,7 @@ export class DocumentController {
 					{
 						folder,
 						resource_type: "auto",
+						access_mode: "public",
 					},
 					(error, uploadResult) => {
 						if (error) {
@@ -188,6 +189,7 @@ export class DocumentController {
 							{
 								folder,
 								resource_type: "auto",
+								access_mode: "public",
 							},
 							(error, uploadResult) => {
 								if (error) {
@@ -425,6 +427,75 @@ export class DocumentController {
 				error instanceof Error
 					? error.message
 					: "Failed to override document status";
+			res.status(500).json({ status: "error", message });
+		}
+	}
+
+	/**
+	 * Generate a time-limited signed Cloudinary URL for a document.
+	 * This is needed because the Cloudinary account has strict/signed delivery enabled.
+	 */
+	static async getSignedUrl(req: AuthRequest, res: Response): Promise<void> {
+		try {
+			if (!req.user) {
+				res.status(401).json({ status: "error", message: "Unauthorized" });
+				return;
+			}
+
+			if (!isCloudinaryConfigured) {
+				res.status(500).json({
+					status: "error",
+					message: "Cloudinary is not configured on the server",
+				});
+				return;
+			}
+
+			const document = await DocumentModel.findById(req.params.id);
+
+			if (!document) {
+				res
+					.status(404)
+					.json({ status: "error", message: "Document not found" });
+				return;
+			}
+
+			// Determine the resource type from the stored URL
+			let resourceType: string = "image";
+			if (document.url.includes("/raw/upload/")) {
+				resourceType = "raw";
+			} else if (document.url.includes("/video/upload/")) {
+				resourceType = "video";
+			}
+
+			// Generate a signed URL valid for 1 hour
+			const signedUrl = cloudinary.url(document.cloudinaryPublicId, {
+				sign_url: true,
+				type: "authenticated",
+				resource_type: resourceType as "image" | "raw" | "video",
+				secure: true,
+				flags: "attachment",
+			});
+
+			// Also try a public URL in case the file was uploaded with public access
+			const publicUrl = cloudinary.url(document.cloudinaryPublicId, {
+				secure: true,
+				resource_type: resourceType as "image" | "raw" | "video",
+				flags: "attachment",
+			});
+
+			res.status(200).json({
+				status: "success",
+				signedUrl,
+				publicUrl,
+				originalUrl: document.url,
+				filename: document.filename,
+				mimeType: document.mimeType,
+			});
+		} catch (error) {
+			const message =
+				error instanceof Error
+					? error.message
+					: "Failed to generate signed URL";
 			res.status(500).json({ status: "error", message });
 		}
 	}

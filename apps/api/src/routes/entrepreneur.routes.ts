@@ -39,54 +39,23 @@ router.use(authorize("entrepreneur"));
  *             properties:
  *               fullName:
  *                 type: string
- *                 example: "John Doe"
  *               companyName:
  *                 type: string
- *                 example: "AgriTech Solutions"
  *               companyRegistrationNumber:
  *                 type: string
  *               businessSector:
  *                 type: string
- *                 enum: [technology, healthcare, agriculture, finance, education, retail, manufacturing, energy, transportation, other]
  *               businessStage:
  *                 type: string
- *                 enum: [idea, mvp, early-revenue, scaling]
  *     responses:
  *       201:
  *         description: Profile created
- *         content:
- *           application/json:
- *             schema:
- *               allOf:
- *                 - $ref: '#/components/schemas/SuccessResponse'
- *                 - type: object
- *                   properties:
- *                     profile:
- *                       $ref: '#/components/schemas/EntrepreneurProfileObject'
  *       400:
  *         description: Validation or duplicate profile error
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/ErrorResponse'
  *       401:
  *         description: Unauthorized
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/ErrorResponse'
  *       403:
  *         description: Forbidden
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/ErrorResponse'
- *       500:
- *         description: Internal server error
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/ErrorResponse'
  */
 router.post(
 	"/profile",
@@ -105,27 +74,10 @@ router.post(
  *     responses:
  *       200:
  *         description: Profile fetched
- *         content:
- *           application/json:
- *             schema:
- *               allOf:
- *                 - $ref: '#/components/schemas/SuccessResponse'
- *                 - type: object
- *                   properties:
- *                     profile:
- *                       $ref: '#/components/schemas/EntrepreneurProfileObject'
  *       401:
  *         description: Unauthorized
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/ErrorResponse'
  *       404:
  *         description: Profile not found
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/ErrorResponse'
  */
 router.get("/profile", EntrepreneurController.getProfile);
 
@@ -152,37 +104,15 @@ router.get("/profile", EntrepreneurController.getProfile);
  *                 type: string
  *               businessStage:
  *                 type: string
- *                 enum: [idea, mvp, early-revenue, scaling]
  *     responses:
  *       200:
  *         description: Profile updated
- *         content:
- *           application/json:
- *             schema:
- *               allOf:
- *                 - $ref: '#/components/schemas/SuccessResponse'
- *                 - type: object
- *                   properties:
- *                     profile:
- *                       $ref: '#/components/schemas/EntrepreneurProfileObject'
  *       400:
  *         description: Validation error
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/ErrorResponse'
  *       401:
  *         description: Unauthorized
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/ErrorResponse'
  *       404:
  *         description: Profile not found
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/ErrorResponse'
  */
 router.put(
 	"/profile",
@@ -201,22 +131,8 @@ router.put(
  *     responses:
  *       200:
  *         description: Profile existence returned
- *         content:
- *           application/json:
- *             schema:
- *               allOf:
- *                 - $ref: '#/components/schemas/SuccessResponse'
- *                 - type: object
- *                   properties:
- *                     exists:
- *                       type: boolean
- *                       example: true
  *       401:
  *         description: Unauthorized
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/ErrorResponse'
  */
 router.get("/profile/check", EntrepreneurController.checkProfile);
 

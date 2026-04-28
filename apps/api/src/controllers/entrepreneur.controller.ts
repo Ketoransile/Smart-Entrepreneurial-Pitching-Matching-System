@@ -31,9 +31,10 @@ export class EntrepreneurController {
 				message: "Entrepreneur profile created successfully",
 				data: profile,
 			});
-		} catch (error: any) {
-			if (error.message === "Profile already exists") {
-				return res.status(400).json({ message: error.message });
+		} catch (error: unknown) {
+			const message = error instanceof Error ? error.message : "";
+			if (message === "Profile already exists") {
+				return res.status(400).json({ message });
 			}
 			console.error("Create entrepreneur profile error:", error);
 			res.status(500).json({ message: "Server error" });
@@ -57,8 +58,8 @@ export class EntrepreneurController {
 				success: true,
 				data: profile,
 			});
-		} catch (error: any) {
-			if (error.message === "Profile not found") {
+		} catch (error: unknown) {
+			if (error instanceof Error && error.message === "Profile not found") {
 				return res.status(404).json({ message: "Profile not found" });
 			}
 			console.error("Get entrepreneur profile error:", error);
@@ -87,11 +88,11 @@ export class EntrepreneurController {
 				message: "Profile updated successfully",
 				data: profile,
 			});
-		} catch (error: any) {
-			if (error.message === "Profile not found") {
+		} catch (error: unknown) {
+			if (error instanceof Error && error.message === "Profile not found") {
 				return res.status(404).json({ message: "Profile not found" });
 			}
-			console.error("Update entrepreneur profile error:", error);
+			console.error("Update entreprneur profile error:", error);
 			res.status(500).json({ message: "Server error" });
 		}
 	}

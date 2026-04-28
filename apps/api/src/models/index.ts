@@ -20,8 +20,10 @@ export * from "./Message";
 export * from "./Milestone";
 export * from "./MisconductReport";
 export * from "./Notification";
+export * from "./PendingPayment";
 // Content & workflow layer
 export * from "./Submission";
 export * from "./Tag";
 export * from "./TagAssignment";
+export * from "./TransactionLog";
 export * from "./User";

@@ -34,8 +34,8 @@ export const verifyMockWebhookSignature = (
 	return expected === signature;
 };
 
-export class MockPaymentProvider {
-	static async simulateEscrowHold(payload: {
+export const MockPaymentProvider = {
+	async simulateEscrowHold(payload: {
 		milestoneId: string;
 		amount: number;
 		currency: string;
@@ -53,9 +53,9 @@ export class MockPaymentProvider {
 		};
 
 		return event;
-	}
+	},
 
-	static async simulateMilestonePayout(payload: {
+	async simulateMilestonePayout(payload: {
 		milestoneId: string;
 		amount: number;
 		currency: string;
@@ -73,5 +73,5 @@ export class MockPaymentProvider {
 		};
 
 		return event;
-	}
-}
+	},
+};

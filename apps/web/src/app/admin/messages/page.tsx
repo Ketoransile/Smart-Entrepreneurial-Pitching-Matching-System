@@ -79,6 +79,18 @@ interface Message {
 	createdAt: string;
 }
 
+interface AdminUser {
+	_id: string;
+	fullName: string;
+	email: string;
+}
+
+interface NotificationEntry {
+	_id: string;
+	type: string;
+	isRead: boolean;
+}
+
 /* ── Helpers ── */
 function formatTime(dateStr: string) {
 	return new Date(dateStr).toLocaleTimeString([], {
@@ -164,7 +176,7 @@ function MessagesContent() {
 
 	// Group management state
 	const [showGroupDialog, setShowGroupDialog] = useState(false);
-	const [allAdmins, setAllAdmins] = useState<any[]>([]);
+	const [allAdmins, setAllAdmins] = useState<AdminUser[]>([]);
 	const [fetchingAdmins, setFetchingAdmins] = useState(false);
 	const [manageParticipantLoading, setManageParticipantLoading] = useState<
 		string | null
@@ -179,6 +191,7 @@ function MessagesContent() {
 	const api = (
 		process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api"
 	).replace(/\/+$/, "");
+	const currentUserId = userProfile?._id ?? "";
 
 	const getToken = useCallback(async () => {
 		if (!user) return "";
@@ -272,9 +285,9 @@ function MessagesContent() {
 				});
 				if (!res.ok) return;
 				const { notifications } = await res.json();
-				const unreadMsgNotifs = (notifications || []).filter(
-					(n: any) => !n.isRead && n.type === "message_received",
-				);
+				const unreadMsgNotifs = (
+					(notifications || []) as NotificationEntry[]
+				).filter((n) => !n.isRead && n.type === "message_received");
 				for (const n of unreadMsgNotifs) {
 					fetch(`${api}/messages/notifications/${n._id}/read`, {
 						method: "PATCH",
@@ -391,12 +404,10 @@ function MessagesContent() {
 		const optimisticMsg: Message = {
 			_id: `temp-${Date.now()}`,
 			conversationId: activeConvo._id,
-			senderId: (userProfile as any)._id || "",
+			senderId: currentUserId,
 			body,
 			type: "text",
-			readBy: [
-				{ userId: (userProfile as any)._id, readAt: new Date().toISOString() },
-			],
+			readBy: [{ userId: currentUserId, readAt: new Date().toISOString() }],
 			createdAt: new Date().toISOString(),
 		};
 		setMessages((prev) => [...prev, optimisticMsg]);
@@ -481,7 +492,7 @@ function MessagesContent() {
 	const getOtherParticipant = (convo: Conversation) => {
 		if (!userProfile) return null;
 		return (
-			convo.participants.find((p) => p._id !== (userProfile as any)._id) ||
+			convo.participants.find((p) => p._id !== currentUserId) ||
 			convo.participants[0]
 		);
 	};
@@ -493,7 +504,7 @@ function MessagesContent() {
 
 	const isReadByOther = (msg: Message) => {
 		if (!userProfile || !msg.readBy) return false;
-		const myId = (userProfile as any)._id;
+		const myId = currentUserId;
 		return msg.readBy.some(
 			(r) => r.userId !== myId && r.userId.toString() !== myId,
 		);
@@ -660,80 +671,86 @@ function MessagesContent() {
 										const unread = convo.unreadCount || 0;
 
 										return (
-											<div
+											<button
+												type="button"
 												key={convo._id}
 												onClick={() => setActiveConvo(convo)}
-												className={`flex items-center gap-3 px-4 py-3 cursor-pointer transition-all duration-150 border-b border-border 
+												className="w-full text-left"
+												aria-label={`Open conversation with ${convo.isGroup ? convo.title || "group" : other?.fullName || "participant"}`}
+											>
+												<div
+													className={`flex items-center gap-3 px-4 py-3 cursor-pointer transition-all duration-150 border-b border-border 
 													${isActive ? "bg-primary/8 border-l-[3px] border-l-primary" : "hover:bg-muted/40 border-l-[3px] border-l-transparent"}
 													${convo.isArchived ? "opacity-50" : ""}`}
-											>
-												<div className="relative">
-													<Avatar
-														className={`h-11 w-11 shrink-0 ${
-															convo.isGroup
-																? "bg-primary/10 text-primary"
-																: avatarColor(other?._id || "")
-														}`}
-													>
-														<AvatarFallback className="text-xs font-bold">
-															{convo.isGroup
-																? "AG"
-																: getInitials(other?.fullName)}
-														</AvatarFallback>
-													</Avatar>
-													{unread > 0 && (
-														<span className="absolute -top-0.5 -right-0.5 flex h-5 w-5 items-center justify-center rounded-full bg-primary text-[10px] font-bold text-primary-foreground shadow-sm">
-															{unread > 9 ? "9+" : unread}
-														</span>
-													)}
-												</div>
-												<div className="min-w-0 flex-1">
-													<div className="flex items-center justify-between gap-2">
-														<p
-															className={`text-sm truncate flex items-center gap-2 ${
-																unread > 0 ? "font-bold" : "font-medium"
+												>
+													<div className="relative">
+														<Avatar
+															className={`h-11 w-11 shrink-0 ${
+																convo.isGroup
+																	? "bg-primary/10 text-primary"
+																	: avatarColor(other?._id || "")
 															}`}
 														>
-															<span className="truncate">
+															<AvatarFallback className="text-xs font-bold">
 																{convo.isGroup
-																	? convo.title || "Group Chat"
-																	: other?.fullName || "Unknown"}
+																	? "AG"
+																	: getInitials(other?.fullName)}
+															</AvatarFallback>
+														</Avatar>
+														{unread > 0 && (
+															<span className="absolute -top-0.5 -right-0.5 flex h-5 w-5 items-center justify-center rounded-full bg-primary text-[10px] font-bold text-primary-foreground shadow-sm">
+																{unread > 9 ? "9+" : unread}
 															</span>
-															{!convo.isGroup && (
-																<RoleBadge role={other?.role} />
-															)}
-														</p>
-														<span
-															className={`text-[11px] shrink-0 ${
-																unread > 0
-																	? "text-primary font-semibold"
-																	: "text-muted-foreground"
-															}`}
-														>
-															{getLastMessageTime(convo)}
-														</span>
-													</div>
-													<div className="flex items-center justify-between gap-2 mt-0.5">
-														<p
-															className={`text-xs truncate ${
-																unread > 0
-																	? "text-foreground font-medium"
-																	: "text-muted-foreground"
-															}`}
-														>
-															{getLastMessagePreview(convo)}
-														</p>
-														{convo.isArchived && (
-															<Badge
-																variant="destructive"
-																className="text-[9px] shrink-0 px-1.5 py-0"
-															>
-																Frozen
-															</Badge>
 														)}
 													</div>
+													<div className="min-w-0 flex-1">
+														<div className="flex items-center justify-between gap-2">
+															<p
+																className={`text-sm truncate flex items-center gap-2 ${
+																	unread > 0 ? "font-bold" : "font-medium"
+																}`}
+															>
+																<span className="truncate">
+																	{convo.isGroup
+																		? convo.title || "Group Chat"
+																		: other?.fullName || "Unknown"}
+																</span>
+																{!convo.isGroup && (
+																	<RoleBadge role={other?.role} />
+																)}
+															</p>
+															<span
+																className={`text-[11px] shrink-0 ${
+																	unread > 0
+																		? "text-primary font-semibold"
+																		: "text-muted-foreground"
+																}`}
+															>
+																{getLastMessageTime(convo)}
+															</span>
+														</div>
+														<div className="flex items-center justify-between gap-2 mt-0.5">
+															<p
+																className={`text-xs truncate ${
+																	unread > 0
+																		? "text-foreground font-medium"
+																		: "text-muted-foreground"
+																}`}
+															>
+																{getLastMessagePreview(convo)}
+															</p>
+															{convo.isArchived && (
+																<Badge
+																	variant="destructive"
+																	className="text-[9px] shrink-0 px-1.5 py-0"
+																>
+																	Frozen
+																</Badge>
+															)}
+														</div>
+													</div>
 												</div>
-											</div>
+											</button>
 										);
 									})
 								)}
@@ -865,8 +882,8 @@ function MessagesContent() {
 												</p>
 											</div>
 										) : (
-											groupedMessages.map((group, gi) => (
-												<div key={gi}>
+											groupedMessages.map((group) => (
+												<div key={group.date}>
 													{/* Date separator */}
 													<div className="flex items-center justify-center my-4">
 														<span className="px-3 py-1 rounded-full bg-muted/60 text-[11px] font-medium text-muted-foreground shadow-sm">
@@ -876,8 +893,7 @@ function MessagesContent() {
 
 													{group.msgs.map((msg) => {
 														const senderId = getSenderId(msg);
-														const isMine =
-															senderId === (userProfile as any)?._id;
+														const isMine = senderId === currentUserId;
 														const read = isReadByOther(msg);
 
 														return (
@@ -1083,8 +1099,8 @@ function MessagesContent() {
 												</p>
 											</div>
 										</div>
-										{(userProfile as any)?.adminLevel === "super_admin" &&
-											p._id !== (userProfile as any)._id && (
+										{userProfile?.adminLevel === "super_admin" &&
+											p._id !== currentUserId && (
 												<Button
 													variant="ghost"
 													size="sm"
@@ -1103,7 +1119,7 @@ function MessagesContent() {
 								))}
 							</div>
 
-							{(userProfile as any)?.adminLevel === "super_admin" && (
+							{userProfile?.adminLevel === "super_admin" && (
 								<div className="mt-6 pt-4 border-t">
 									<p className="text-sm font-semibold mb-3 text-muted-foreground">
 										Add Admins

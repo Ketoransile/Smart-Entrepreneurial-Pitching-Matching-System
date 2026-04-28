@@ -1,5 +1,9 @@
 import type { NextFunction, Request, Response } from "express";
-import { body, validationResult } from "express-validator";
+import {
+	body,
+	type ValidationChain,
+	validationResult,
+} from "express-validator";
 
 const businessSectorValues = [
 	"technology",
@@ -16,7 +20,7 @@ const businessSectorValues = [
 
 const businessStageValues = ["idea", "mvp", "early-revenue", "scaling"];
 
-export const validate = (validations: any[]) => {
+export const validate = (validations: ValidationChain[]) => {
 	return async (req: Request, res: Response, next: NextFunction) => {
 		await Promise.all(validations.map((validation) => validation.run(req)));
 

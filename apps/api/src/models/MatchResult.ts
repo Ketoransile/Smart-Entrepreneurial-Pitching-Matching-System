@@ -1,6 +1,11 @@
 import { type Document, model, Schema, type Types } from "mongoose";
 
-export type MatchStatus = "pending" | "accepted" | "declined" | "expired";
+export type MatchStatus =
+	| "pending"
+	| "requested"
+	| "accepted"
+	| "declined"
+	| "expired";
 
 export interface IMatchResult extends Document {
 	submissionId: Types.ObjectId;
@@ -68,6 +73,7 @@ const MatchResultSchema = new Schema<IMatchResult>(
 			type: String,
 			enum: [
 				"pending",
+				"requested",
 				"accepted",
 				"declined",
 				"expired",

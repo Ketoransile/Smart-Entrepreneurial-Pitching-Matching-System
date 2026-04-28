@@ -2,7 +2,6 @@
 node_modules/
 .pnpm-store/
 .npm/
-
 # Environment files
 .env
 .env.local
@@ -33,6 +32,7 @@ yarn-error.log*
 
 # Testing
 coverage/
+api/coverage/
 .nyc_output/
 
 # Backend

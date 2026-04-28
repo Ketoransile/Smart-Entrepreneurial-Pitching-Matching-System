@@ -1,7 +1,7 @@
 "use client";
 // Architectural Unit: Initial Dashboard structure setup
 
-import { ChevronsUpDown, Layers, LogOut, Settings, User } from "lucide-react";
+import { ChevronsUpDown, LogOut, Settings, User } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 import { Logo } from "@/components/Logo";
@@ -33,7 +33,6 @@ import {
 	SidebarFooter,
 	SidebarGroup,
 	SidebarGroupContent,
-	SidebarGroupLabel,
 	SidebarHeader,
 	SidebarInset,
 	SidebarMenu,

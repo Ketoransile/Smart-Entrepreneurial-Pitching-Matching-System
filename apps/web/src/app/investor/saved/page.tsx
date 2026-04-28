@@ -1,6 +1,6 @@
 "use client";
 
-import { Briefcase, Heart, MessageSquare } from "lucide-react";
+import { Heart } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
