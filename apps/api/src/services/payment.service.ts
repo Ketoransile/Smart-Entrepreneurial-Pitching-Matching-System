@@ -285,7 +285,6 @@ export class PaymentService {
 	static async generateTxRef(): Promise<string> {
 		if (chapa) {
 			try {
-				// @ts-expect-error
 				return await chapa.genTxRef();
 			} catch (error) {
 				console.error(
