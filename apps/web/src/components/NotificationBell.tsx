@@ -138,6 +138,29 @@ export default function NotificationBell() {
 		}
 	};
 
+	const markAllAsRead = async () => {
+		if (!user) return;
+		try {
+			const token = await user.getIdToken();
+			const res = await fetch(`${api}/messages/notifications/read-all`, {
+				method: "PATCH",
+				headers: { Authorization: `Bearer ${token}` },
+			});
+			if (res.ok) {
+				setNotifications((prev) => prev.map((n) => ({ ...n, isRead: true })));
+			}
+		} catch (_error) {
+			console.error("Failed to mark all as read");
+		}
+	};
+
+	const handleOpenChange = (open: boolean) => {
+		setIsOpen(open);
+		if (!open && notifications.some((n) => !n.isRead)) {
+			markAllAsRead();
+		}
+	};
+
 	const handleNotificationClick = (notif: Notification) => {
 		const link = getNotificationLink(notif, userProfile?.role || null);
 		// Mark as read
@@ -152,7 +175,7 @@ export default function NotificationBell() {
 	const unreadCount = notifications.filter((n) => !n.isRead).length;
 
 	return (
-		<Popover open={isOpen} onOpenChange={setIsOpen}>
+		<Popover open={isOpen} onOpenChange={handleOpenChange}>
 			<PopoverTrigger asChild>
 				<Button variant="ghost" size="icon" className="relative group">
 					<Bell className="h-5 w-5 text-muted-foreground group-hover:text-foreground transition-colors" />

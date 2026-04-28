@@ -306,6 +306,30 @@ export class MessageController {
 		}
 	}
 
+	static async markAllNotificationsRead(
+		req: Request,
+		res: Response,
+	): Promise<void> {
+		try {
+			if (!req.user) {
+				res.status(401).json({ status: "error", message: "Unauthorized" });
+				return;
+			}
+
+			await NotificationService.markAllAsRead(req.user._id.toString());
+
+			res.status(200).json({
+				status: "success",
+				message: "All notifications marked as read",
+			});
+		} catch (error) {
+			console.error("Failed to mark all notifications read", error);
+			res
+				.status(500)
+				.json({ status: "error", message: "Failed to update notifications" });
+		}
+	}
+
 	/* ── Admin: Misconduct Reports ── */
 
 	static async listReports(req: Request, res: Response): Promise<void> {

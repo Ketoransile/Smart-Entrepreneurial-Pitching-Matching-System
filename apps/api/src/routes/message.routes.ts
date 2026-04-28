@@ -255,6 +255,24 @@ router.get("/notifications", authenticate, MessageController.listNotifications);
 
 /**
  * @openapi
+ * /api/messages/notifications/read-all:
+ *   patch:
+ *     tags: [Communication]
+ *     summary: Mark all unread notifications as read
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: All notifications marked as read
+ */
+router.patch(
+	"/notifications/read-all",
+	authenticate,
+	MessageController.markAllNotificationsRead,
+);
+
+/**
+ * @openapi
  * /api/messages/notifications/{notificationId}/read:
  *   patch:
  *     tags: [Communication]

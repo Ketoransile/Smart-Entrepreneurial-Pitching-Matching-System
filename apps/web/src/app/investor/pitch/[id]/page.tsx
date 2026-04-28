@@ -224,6 +224,28 @@ interface Submission {
 	};
 }
 
+const getDownloadUrl = (url: string) => {
+	if (!url) return "";
+	if (!url.includes("/upload/")) return url;
+	if (url.includes("/upload/fl_attachment/")) return url;
+	return url.replace("/upload/", "/upload/fl_attachment/");
+};
+
+const getPreviewUrl = (url: string) => {
+	if (!url) return null;
+	if (!url.includes("/upload/")) return null;
+	return url
+		.replace("/fl_attachment/", "/")
+		.replace("/upload/", "/upload/pg_1,w_800/")
+		.replace(/\.pdf$/i, ".jpg");
+};
+
+const getViewUrl = (url: string) => {
+	if (!url) return "";
+	if (!url.includes("/upload/")) return url;
+	return url.replace("/fl_attachment/", "/");
+};
+
 export default function InvestorPitchViewPage() {
 	const { user } = useAuth();
 	const router = useRouter();
@@ -746,14 +768,7 @@ export default function InvestorPitchViewPage() {
 														</div>
 														<div className="flex items-center gap-2">
 															<a
-																href={
-																	doc.url.includes("/upload/")
-																		? doc.url.replace(
-																				"/upload/",
-																				"/upload/fl_attachment/",
-																			)
-																		: doc.url
-																}
+																href={getDownloadUrl(doc.url)}
 																target="_blank"
 																rel="noopener noreferrer"
 																title="Download Document"
@@ -767,7 +782,7 @@ export default function InvestorPitchViewPage() {
 																</Button>
 															</a>
 															<a
-																href={doc.url}
+																href={getViewUrl(doc.url)}
 																target="_blank"
 																rel="noopener noreferrer"
 																title="View Document"
@@ -785,24 +800,11 @@ export default function InvestorPitchViewPage() {
 													{/* Inline Document Preview */}
 													{isPdf &&
 														(() => {
-															const previewUrl = doc.url.includes("/upload/")
-																? doc.url
-																		.replace("/upload/", "/upload/pg_1,w_800/")
-																		.replace(/\.pdf$/i, ".jpg")
-																: null;
+															const previewUrl = getPreviewUrl(doc.url);
 															return previewUrl ? (
 																<div className="relative border-t bg-muted/20 group/preview">
 																	<a
-																		href={
-																			doc.url.includes("/upload/")
-																				? doc.url
-																						.replace(
-																							"/upload/",
-																							"/upload/fl_attachment/",
-																						)
-																						.concat(".pdf")
-																				: doc.url
-																		}
+																		href={getViewUrl(doc.url)}
 																		target="_blank"
 																		rel="noopener noreferrer"
 																		className="block"
@@ -821,8 +823,8 @@ export default function InvestorPitchViewPage() {
 																				variant="secondary"
 																				className="gap-1.5 shadow-lg"
 																			>
-																				<FileUp className="h-3.5 w-3.5 rotate-180" />{" "}
-																				Download Full PDF
+																				<ExternalLink className="h-3.5 w-3.5" />{" "}
+																				View Full PDF
 																			</Button>
 																		</div>
 																	</a>
@@ -833,19 +835,12 @@ export default function InvestorPitchViewPage() {
 																		Preview unavailable
 																	</p>
 																	<a
-																		href={
-																			doc.url.includes("/upload/")
-																				? doc.url.replace(
-																						"/upload/",
-																						"/upload/fl_attachment/",
-																					)
-																				: doc.url
-																		}
+																		href={getViewUrl(doc.url)}
 																		target="_blank"
 																		rel="noopener noreferrer"
 																	>
 																		<Button size="sm" variant="outline">
-																			Download PDF
+																			View PDF
 																		</Button>
 																	</a>
 																</div>

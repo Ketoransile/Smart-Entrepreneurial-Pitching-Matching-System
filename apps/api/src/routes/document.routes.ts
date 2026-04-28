@@ -244,4 +244,30 @@ router.post(
 	DocumentController.overrideStatus,
 );
 
+/**
+ * @openapi
+ * /api/documents/{id}/signed-url:
+ *   get:
+ *     tags: [Documents]
+ *     summary: Get a signed download URL for a document
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Signed URL generated
+ *       404:
+ *         description: Document not found
+ */
+router.get(
+	"/:id/signed-url",
+	authorize("entrepreneur", "investor", "admin", "super_admin"),
+	DocumentController.getSignedUrl,
+);
+
 export default router;
