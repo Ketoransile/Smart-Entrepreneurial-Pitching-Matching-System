@@ -1,4 +1,3 @@
-// @ts-expect-error
 import { Chapa } from "chapa-nodejs";
 import dotenv from "dotenv";
 
