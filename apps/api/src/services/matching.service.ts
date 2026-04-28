@@ -397,6 +397,161 @@ export class MatchingService {
 			.populate("entrepreneurId", "fullName email");
 	}
 
+	/**
+	 * When a new investor completes onboarding, run matching against all
+	 * existing approved/under_review submissions so they immediately see
+	 * relevant pitches in their match queue — not just future ones.
+	 */
+	static async runMatchingForNewInvestor(
+		investorUserId: string,
+		options?: { limit?: number; minScore?: number },
+	) {
+		const minScore = options?.minScore ?? 0.3;
+		const limitPerSubmission = options?.limit ?? 10;
+
+		// Find the investor profile
+		const investor = await InvestorProfile.findOne({ userId: investorUserId });
+		if (!investor) return;
+
+		// Find all submissions that are approved or under_review and have an embedding
+		const submissions = await Submission.find({
+			status: { $in: ["approved", "under_review"] },
+		})
+			.sort({ submittedAt: -1 })
+			.limit(100); // cap to avoid overwhelming on large datasets
+
+		console.log(
+			`[MATCHING:NEW_INVESTOR] investor=${investorUserId} checking ${submissions.length} existing submissions`,
+		);
+
+		const investorText = buildInvestorText(investor);
+		const investorEmbeddingResult = await AIService.generateEmbedding({
+			text: investorText,
+			targetType: "investorProfile",
+			targetId: investor._id.toString(),
+		});
+
+		// Upsert investor embedding
+		await EmbeddingEntry.findOneAndUpdate(
+			{
+				targetId: investor._id,
+				targetType: "investorProfile",
+				modelVersion: investorEmbeddingResult.modelVersion,
+			},
+			{
+				targetId: investor._id,
+				targetType: "investorProfile",
+				modelVersion: investorEmbeddingResult.modelVersion,
+				vector: investorEmbeddingResult.vector,
+				dimensions: investorEmbeddingResult.vector.length,
+				sourceHash: createHash("sha1").update(investorText).digest("hex"),
+				metadata: {
+					fullName: investor.fullName,
+					updatedAt: investor.updatedAt,
+				},
+				generatedAt: new Date(),
+			},
+			{ upsert: true, new: true },
+		);
+
+		let matched = 0;
+		for (const submission of submissions) {
+			// Skip if a MatchResult already exists for this pair
+			const existing = await MatchResult.findOne({
+				submissionId: submission._id,
+				investorId: investorUserId,
+			});
+			if (existing) continue;
+
+			// Get or generate submission embedding
+			let submissionEmbedding = await EmbeddingEntry.findOne({
+				targetId: submission._id,
+				targetType: "submission",
+			}).lean();
+
+			if (!submissionEmbedding?.vector?.length) {
+				// Submission has no embedding yet — generate it now
+				const submissionText = buildSubmissionText(submission);
+				const embResult = await AIService.generateEmbedding({
+					text: submissionText,
+					targetType: "submission",
+					targetId: submission._id.toString(),
+				});
+				submissionEmbedding = await EmbeddingEntry.findOneAndUpdate(
+					{
+						targetId: submission._id,
+						targetType: "submission",
+						modelVersion: embResult.modelVersion,
+					},
+					{
+						targetId: submission._id,
+						targetType: "submission",
+						modelVersion: embResult.modelVersion,
+						vector: embResult.vector,
+						dimensions: embResult.vector.length,
+						sourceHash: createHash("sha1")
+							.update(buildSubmissionText(submission))
+							.digest("hex"),
+						metadata: {
+							title: submission.title,
+							sector: submission.sector,
+							stage: submission.stage,
+						},
+						generatedAt: new Date(),
+					},
+					{ upsert: true, new: true },
+				);
+			}
+
+			// Guard: skip if embedding still unavailable after upsert
+			if (!submissionEmbedding?.vector?.length) continue;
+
+			const scoredResult = await AIService.computeMatchScore({
+				submissionId: submission._id.toString(),
+				investorId: investorUserId,
+				submissionEmbedding: submissionEmbedding.vector,
+				investorEmbedding: investorEmbeddingResult.vector,
+				submissionSector: submission.sector,
+				submissionStage: submission.stage,
+				targetAmount: submission.targetAmount,
+				preferredSectors: investor.preferredSectors,
+				preferredStages: investor.preferredStages,
+				investmentRangeMin: investor.investmentRange?.min,
+				investmentRangeMax: investor.investmentRange?.max,
+			});
+
+			if (scoredResult.score < minScore) continue;
+
+			await MatchResult.create({
+				submissionId: submission._id,
+				entrepreneurId: submission.entrepreneurId,
+				investorId: investorUserId,
+				score: scoredResult.score,
+				rank: matched + 1,
+				aiRationale: scoredResult.rationale,
+				scoreBreakdown: scoredResult.breakdown,
+				status: "pending",
+				matchedAt: new Date(),
+				expiresAt: new Date(Date.now() + 1000 * 60 * 60 * 24 * 14),
+			});
+
+			await NotificationService.createNotification({
+				userId: investorUserId,
+				type: "match_found",
+				title: "New match found",
+				body: `A pitch matching your investment profile is available: "${submission.title}".`,
+				metadata: { submissionId: submission._id },
+			});
+
+			matched++;
+			if (matched >= limitPerSubmission) break;
+		}
+
+		console.log(
+			`[MATCHING:NEW_INVESTOR] Done: ${matched} matches created for investor ${investorUserId}`,
+		);
+	}
+
 	static async updateMatchStatus(payload: {
 		matchId: string;
 		investorId: string;

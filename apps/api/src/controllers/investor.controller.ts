@@ -2,6 +2,7 @@ import type { Response } from "express";
 import mongoose from "mongoose";
 import type { AuthRequest } from "../middleware/auth";
 import { InvestorProfile } from "../models/InvestorProfile";
+import { MatchingService } from "../services/matching.service";
 import { ProfileService } from "../services/profile.service";
 
 export class InvestorController {
@@ -31,6 +32,19 @@ export class InvestorController {
 				success: true,
 				message: "Investor profile created successfully",
 				data: profile,
+			});
+
+			// Fire matching against existing pitches in the background — never block the response
+			setImmediate(() => {
+				MatchingService.runMatchingForNewInvestor(userId, {
+					limit: 10,
+					minScore: 0.3,
+				}).catch((err) => {
+					console.error(
+						"Background matching for new investor failed:",
+						err?.message ?? err,
+					);
+				});
 			});
 		} catch (error: any) {
 			if (error.message === "Profile already exists") {
