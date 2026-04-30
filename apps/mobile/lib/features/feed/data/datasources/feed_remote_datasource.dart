@@ -2,6 +2,7 @@ import 'package:dio/dio.dart';
 
 import '../../../../core/config/api_config.dart';
 import '../../../../core/error/failures.dart';
+import '../../../../core/mock/mock_backend.dart';
 import '../../../../core/network/dio_client.dart';
 import '../../../submissions/data/models/submission_model.dart';
 
@@ -26,6 +27,10 @@ class FeedRemoteDataSourceImpl implements FeedRemoteDataSource {
     int? page,
     int? limit,
   }) async {
+    if (ApiConfig.useMockData) {
+      await Future<void>.delayed(ApiConfig.mockLatency);
+      return MockBackend.browseFeed(sector: sector, limit: limit);
+    }
     try {
       final res = await _dio.get(
         ApiConfig.submissionsFeedBrowse,
@@ -55,6 +60,10 @@ class FeedRemoteDataSourceImpl implements FeedRemoteDataSource {
 
   @override
   Future<SubmissionModel> getPitch(String id) async {
+    if (ApiConfig.useMockData) {
+      await Future<void>.delayed(ApiConfig.mockLatency);
+      return MockBackend.getSubmissionById(id);
+    }
     try {
       final res = await _dio.get(ApiConfig.submissionById(id));
       if (res.statusCode == 200) {

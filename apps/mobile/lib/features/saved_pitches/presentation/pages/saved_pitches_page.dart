@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_spacing.dart';
+import '../../../../core/widgets/widgets.dart';
+import '../../../submissions/presentation/submission_display.dart';
 import '../bloc/saved_pitches_bloc.dart';
 
 class SavedPitchesPage extends StatefulWidget {
@@ -18,53 +21,101 @@ class _SavedPitchesPageState extends State<SavedPitchesPage> {
     context.read<SavedPitchesBloc>().add(const SavedPitchesRequested());
   }
 
+  void _reload() {
+    context.read<SavedPitchesBloc>().add(const SavedPitchesRequested());
+  }
+
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Saved pitches'),
+        title: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Saved',
+              style: theme.textTheme.titleLarge?.copyWith(
+                fontWeight: FontWeight.w800,
+              ),
+            ),
+            Text(
+              'Shortlisted opportunities',
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: AppColors.mutedForeground,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ],
+        ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.refresh),
-            onPressed: () => context.read<SavedPitchesBloc>().add(const SavedPitchesRequested()),
+            tooltip: 'Refresh',
+            icon: const Icon(Icons.refresh_rounded),
+            onPressed: _reload,
           ),
         ],
       ),
       body: SafeArea(
-        child: Padding(
-          padding: AppSpacing.screenPadding,
-          child: BlocBuilder<SavedPitchesBloc, SavedPitchesState>(
-            builder: (context, state) {
-              if (state.isLoading) return const Center(child: CircularProgressIndicator());
-              if (state.status == SavedPitchesStatus.error) {
-                return Center(child: Text(state.error ?? 'Failed to load saved pitches'));
-              }
-              if (state.items.isEmpty) return const Center(child: Text('No saved pitches.'));
+        child: BlocBuilder<SavedPitchesBloc, SavedPitchesState>(
+          builder: (context, state) {
+            if (state.isLoading) {
+              return const Center(child: CircularProgressIndicator());
+            }
+            if (state.status == SavedPitchesStatus.error) {
+              return EmptyStateView(
+                icon: Icons.bookmark_remove_outlined,
+                title: 'Could not load saved pitches',
+                message: state.error ?? 'Please try again in a moment.',
+                actionLabel: 'Retry',
+                onAction: _reload,
+              );
+            }
+            if (state.items.isEmpty) {
+              return EmptyStateView(
+                icon: Icons.bookmark_add_outlined,
+                title: 'No saved pitches yet',
+                message:
+                    'Tap the bookmark on a pitch to save it here for quick access.',
+                actionLabel: 'Refresh',
+                onAction: _reload,
+              );
+            }
 
-              return ListView.separated(
+            return RefreshIndicator(
+              onRefresh: () async => _reload(),
+              child: ListView.separated(
+                physics: const AlwaysScrollableScrollPhysics(),
+                padding: AppSpacing.screenPadding.copyWith(top: 8, bottom: 100),
                 itemCount: state.items.length,
-                separatorBuilder: (_, __) => AppSpacing.gapSm,
+                separatorBuilder: (_, __) => AppSpacing.gapMd,
                 itemBuilder: (context, i) {
                   final p = state.items[i];
-                  return Card(
-                    child: ListTile(
-                      title: Text(p.title.isEmpty ? 'Untitled pitch' : p.title),
-                      subtitle: Text('Sector: ${p.sector}  Stage: ${p.stage}'),
-                      trailing: IconButton(
-                        icon: const Icon(Icons.bookmark_remove_outlined),
-                        onPressed: p.id.isEmpty
-                            ? null
-                            : () => context.read<SavedPitchesBloc>().add(SavedPitchToggled(p.id)),
+                  return PitchPreviewCard(
+                    title: p.title,
+                    sector: p.sector.isEmpty ? 'General' : p.sector,
+                    stageLabel: submissionStageLabel(p.stage),
+                    summary: p.summary,
+                    trailing: IconButton(
+                      tooltip: 'Remove from saved',
+                      style: IconButton.styleFrom(
+                        foregroundColor: AppColors.destructive,
                       ),
+                      icon: const Icon(Icons.bookmark_remove_rounded),
+                      onPressed: p.id.isEmpty
+                          ? null
+                          : () => context
+                              .read<SavedPitchesBloc>()
+                              .add(SavedPitchToggled(p.id)),
                     ),
                   );
                 },
-              );
-            },
-          ),
+              ),
+            );
+          },
         ),
       ),
     );
   }
 }
-

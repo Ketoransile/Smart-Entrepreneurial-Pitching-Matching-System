@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "476915054673",
+    "project_id": "spems-746c3",
+    "storage_bucket": "spems-746c3.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:476915054673:android:e7c1cb51d685de57002070",
+        "android_client_info": {
+          "package_name": "com.example.sepms_mobile"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "476915054673-fjhdditlub78sa5ids7k1nqv203mtq2v.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDylcMfoyANHEnAn4wuZUKV8BtYp3RK--g"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "476915054673-fjhdditlub78sa5ids7k1nqv203mtq2v.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

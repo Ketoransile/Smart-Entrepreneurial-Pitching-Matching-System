@@ -5,6 +5,7 @@ import '../../../auth/domain/entities/user_entity.dart';
 import '../../../auth/presentation/bloc/auth_bloc.dart';
 import '../../../auth/presentation/bloc/auth_event.dart';
 import '../../../auth/presentation/bloc/auth_state.dart';
+import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/widgets/app_button.dart';
 import '../bloc/user_profile_bloc.dart';
@@ -46,17 +47,27 @@ class AccountGatePage extends StatelessWidget {
                   'Welcome, ${user.displayName ?? 'User'}',
                   style: Theme.of(context).textTheme.headlineSmall,
                 ),
-                AppSpacing.gapSm,
-                Text('Role: ${user.role.name}'),
-                Text('Status: ${user.status.name}'),
-                if (user.kycRejectionReason != null)
-                  Padding(
-                    padding: const EdgeInsets.only(top: 8),
-                    child: Text(
-                      'Reason: ${user.kycRejectionReason}',
-                      style: Theme.of(context).textTheme.bodyMedium,
+                AppSpacing.gapMd,
+                Card(
+                  child: Padding(
+                    padding: AppSpacing.paddingMd,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        Text('Role: ${user.role.name}'),
+                        AppSpacing.gapXs,
+                        Text('Status: ${user.status.name}'),
+                        if (user.kycRejectionReason != null) ...[
+                          AppSpacing.gapSm,
+                          Text(
+                            'Reason: ${user.kycRejectionReason}',
+                            style: Theme.of(context).textTheme.bodyMedium,
+                          ),
+                        ],
+                      ],
                     ),
                   ),
+                ),
                 AppSpacing.gapLg,
                 BlocBuilder<UserProfileBloc, UserProfileState>(
                   builder: (context, state) {
@@ -119,9 +130,12 @@ class AccountGatePage extends StatelessWidget {
                 ),
                 const Spacer(),
                 if (user.status != UserStatus.verified)
-                  const Text(
+                  Text(
                     'Some features may be restricted until your account is verified.',
                     textAlign: TextAlign.center,
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: AppColors.mutedForeground,
+                        ),
                   ),
               ],
             ),
@@ -131,4 +145,3 @@ class AccountGatePage extends StatelessWidget {
     );
   }
 }
-

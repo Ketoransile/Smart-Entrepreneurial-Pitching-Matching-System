@@ -82,14 +82,19 @@ class AuthWrapper extends StatelessWidget {
       return AccountGatePage(user: user);
     }
 
-    switch (user.role) {
-      case UserRole.entrepreneur:
-        return const EntrepreneurShell();
-      case UserRole.investor:
-        return const InvestorShell();
-      case UserRole.admin:
-        return const AdminShell();
+    // Use the convenience getters on UserEntity instead of a switch.
+    // This avoids issues with enum switch exhaustiveness or constant
+    // evaluation across different build targets.
+    if (user.isEntrepreneur) {
+      return const EntrepreneurShell();
+    } else if (user.isInvestor) {
+      return const InvestorShell();
+    } else if (user.isAdmin) {
+      return const AdminShell();
     }
+
+    // Fallback: if the role is somehow unrecognized, send to account gate.
+    return AccountGatePage(user: user);
   }
 }
 
@@ -113,7 +118,7 @@ class _SplashScreen extends StatelessWidget {
                   end: Alignment.bottomRight,
                   colors: [
                     Theme.of(context).primaryColor,
-                    Theme.of(context).primaryColor.withValues(alpha: 0.8),
+                    Theme.of(context).primaryColor.withOpacity(0.8),
                   ],
                 ),
                 borderRadius: BorderRadius.circular(20),

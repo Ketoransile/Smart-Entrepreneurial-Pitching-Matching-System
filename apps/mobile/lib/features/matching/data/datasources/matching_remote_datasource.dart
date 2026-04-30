@@ -1,7 +1,9 @@
 import 'package:dio/dio.dart';
 
 import '../../../../core/config/api_config.dart';
+import '../../../../core/config/urls.dart';
 import '../../../../core/error/failures.dart';
+import '../../../../core/mock/mock_backend.dart';
 import '../../../../core/network/dio_client.dart';
 import '../models/match_result_model.dart';
 
@@ -12,13 +14,20 @@ abstract class MatchingRemoteDataSource {
 
 class MatchingRemoteDataSourceImpl implements MatchingRemoteDataSource {
   final DioClient _dio;
-  MatchingRemoteDataSourceImpl({required DioClient dioClient}) : _dio = dioClient;
+  MatchingRemoteDataSourceImpl({required DioClient dioClient})
+      : _dio = dioClient;
 
   @override
-  Future<void> runMatching(String submissionId, {int? limit, double? minScore}) async {
+  Future<void> runMatching(String submissionId,
+      {int? limit, double? minScore}) async {
+    if (ApiConfig.useMockData) {
+      await Future<void>.delayed(ApiConfig.mockLatency);
+      MockBackend.runMatching(submissionId);
+      return;
+    }
     try {
       final res = await _dio.post(
-        ApiConfig.matchingRun(submissionId),
+        Urls.buildUrl(Urls.createMatch, submissionId),
         data: {
           if (limit != null) 'limit': limit,
           if (minScore != null) 'minScore': minScore,
@@ -33,8 +42,12 @@ class MatchingRemoteDataSourceImpl implements MatchingRemoteDataSource {
 
   @override
   Future<List<MatchResultModel>> getResults(String submissionId) async {
+    if (ApiConfig.useMockData) {
+      await Future<void>.delayed(ApiConfig.mockLatency);
+      return MockBackend.matchResults(submissionId);
+    }
     try {
-      final res = await _dio.get(ApiConfig.matchingResults(submissionId));
+      final res = await _dio.get(Urls.buildUrl(Urls.getMatch, submissionId));
       if (res.statusCode == 200) {
         final data = res.data as Map<String, dynamic>;
         final list = (data['matches'] as List?) ??
@@ -52,4 +65,3 @@ class MatchingRemoteDataSourceImpl implements MatchingRemoteDataSource {
     }
   }
 }
-

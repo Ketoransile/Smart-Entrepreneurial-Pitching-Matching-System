@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_spacing.dart';
-import '../../../../core/widgets/app_button.dart';
-import '../../../../core/widgets/app_text_field.dart';
+import '../../../../core/widgets/widgets.dart';
 import '../bloc/send_invitation_bloc.dart';
 
 class SendInvitationPage extends StatefulWidget {
@@ -40,8 +40,31 @@ class _SendInvitationPageState extends State<SendInvitationPage> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
     return Scaffold(
-      appBar: AppBar(title: const Text('Send invitation')),
+      appBar: AppBar(
+        title: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Send invitation',
+              style: theme.textTheme.titleLarge?.copyWith(
+                fontWeight: FontWeight.w800,
+              ),
+            ),
+            Text(
+              'Match · ${widget.matchId}',
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: AppColors.mutedForeground,
+                fontWeight: FontWeight.w500,
+              ),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ],
+        ),
+      ),
       body: SafeArea(
         child: Padding(
           padding: AppSpacing.screenPadding,
@@ -54,33 +77,61 @@ class _SendInvitationPageState extends State<SendInvitationPage> {
             builder: (context, state) {
               return Form(
                 key: _formKey,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                child: ListView(
                   children: [
-                    Text('Match ID: ${widget.matchId}'),
-                    AppSpacing.gapMd,
-                    AppTextField(
-                      label: 'Message',
-                      controller: _message,
-                      maxLines: 4,
-                      validator: (v) =>
-                          (v == null || v.trim().isEmpty) ? 'Message required' : null,
+                    Text(
+                      'Add a short note and choose how long the invitation stays open.',
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        color: AppColors.mutedForeground,
+                        height: 1.45,
+                      ),
                     ),
-                    AppSpacing.gapMd,
-                    AppTextField(
-                      label: 'Expires in days',
-                      controller: _expires,
-                      keyboardType: TextInputType.number,
+                    AppSpacing.gapLg,
+                    Material(
+                      color: AppColors.card,
+                      elevation: 0,
+                      shape: RoundedRectangleBorder(
+                        borderRadius:
+                            BorderRadius.circular(AppSpacing.radiusLg),
+                        side: const BorderSide(color: AppColors.border),
+                      ),
+                      child: Padding(
+                        padding: AppSpacing.paddingMd,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            AppTextField(
+                              label: 'Message',
+                              controller: _message,
+                              maxLines: 4,
+                              validator: (v) =>
+                                  (v == null || v.trim().isEmpty)
+                                      ? 'Message required'
+                                      : null,
+                            ),
+                            AppSpacing.gapMd,
+                            AppTextField(
+                              label: 'Expires in days',
+                              controller: _expires,
+                              keyboardType: TextInputType.number,
+                            ),
+                          ],
+                        ),
+                      ),
                     ),
                     AppSpacing.gapLg,
                     if (state.status == SendInvitationStatus.error)
-                      Text(
-                        state.error ?? 'Failed to send invitation',
-                        style: TextStyle(color: Theme.of(context).colorScheme.error),
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: AppSpacing.md),
+                        child: Text(
+                          state.error ?? 'Failed to send invitation',
+                          style: TextStyle(
+                            color: theme.colorScheme.error,
+                          ),
+                        ),
                       ),
-                    AppSpacing.gapMd,
                     AppButton(
-                      text: state.isLoading ? 'Sending...' : 'Send',
+                      text: state.isLoading ? 'Sending...' : 'Send invitation',
                       onPressed: state.isLoading ? null : _send,
                       isLoading: state.isLoading,
                     ),
@@ -94,4 +145,3 @@ class _SendInvitationPageState extends State<SendInvitationPage> {
     );
   }
 }
-

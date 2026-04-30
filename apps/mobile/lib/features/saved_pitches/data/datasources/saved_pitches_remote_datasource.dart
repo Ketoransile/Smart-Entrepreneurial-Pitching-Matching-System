@@ -2,6 +2,7 @@ import 'package:dio/dio.dart';
 
 import '../../../../core/config/api_config.dart';
 import '../../../../core/error/failures.dart';
+import '../../../../core/mock/mock_backend.dart';
 import '../../../../core/network/dio_client.dart';
 import '../../../submissions/data/models/submission_model.dart';
 
@@ -16,6 +17,10 @@ class SavedPitchesRemoteDataSourceImpl implements SavedPitchesRemoteDataSource {
 
   @override
   Future<List<SubmissionModel>> listSaved() async {
+    if (ApiConfig.useMockData) {
+      await Future<void>.delayed(ApiConfig.mockLatency);
+      return MockBackend.listSavedPitches();
+    }
     try {
       final res = await _dio.get(ApiConfig.investorSavedPitches);
       if (res.statusCode == 200) {
@@ -37,6 +42,11 @@ class SavedPitchesRemoteDataSourceImpl implements SavedPitchesRemoteDataSource {
 
   @override
   Future<void> toggleSaved(String pitchId) async {
+    if (ApiConfig.useMockData) {
+      await Future<void>.delayed(ApiConfig.mockLatency);
+      MockBackend.toggleSaved(pitchId);
+      return;
+    }
     try {
       final res = await _dio.post('${ApiConfig.investorSavedPitches}/$pitchId');
       if (res.statusCode == 200) return;

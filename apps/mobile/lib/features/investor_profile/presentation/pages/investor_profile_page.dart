@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../../auth/presentation/bloc/auth_bloc.dart';
+import '../../../auth/presentation/bloc/auth_event.dart';
 import '../../../../core/di/injection_container.dart';
+import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/widgets/app_button.dart';
 import '../../../../core/widgets/app_text_field.dart';
@@ -79,15 +82,77 @@ class _InvestorProfilePageState extends State<InvestorProfilePage> {
     };
   }
 
+  void _confirmLogout() {
+    showDialog<void>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Sign out'),
+        content: const Text(
+          'You will need to sign in again to access your account.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.of(ctx).pop();
+              context.read<AuthBloc>().add(const SignOutRequested());
+            },
+            child: Text(
+              'Sign out',
+              style: TextStyle(
+                color: Theme.of(context).colorScheme.error,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _logoutSection() {
+    return Card(
+      child: ListTile(
+        leading: Icon(
+          Icons.logout_rounded,
+          color: Theme.of(context).colorScheme.error,
+        ),
+        title: const Text('Sign out'),
+        subtitle: Text(
+          'Leave this session on this device',
+          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                color: AppColors.mutedForeground,
+              ),
+        ),
+        trailing: const Icon(Icons.chevron_right_rounded),
+        onTap: _confirmLogout,
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Investor Profile'),
+        title: const Text('Profile'),
         actions: [
           IconButton(
-            icon: const Icon(Icons.refresh),
-            onPressed: () => context.read<InvestorProfileBloc>().add(const InvestorProfileRequested()),
+            tooltip: 'Sign out',
+            onPressed: _confirmLogout,
+            icon: Icon(
+              Icons.logout_rounded,
+              color: Theme.of(context).colorScheme.error,
+            ),
+          ),
+          IconButton(
+            tooltip: 'Refresh',
+            icon: const Icon(Icons.refresh_rounded),
+            onPressed: () => context
+                .read<InvestorProfileBloc>()
+                .add(const InvestorProfileRequested()),
           ),
         ],
       ),
@@ -104,22 +169,50 @@ class _InvestorProfilePageState extends State<InvestorProfilePage> {
               }
             },
             builder: (context, state) {
-              if (state.isLoading) return const Center(child: CircularProgressIndicator());
+              if (state.isLoading) {
+                return const Center(child: CircularProgressIndicator());
+              }
               if (state.status == InvestorProfileStatus.error) {
-                return Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                return ListView(
+                  padding: const EdgeInsets.only(bottom: 100),
                   children: [
-                    Text(
-                      state.error ?? 'Failed to load profile',
-                      style: TextStyle(color: Theme.of(context).colorScheme.error),
+                    Card(
+                      child: Padding(
+                        padding: AppSpacing.paddingLg,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            Icon(
+                              Icons.error_outline_rounded,
+                              size: 48,
+                              color: Theme.of(context)
+                                  .colorScheme
+                                  .error
+                                  .withValues(alpha: 0.85),
+                            ),
+                            AppSpacing.gapMd,
+                            Text(
+                              state.error ??
+                                  'We could not load your investor profile.',
+                              style: Theme.of(context).textTheme.bodyLarge,
+                              textAlign: TextAlign.center,
+                            ),
+                            AppSpacing.gapLg,
+                            AppButton(
+                              text: 'Create profile',
+                              onPressed: () {
+                                context.read<InvestorProfileBloc>().add(
+                                      InvestorProfileCreateRequested(
+                                          _payload()),
+                                    );
+                              },
+                            ),
+                          ],
+                        ),
+                      ),
                     ),
                     AppSpacing.gapMd,
-                    AppButton(
-                      text: 'Create profile',
-                      onPressed: () => context
-                          .read<InvestorProfileBloc>()
-                          .add(InvestorProfileCreateRequested(_payload())),
-                    ),
+                    _logoutSection(),
                   ],
                 );
               }
@@ -127,53 +220,139 @@ class _InvestorProfilePageState extends State<InvestorProfilePage> {
               return Form(
                 key: _formKey,
                 child: ListView(
+                  padding: const EdgeInsets.only(bottom: 100),
                   children: [
-                    AppTextField(
-                      label: 'Full name',
-                      controller: _fullName,
-                      validator: (v) => (v == null || v.trim().isEmpty) ? 'Required' : null,
-                    ),
-                    AppSpacing.gapMd,
-                    AppTextField(
-                      label: 'Preferred sectors (comma separated)',
-                      controller: _sectors,
-                    ),
-                    AppSpacing.gapMd,
-                    AppTextField(
-                      label: 'Preferred stages (comma separated)',
-                      hint: 'idea, mvp, early-revenue, scaling',
-                      controller: _stages,
-                    ),
-                    AppSpacing.gapMd,
-                    Row(
-                      children: [
-                        Expanded(
-                          child: AppTextField(
-                            label: 'Min',
-                            controller: _min,
-                            keyboardType: TextInputType.number,
+                    Text(
+                      'Investor workspace',
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                            color: AppColors.mutedForeground,
                           ),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: AppTextField(
-                            label: 'Max',
-                            controller: _max,
-                            keyboardType: TextInputType.number,
-                          ),
-                        ),
-                      ],
+                    ),
+                    AppSpacing.gapXs,
+                    Text(
+                      'Tune how you discover and evaluate founders',
+                      style:
+                          Theme.of(context).textTheme.headlineSmall?.copyWith(
+                                fontWeight: FontWeight.w700,
+                              ),
                     ),
                     AppSpacing.gapMd,
-                    AppTextField(
-                      label: 'Investment types (comma separated)',
-                      controller: _types,
+                    Builder(
+                      builder: (context) {
+                        final name = (_fullName.text.isNotEmpty
+                                ? _fullName.text
+                                : null) ??
+                            state.profile?.fullName;
+                        if ((name ?? '').trim().isEmpty) {
+                          return const SizedBox.shrink();
+                        }
+                        final displayName = name!.trim();
+                        return Padding(
+                          padding: const EdgeInsets.only(bottom: AppSpacing.md),
+                          child: Container(
+                            padding: AppSpacing.paddingMd,
+                            decoration: BoxDecoration(
+                              gradient: const LinearGradient(
+                                colors: [Color(0xFF2563EB), Color(0xFF1D4ED8)],
+                              ),
+                              borderRadius:
+                                  BorderRadius.circular(AppSpacing.radiusLg),
+                            ),
+                            child: Row(
+                              children: [
+                                CircleAvatar(
+                                  radius: 26,
+                                  backgroundColor:
+                                      Colors.white.withValues(alpha: 0.2),
+                                  child: Text(
+                                    displayName[0].toUpperCase(),
+                                    style: Theme.of(context)
+                                        .textTheme
+                                        .titleLarge
+                                        ?.copyWith(
+                                          color: Colors.white,
+                                          fontWeight: FontWeight.w700,
+                                        ),
+                                  ),
+                                ),
+                                const SizedBox(width: AppSpacing.md),
+                                Expanded(
+                                  child: Text(
+                                    displayName,
+                                    style: Theme.of(context)
+                                        .textTheme
+                                        .titleMedium
+                                        ?.copyWith(
+                                          color: Colors.white,
+                                          fontWeight: FontWeight.w700,
+                                        ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                    Card(
+                      child: Padding(
+                        padding: AppSpacing.paddingMd,
+                        child: Column(
+                          children: [
+                            AppTextField(
+                              label: 'Full name',
+                              controller: _fullName,
+                              validator: (v) => (v == null || v.trim().isEmpty)
+                                  ? 'Required'
+                                  : null,
+                            ),
+                            AppSpacing.gapMd,
+                            AppTextField(
+                              label: 'Preferred sectors (comma separated)',
+                              controller: _sectors,
+                            ),
+                            AppSpacing.gapMd,
+                            AppTextField(
+                              label: 'Preferred stages (comma separated)',
+                              hint: 'idea, mvp, early-revenue, scaling',
+                              controller: _stages,
+                            ),
+                            AppSpacing.gapMd,
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: AppTextField(
+                                    label: 'Min',
+                                    controller: _min,
+                                    keyboardType: TextInputType.number,
+                                  ),
+                                ),
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: AppTextField(
+                                    label: 'Max',
+                                    controller: _max,
+                                    keyboardType: TextInputType.number,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            AppSpacing.gapMd,
+                            AppTextField(
+                              label: 'Investment types (comma separated)',
+                              controller: _types,
+                            ),
+                          ],
+                        ),
+                      ),
                     ),
                     AppSpacing.gapLg,
                     AppButton(
                       text: 'Save',
                       onPressed: () {
-                        if (!(_formKey.currentState?.validate() ?? false)) return;
+                        if (!(_formKey.currentState?.validate() ?? false)) {
+                          return;
+                        }
                         final payload = _payload();
                         if (state.profile == null) {
                           context
@@ -188,85 +367,108 @@ class _InvestorProfilePageState extends State<InvestorProfilePage> {
                     ),
                     AppSpacing.gapXl,
                     Text(
-                      'Tools',
-                      style: Theme.of(context).textTheme.titleMedium,
+                      'Quick tools',
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                            fontWeight: FontWeight.w800,
+                          ),
                     ),
                     AppSpacing.gapSm,
-                    Card(
-                      child: ListTile(
-                        leading: const Icon(Icons.mail_outline),
-                        title: const Text('Invitations'),
-                        onTap: () => Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (_) => BlocProvider(
-                              create: (_) => sl<InvitationsBloc>(),
-                              child: const InvitationsPage(),
+                    Text(
+                      'Shortcuts to your investor workflow',
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                            color: AppColors.mutedForeground,
+                          ),
+                    ),
+                    AppSpacing.gapMd,
+                    GridView.count(
+                      crossAxisCount: 2,
+                      shrinkWrap: true,
+                      physics: const NeverScrollableScrollPhysics(),
+                      mainAxisSpacing: AppSpacing.md,
+                      crossAxisSpacing: AppSpacing.md,
+                      childAspectRatio: 1.22,
+                      children: [
+                        _InvestorQuickTool(
+                          icon: Icons.mail_outline_rounded,
+                          title: 'Invitations',
+                          subtitle: 'Requests & replies',
+                          onTap: () => Navigator.push(
+                            context,
+                            MaterialPageRoute<void>(
+                              builder: (_) => BlocProvider<InvitationsBloc>(
+                                create: (_) => sl<InvitationsBloc>(),
+                                child: const InvitationsPage(),
+                              ),
                             ),
                           ),
                         ),
-                      ),
-                    ),
-                    Card(
-                      child: ListTile(
-                        leading: const Icon(Icons.calendar_month_outlined),
-                        title: const Text('Meetings'),
-                        onTap: () => Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (_) => BlocProvider(
-                              create: (_) => sl<MeetingsBloc>(),
-                              child: const MeetingsPage(),
+                        _InvestorQuickTool(
+                          icon: Icons.calendar_month_rounded,
+                          title: 'Meetings',
+                          subtitle: 'Schedule & notes',
+                          onTap: () => Navigator.push(
+                            context,
+                            MaterialPageRoute<void>(
+                              builder: (_) => BlocProvider<MeetingsBloc>(
+                                create: (_) => sl<MeetingsBloc>(),
+                                child: const MeetingsPage(),
+                              ),
                             ),
                           ),
                         ),
-                      ),
-                    ),
-                    Card(
-                      child: ListTile(
-                        leading: const Icon(Icons.flag_outlined),
-                        title: const Text('Milestones'),
-                        onTap: () => Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (_) => BlocProvider(
-                              create: (_) => sl<MilestonesBloc>(),
-                              child: const MilestonesPage(),
+                        _InvestorQuickTool(
+                          icon: Icons.flag_rounded,
+                          title: 'Milestones',
+                          subtitle: 'Track progress',
+                          onTap: () => Navigator.push(
+                            context,
+                            MaterialPageRoute<void>(
+                              builder: (_) => BlocProvider<MilestonesBloc>(
+                                create: (_) => sl<MilestonesBloc>(),
+                                child: const MilestonesPage(),
+                              ),
                             ),
                           ),
                         ),
-                      ),
-                    ),
-                    Card(
-                      child: ListTile(
-                        leading: const Icon(Icons.star_outline),
-                        title: const Text('Feedback'),
-                        onTap: () => Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (_) => BlocProvider(
-                              create: (_) => sl<FeedbackBloc>(),
-                              child: const FeedbackPage(),
+                        _InvestorQuickTool(
+                          icon: Icons.star_rounded,
+                          title: 'Feedback',
+                          subtitle: 'Given & received',
+                          onTap: () => Navigator.push(
+                            context,
+                            MaterialPageRoute<void>(
+                              builder: (_) => BlocProvider<FeedbackBloc>(
+                                create: (_) => sl<FeedbackBloc>(),
+                                child: const FeedbackPage(),
+                              ),
                             ),
                           ),
                         ),
-                      ),
-                    ),
-                    Card(
-                      child: ListTile(
-                        leading: const Icon(Icons.folder_open_outlined),
-                        title: const Text('Documents'),
-                        onTap: () => Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (_) => BlocProvider(
-                              create: (_) => sl<DocumentsBloc>(),
-                              child: const DocumentsPage(),
+                        _InvestorQuickTool(
+                          icon: Icons.folder_open_rounded,
+                          title: 'Documents',
+                          subtitle: 'Decks & files',
+                          onTap: () => Navigator.push(
+                            context,
+                            MaterialPageRoute<void>(
+                              builder: (_) => BlocProvider<DocumentsBloc>(
+                                create: (_) => sl<DocumentsBloc>(),
+                                child: const DocumentsPage(),
+                              ),
                             ),
                           ),
                         ),
-                      ),
+                      ],
                     ),
+                    AppSpacing.gapXl,
+                    Text(
+                      'Account',
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                            fontWeight: FontWeight.w800,
+                          ),
+                    ),
+                    AppSpacing.gapSm,
+                    _logoutSection(),
                   ],
                 ),
               );
@@ -278,3 +480,68 @@ class _InvestorProfilePageState extends State<InvestorProfilePage> {
   }
 }
 
+class _InvestorQuickTool extends StatelessWidget {
+  const _InvestorQuickTool({
+    required this.icon,
+    required this.title,
+    required this.subtitle,
+    required this.onTap,
+  });
+
+  final IconData icon;
+  final String title;
+  final String subtitle;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Material(
+      color: AppColors.card,
+      elevation: 0,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
+        side: const BorderSide(color: AppColors.border),
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        onTap: onTap,
+        child: Padding(
+          padding: AppSpacing.paddingMd,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              DecoratedBox(
+                decoration: BoxDecoration(
+                  color: AppColors.primary.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.all(10),
+                  child: Icon(icon, color: AppColors.primary, size: 22),
+                ),
+              ),
+              const Spacer(),
+              Text(
+                title,
+                style: theme.textTheme.titleSmall?.copyWith(
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+              AppSpacing.gapXs,
+              Text(
+                subtitle,
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: AppColors.mutedForeground,
+                  height: 1.25,
+                ),
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}

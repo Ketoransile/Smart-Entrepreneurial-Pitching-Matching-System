@@ -20,7 +20,7 @@ abstract class MessagingRepository {
   Future<Either<Failure, MessageEntity>> sendMessage(
     String conversationId, {
     required String body,
-    String type,
+    String type = 'text',
     String? attachmentUrl,
   });
   Future<Either<Failure, Unit>> markConversationRead(String conversationId);

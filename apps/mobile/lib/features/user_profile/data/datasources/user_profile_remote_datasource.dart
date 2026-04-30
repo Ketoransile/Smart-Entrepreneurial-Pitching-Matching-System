@@ -17,6 +17,28 @@ class UserProfileRemoteDataSourceImpl implements UserProfileRemoteDataSource {
 
   @override
   Future<UserProfileModel> getMyProfile() async {
+    if (ApiConfig.useMockData) {
+      await Future<void>.delayed(ApiConfig.mockLatency);
+      return UserProfileModel.fromJson({
+        '_id': 'user_entrepreneur_001',
+        'email': 'demo@sepms.app',
+        'fullName': 'Demo Entrepreneur',
+        'role': 'entrepreneur',
+        'status': 'verified',
+        'photoURL': 'https://i.pravatar.cc/300?img=12',
+        'roleProfile': {
+          'companyName': 'ClinicFlow Ltd',
+          'businessSector': 'Health',
+          'businessStage': 'earlyRevenue',
+          'location': 'Addis Ababa',
+        },
+        'createdAt': DateTime.now()
+            .toUtc()
+            .subtract(const Duration(days: 120))
+            .toIso8601String(),
+        'updatedAt': DateTime.now().toUtc().toIso8601String(),
+      });
+    }
     try {
       final response = await _dioClient.get(ApiConfig.usersMeProfile);
 

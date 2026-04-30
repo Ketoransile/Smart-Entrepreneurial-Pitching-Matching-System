@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_spacing.dart';
-import '../../../../core/widgets/app_button.dart';
-import '../../../../core/widgets/app_text_field.dart';
+import '../../../../core/widgets/widgets.dart';
 import '../bloc/messaging_bloc.dart';
 
 class ChatPage extends StatefulWidget {
@@ -20,8 +20,12 @@ class _ChatPageState extends State<ChatPage> {
   @override
   void initState() {
     super.initState();
-    context.read<MessagingBloc>().add(MessagesRequested(widget.conversationId, page: 1, limit: 30));
-    context.read<MessagingBloc>().add(ConversationReadRequested(widget.conversationId));
+    context.read<MessagingBloc>().add(
+          MessagesRequested(widget.conversationId, page: 1, limit: 30),
+        );
+    context.read<MessagingBloc>().add(
+          ConversationReadRequested(widget.conversationId),
+        );
   }
 
   @override
@@ -30,26 +34,58 @@ class _ChatPageState extends State<ChatPage> {
     super.dispose();
   }
 
+  void _reload() {
+    context.read<MessagingBloc>().add(
+          MessagesRequested(widget.conversationId, page: 1, limit: 30),
+        );
+  }
+
   void _send() {
     final text = _controller.text.trim();
     if (text.isEmpty) return;
     _controller.clear();
     context.read<MessagingBloc>().add(
-          MessageSendRequested(conversationId: widget.conversationId, body: text),
+          MessageSendRequested(
+            conversationId: widget.conversationId,
+            body: text,
+          ),
         );
   }
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final shortId = widget.conversationId.length > 18
+        ? '${widget.conversationId.substring(0, 18)}…'
+        : widget.conversationId;
+
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Chat'),
+        title: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Chat',
+              style: theme.textTheme.titleLarge?.copyWith(
+                fontWeight: FontWeight.w800,
+              ),
+            ),
+            Text(
+              shortId,
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: AppColors.mutedForeground,
+                fontWeight: FontWeight.w500,
+              ),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ],
+        ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.refresh),
-            onPressed: () => context
-                .read<MessagingBloc>()
-                .add(MessagesRequested(widget.conversationId, page: 1, limit: 30)),
+            tooltip: 'Refresh',
+            icon: const Icon(Icons.refresh_rounded),
+            onPressed: _reload,
           ),
         ],
       ),
@@ -58,33 +94,78 @@ class _ChatPageState extends State<ChatPage> {
           children: [
             Expanded(
               child: Padding(
-                padding: AppSpacing.screenPadding,
+                padding: AppSpacing.screenPadding.copyWith(bottom: 0),
                 child: BlocBuilder<MessagingBloc, MessagingState>(
                   builder: (context, state) {
                     if (state.isLoading && state.messages.isEmpty) {
                       return const Center(child: CircularProgressIndicator());
                     }
-                    if (state.status == MessagingStatus.error && state.messages.isEmpty) {
-                      return Center(child: Text(state.error ?? 'Failed to load messages'));
+                    if (state.status == MessagingStatus.error &&
+                        state.messages.isEmpty) {
+                      return EmptyStateView(
+                        icon: Icons.wifi_off_rounded,
+                        title: 'Could not load messages',
+                        message: state.error ?? 'Pull to refresh or try again.',
+                        actionLabel: 'Retry',
+                        onAction: _reload,
+                      );
                     }
                     final msgs = state.messages;
-                    if (msgs.isEmpty) return const Center(child: Text('No messages yet.'));
+                    if (msgs.isEmpty) {
+                      return const EmptyStateView(
+                        icon: Icons.chat_outlined,
+                        title: 'No messages yet',
+                        message:
+                            'Say hello to start the thread. Your note will appear here.',
+                      );
+                    }
 
-                    return ListView.builder(
-                      reverse: true,
-                      itemCount: msgs.length,
-                      itemBuilder: (context, i) {
-                        final m = msgs[msgs.length - 1 - i];
-                        return Align(
-                          alignment: Alignment.centerLeft,
-                          child: Container(
-                            margin: const EdgeInsets.symmetric(vertical: 4),
-                            padding: const EdgeInsets.all(10),
-                            decoration: BoxDecoration(
-                              color: Theme.of(context).colorScheme.surfaceContainerHighest,
-                              borderRadius: BorderRadius.circular(10),
-                            ),
-                            child: Text(m.body),
+                    return LayoutBuilder(
+                      builder: (context, constraints) {
+                        final maxBubble = constraints.maxWidth * 0.88;
+                        return RefreshIndicator(
+                          onRefresh: () async {
+                            _reload();
+                            await Future<void>.delayed(
+                              const Duration(milliseconds: 400),
+                            );
+                          },
+                          child: ListView.separated(
+                            reverse: true,
+                            physics: const AlwaysScrollableScrollPhysics(),
+                            itemCount: msgs.length,
+                            separatorBuilder: (_, __) => AppSpacing.gapSm,
+                            itemBuilder: (context, i) {
+                              final m = msgs[msgs.length - 1 - i];
+                              return Align(
+                                alignment: Alignment.centerLeft,
+                                child: ConstrainedBox(
+                                  constraints:
+                                      BoxConstraints(maxWidth: maxBubble),
+                                  child: Material(
+                                    color: AppColors.muted,
+                                    elevation: 0,
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(16),
+                                      side: const BorderSide(
+                                        color: AppColors.border,
+                                      ),
+                                    ),
+                                    child: Padding(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 14,
+                                        vertical: 10,
+                                      ),
+                                      child: Text(
+                                        m.body,
+                                        style: theme.textTheme.bodyMedium
+                                            ?.copyWith(height: 1.45),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              );
+                            },
                           ),
                         );
                       },
@@ -93,25 +174,40 @@ class _ChatPageState extends State<ChatPage> {
                 ),
               ),
             ),
-            Padding(
-              padding: AppSpacing.screenPadding,
-              child: Row(
-                children: [
-                  Expanded(
-                    child: AppTextField(
-                      label: '',
-                      hint: 'Type a message',
-                      controller: _controller,
-                      textInputAction: TextInputAction.send,
-                      onSubmitted: (_) => _send(),
+            Material(
+              elevation: 8,
+              shadowColor: AppColors.foreground.withValues(alpha: 0.08),
+              color: theme.colorScheme.surface,
+              child: Padding(
+                padding: AppSpacing.screenPadding.copyWith(
+                  top: AppSpacing.sm,
+                  bottom: AppSpacing.sm,
+                ),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    Expanded(
+                      child: AppTextField(
+                        hint: 'Type a message',
+                        controller: _controller,
+                        textInputAction: TextInputAction.send,
+                        maxLines: 4,
+                        onSubmitted: (_) => _send(),
+                      ),
                     ),
-                  ),
-                  const SizedBox(width: 8),
-                  SizedBox(
-                    width: 96,
-                    child: AppButton(text: 'Send', onPressed: _send),
-                  ),
-                ],
+                    const SizedBox(width: AppSpacing.sm),
+                    FilledButton(
+                      onPressed: _send,
+                      style: FilledButton.styleFrom(
+                        padding: const EdgeInsets.all(14),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(14),
+                        ),
+                      ),
+                      child: const Icon(Icons.send_rounded, size: 22),
+                    ),
+                  ],
+                ),
               ),
             ),
           ],
@@ -120,4 +216,3 @@ class _ChatPageState extends State<ChatPage> {
     );
   }
 }
-

@@ -14,6 +14,10 @@ class UserEntity extends Equatable {
   final String? photoURL;
   final bool emailVerified;
   final String? kycRejectionReason;
+  final bool isActive;
+  final DateTime? lastLoginAt;
+  final DateTime createdAt;
+  final DateTime updatedAt;
 
   const UserEntity({
     required this.uid,
@@ -25,6 +29,10 @@ class UserEntity extends Equatable {
     this.photoURL,
     required this.emailVerified,
     this.kycRejectionReason,
+    required this.isActive,
+    this.lastLoginAt,
+    required this.createdAt,
+    required this.updatedAt,
   });
 
   /// Convenience getters to check the user's role and verification state.
@@ -47,6 +55,10 @@ class UserEntity extends Equatable {
     String? photoURL,
     bool? emailVerified,
     String? kycRejectionReason,
+    bool? isActive,
+    DateTime? lastLoginAt,
+    DateTime? createdAt,
+    DateTime? updatedAt,
   }) {
     return UserEntity(
       uid: uid ?? this.uid,
@@ -58,6 +70,10 @@ class UserEntity extends Equatable {
       photoURL: photoURL ?? this.photoURL,
       emailVerified: emailVerified ?? this.emailVerified,
       kycRejectionReason: kycRejectionReason ?? this.kycRejectionReason,
+      isActive: isActive ?? this.isActive,
+      lastLoginAt: lastLoginAt ?? this.lastLoginAt,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
     );
   }
 
@@ -72,5 +88,9 @@ class UserEntity extends Equatable {
         photoURL,
         emailVerified,
         kycRejectionReason,
+        isActive,
+        lastLoginAt,
+        createdAt,
+        updatedAt,
       ];
 }

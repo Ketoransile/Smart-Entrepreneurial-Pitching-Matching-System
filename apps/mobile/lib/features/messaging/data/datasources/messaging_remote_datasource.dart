@@ -1,7 +1,9 @@
 import 'package:dio/dio.dart';
 
 import '../../../../core/config/api_config.dart';
+import '../../../../core/config/urls.dart';
 import '../../../../core/error/failures.dart';
+import '../../../../core/mock/mock_backend.dart';
 import '../../../../core/network/dio_client.dart';
 import '../models/conversation_model.dart';
 import '../models/message_model.dart';
@@ -34,12 +36,17 @@ abstract class MessagingRemoteDataSource {
 
 class MessagingRemoteDataSourceImpl implements MessagingRemoteDataSource {
   final DioClient _dio;
-  MessagingRemoteDataSourceImpl({required DioClient dioClient}) : _dio = dioClient;
+  MessagingRemoteDataSourceImpl({required DioClient dioClient})
+      : _dio = dioClient;
 
   @override
   Future<List<ConversationModel>> listConversations() async {
+    if (ApiConfig.useMockData) {
+      await Future<void>.delayed(ApiConfig.mockLatency);
+      return MockBackend.listConversations();
+    }
     try {
-      final res = await _dio.get(ApiConfig.conversations);
+      final res = await _dio.get(Urls.listConversations);
       if (res.statusCode == 200) {
         final data = res.data as Map<String, dynamic>;
         final list = (data['conversations'] as List?) ??
@@ -62,9 +69,17 @@ class MessagingRemoteDataSourceImpl implements MessagingRemoteDataSource {
     String? matchResultId,
     String? submissionId,
   }) async {
+    if (ApiConfig.useMockData) {
+      await Future<void>.delayed(ApiConfig.mockLatency);
+      return MockBackend.createOrGetConversation(
+        otherUserId: otherUserId,
+        matchResultId: matchResultId,
+        submissionId: submissionId,
+      );
+    }
     try {
       final res = await _dio.post(
-        ApiConfig.conversations,
+        Urls.listConversations,
         data: {
           'otherUserId': otherUserId,
           if (matchResultId != null && matchResultId.isNotEmpty)
@@ -91,9 +106,13 @@ class MessagingRemoteDataSourceImpl implements MessagingRemoteDataSource {
     int? page,
     int? limit,
   }) async {
+    if (ApiConfig.useMockData) {
+      await Future<void>.delayed(ApiConfig.mockLatency);
+      return MockBackend.listMessages(conversationId, limit: limit);
+    }
     try {
       final res = await _dio.get(
-        ApiConfig.conversationMessages(conversationId),
+        Urls.buildUrl(Urls.getConversationMessages, conversationId),
         queryParameters: {
           if (page != null) 'page': page,
           if (limit != null) 'limit': limit,
@@ -121,9 +140,18 @@ class MessagingRemoteDataSourceImpl implements MessagingRemoteDataSource {
     String type = 'text',
     String? attachmentUrl,
   }) async {
+    if (ApiConfig.useMockData) {
+      await Future<void>.delayed(ApiConfig.mockLatency);
+      return MockBackend.sendMessage(
+        conversationId,
+        body: body,
+        type: type,
+        attachmentUrl: attachmentUrl,
+      );
+    }
     try {
       final res = await _dio.post(
-        ApiConfig.conversationMessages(conversationId),
+        Urls.buildUrl(Urls.getConversationMessages, conversationId),
         data: {
           'body': body,
           'type': type,
@@ -133,7 +161,9 @@ class MessagingRemoteDataSourceImpl implements MessagingRemoteDataSource {
       );
       if (res.statusCode == 201 || res.statusCode == 200) {
         final data = res.data as Map<String, dynamic>;
-        final msg = (data['message'] as Map?)?.cast<String, dynamic>() ?? data;
+        final msg = (data['data'] as Map?)?.cast<String, dynamic>() ??
+            (data['message'] as Map?)?.cast<String, dynamic>() ??
+            data;
         return MessageModel.fromJson(msg);
       }
       throw ServerFailure(message: 'Failed (HTTP ${res.statusCode})');
@@ -144,8 +174,14 @@ class MessagingRemoteDataSourceImpl implements MessagingRemoteDataSource {
 
   @override
   Future<void> markConversationRead(String conversationId) async {
+    if (ApiConfig.useMockData) {
+      await Future<void>.delayed(ApiConfig.mockLatency);
+      MockBackend.markConversationRead(conversationId);
+      return;
+    }
     try {
-      final res = await _dio.post(ApiConfig.conversationRead(conversationId));
+      final res = await _dio
+          .post(Urls.buildUrl(Urls.getConversationMessages, conversationId));
       if (res.statusCode == 200) return;
       throw ServerFailure(message: 'Failed (HTTP ${res.statusCode})');
     } on DioException catch (e) {
@@ -155,8 +191,12 @@ class MessagingRemoteDataSourceImpl implements MessagingRemoteDataSource {
 
   @override
   Future<int> unreadCount() async {
+    if (ApiConfig.useMockData) {
+      await Future<void>.delayed(ApiConfig.mockLatency);
+      return MockBackend.unreadCount();
+    }
     try {
-      final res = await _dio.get(ApiConfig.unreadCount);
+      final res = await _dio.get(Urls.listNotifications);
       if (res.statusCode == 200) {
         final data = res.data as Map<String, dynamic>;
         final v = data['unreadCount'] ?? data['count'] ?? 0;
@@ -172,8 +212,12 @@ class MessagingRemoteDataSourceImpl implements MessagingRemoteDataSource {
 
   @override
   Future<List<NotificationModel>> listNotifications() async {
+    if (ApiConfig.useMockData) {
+      await Future<void>.delayed(ApiConfig.mockLatency);
+      return MockBackend.listNotifications();
+    }
     try {
-      final res = await _dio.get(ApiConfig.notifications);
+      final res = await _dio.get(Urls.listNotifications);
       if (res.statusCode == 200) {
         final data = res.data as Map<String, dynamic>;
         final list = (data['notifications'] as List?) ??
@@ -192,13 +236,19 @@ class MessagingRemoteDataSourceImpl implements MessagingRemoteDataSource {
 
   @override
   Future<void> markNotificationRead(String notificationId) async {
+    if (ApiConfig.useMockData) {
+      await Future<void>.delayed(ApiConfig.mockLatency);
+      MockBackend.markNotificationRead(notificationId);
+      return;
+    }
     try {
-      final res = await _dio.patch(ApiConfig.notificationRead(notificationId));
+      final res = await _dio
+          .patch(Urls.buildUrl(Urls.markNotificationRead, notificationId));
       if (res.statusCode == 200) return;
       throw ServerFailure(message: 'Failed (HTTP ${res.statusCode})');
     } on DioException catch (e) {
-      throw ServerFailure(message: e.message ?? 'Failed to mark notification read');
+      throw ServerFailure(
+          message: e.message ?? 'Failed to mark notification read');
     }
   }
 }
-

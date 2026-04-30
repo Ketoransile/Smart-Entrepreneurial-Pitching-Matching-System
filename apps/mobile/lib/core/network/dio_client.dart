@@ -1,6 +1,7 @@
 import 'package:dio/dio.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
+import 'dart:developer' as developer;
 
 import '../config/api_config.dart';
 
@@ -29,6 +30,13 @@ class DioClient {
           if (token != null) {
             options.headers['Authorization'] = 'Bearer $token';
           }
+          // Safe debug: log whether the request has an auth header (do not log the token)
+          try {
+            final hasAuth = options.headers['Authorization'] != null;
+            developer.log(
+                'Outgoing ${options.method} ${options.path} auth=$hasAuth',
+                name: 'DioClient');
+          } catch (_) {}
           return handler.next(options);
         },
         onError: (error, handler) {
@@ -62,10 +70,17 @@ class DioClient {
     try {
       final user = _firebaseAuth.currentUser;
       if (user != null) {
-        return await user.getIdToken();
+        final token = await user.getIdToken();
+        // Log presence and length only for debugging; don't print the token value.
+        developer.log(
+            'Firebase token fetched: present=true length=${token?.length ?? 0}',
+            name: 'DioClient');
+        return token;
       }
       return null;
     } catch (e) {
+      developer.log('Error fetching Firebase token: $e',
+          name: 'DioClient', error: e);
       return null;
     }
   }
@@ -119,6 +134,20 @@ class DioClient {
     Options? options,
   }) {
     return _dio.delete<T>(
+      path,
+      data: data,
+      queryParameters: queryParameters,
+      options: options,
+    );
+  }
+
+  Future<Response<T>> put<T>(
+    String path, {
+    dynamic data,
+    Map<String, dynamic>? queryParameters,
+    Options? options,
+  }) {
+    return _dio.put<T>(
       path,
       data: data,
       queryParameters: queryParameters,

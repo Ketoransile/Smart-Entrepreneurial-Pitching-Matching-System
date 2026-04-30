@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/di/injection_container.dart';
+import '../../../../core/widgets/app_bottom_nav.dart';
 import '../../../feed/presentation/bloc/feed_bloc.dart';
 import '../../../feed/presentation/pages/feed_page.dart';
 import '../../../saved_pitches/presentation/bloc/saved_pitches_bloc.dart';
@@ -22,10 +23,12 @@ class InvestorShell extends StatefulWidget {
 
 class _InvestorShellState extends State<InvestorShell> {
   int _index = 0;
+  late final List<Widget> _pages;
 
   @override
-  Widget build(BuildContext context) {
-    final pages = <Widget>[
+  void initState() {
+    super.initState();
+    _pages = <Widget>[
       BlocProvider<FeedBloc>(
         create: (_) => sl<FeedBloc>(),
         child: const FeedPage(),
@@ -47,39 +50,44 @@ class _InvestorShellState extends State<InvestorShell> {
         child: const InvestorProfilePage(),
       ),
     ];
+  }
 
+  @override
+  Widget build(BuildContext context) {
     return Scaffold(
-      body: pages[_index],
-      bottomNavigationBar: NavigationBar(
+      extendBody: true,
+      body: IndexedStack(index: _index, children: _pages),
+      bottomNavigationBar: AppBottomNav(
         selectedIndex: _index,
         onDestinationSelected: (i) => setState(() => _index = i),
-        destinations: const [
-          NavigationDestination(icon: Icon(Icons.view_list_outlined), label: 'Feed'),
-          NavigationDestination(icon: Icon(Icons.bookmark_outline), label: 'Saved'),
-          NavigationDestination(icon: Icon(Icons.handshake_outlined), label: 'Matches'),
-          NavigationDestination(icon: Icon(Icons.chat_bubble_outline), label: 'Messages'),
-          NavigationDestination(icon: Icon(Icons.person_outline), label: 'Profile'),
+        destinations: const <AppBottomNavDestination>[
+          AppBottomNavDestination(
+            icon: Icons.view_list_outlined,
+            selectedIcon: Icons.view_list,
+            label: 'Feed',
+          ),
+          AppBottomNavDestination(
+            icon: Icons.bookmark_outline,
+            selectedIcon: Icons.bookmark,
+            label: 'Saved',
+          ),
+          AppBottomNavDestination(
+            icon: Icons.handshake_outlined,
+            selectedIcon: Icons.handshake,
+            label: 'Matches',
+          ),
+          AppBottomNavDestination(
+            icon: Icons.chat_bubble_outline,
+            selectedIcon: Icons.chat_bubble,
+            label: 'Messages',
+          ),
+          AppBottomNavDestination(
+            icon: Icons.person_outline,
+            selectedIcon: Icons.person,
+            label: 'Profile',
+          ),
         ],
       ),
     );
   }
 }
-
-class _PlaceholderTab extends StatelessWidget {
-  final String title;
-  const _PlaceholderTab({required this.title});
-
-  @override
-  Widget build(BuildContext context) {
-    return SafeArea(
-      child: Center(
-        child: Text(
-          title,
-          style: Theme.of(context).textTheme.headlineSmall,
-          textAlign: TextAlign.center,
-        ),
-      ),
-    );
-  }
-}
-

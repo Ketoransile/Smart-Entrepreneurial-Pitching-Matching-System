@@ -2,6 +2,7 @@ import 'package:dio/dio.dart';
 
 import '../../../../core/config/api_config.dart';
 import '../../../../core/error/failures.dart';
+import '../../../../core/mock/mock_backend.dart';
 import '../../../../core/network/dio_client.dart';
 import '../../../matching/data/models/match_result_model.dart';
 
@@ -16,6 +17,10 @@ class MatchQueueRemoteDataSourceImpl implements MatchQueueRemoteDataSource {
 
   @override
   Future<List<MatchResultModel>> list({String? status}) async {
+    if (ApiConfig.useMockData) {
+      await Future<void>.delayed(ApiConfig.mockLatency);
+      return MockBackend.matchQueue(status: status);
+    }
     try {
       final res = await _dio.get(
         ApiConfig.matchingInvestorQueue,
@@ -40,6 +45,11 @@ class MatchQueueRemoteDataSourceImpl implements MatchQueueRemoteDataSource {
 
   @override
   Future<void> updateStatus(String matchId, String status) async {
+    if (ApiConfig.useMockData) {
+      await Future<void>.delayed(ApiConfig.mockLatency);
+      MockBackend.updateMatchStatus(matchId, status);
+      return;
+    }
     try {
       final res = await _dio.patch(
         ApiConfig.matchingStatus(matchId),

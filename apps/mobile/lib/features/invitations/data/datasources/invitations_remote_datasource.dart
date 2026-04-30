@@ -23,6 +23,26 @@ class InvitationsRemoteDataSourceImpl implements InvitationsRemoteDataSource {
     required String message,
     int? expiresInDays,
   }) async {
+    if (ApiConfig.useMockData) {
+      await Future<void>.delayed(ApiConfig.mockLatency);
+      final now = DateTime.now().toUtc();
+      return InvitationModel.fromJson({
+        '_id': 'inv_${now.millisecondsSinceEpoch}',
+        'matchResultId': matchId,
+        'submissionId': 'pitch_002',
+        'entrepreneurId': 'user_entrepreneur_001',
+        'investorId': 'user_investor_001',
+        'senderId': 'user_investor_001',
+        'receiverId': 'user_entrepreneur_001',
+        'message': message,
+        'status': 'pending',
+        'sentAt': now.toIso8601String(),
+        'expiresAt':
+            now.add(Duration(days: expiresInDays ?? 14)).toIso8601String(),
+        'createdAt': now.toIso8601String(),
+        'updatedAt': now.toIso8601String(),
+      });
+    }
     try {
       final res = await _dio.post(
         ApiConfig.invitations,

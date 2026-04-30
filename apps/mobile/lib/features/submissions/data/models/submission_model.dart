@@ -1,10 +1,106 @@
 import '../../domain/entities/submission_entity.dart';
 
 class SubmissionModel extends SubmissionEntity {
-  const SubmissionModel({required super.data});
+  const SubmissionModel({
+    required String id,
+    required String entrepreneurId,
+    required String title,
+    required String summary,
+    required String sector,
+    required SubmissionStage stage,
+    required double? targetAmount,
+    required String currency,
+    required SubmissionProblem problem,
+    required SubmissionSolution solution,
+    required SubmissionBusinessModel businessModel,
+    required SubmissionFinancials financials,
+    required List<SubmissionDocument> documents,
+    required double? aiScore,
+    required Map<String, dynamic>? aiAnalysis,
+    required int currentStep,
+    required SubmissionStatus status,
+    required String? reviewNotes,
+    required DateTime? submittedAt,
+    required DateTime? closedAt,
+    required DateTime createdAt,
+    required DateTime updatedAt,
+  }) : super(
+          id: id,
+          entrepreneurId: entrepreneurId,
+          title: title,
+          summary: summary,
+          sector: sector,
+          stage: stage,
+          targetAmount: targetAmount,
+          currency: currency,
+          problem: problem,
+          solution: solution,
+          businessModel: businessModel,
+          financials: financials,
+          documents: documents,
+          aiScore: aiScore,
+          aiAnalysis: aiAnalysis,
+          currentStep: currentStep,
+          status: status,
+          reviewNotes: reviewNotes,
+          submittedAt: submittedAt,
+          closedAt: closedAt,
+          createdAt: createdAt,
+          updatedAt: updatedAt,
+        );
 
   factory SubmissionModel.fromJson(Map<String, dynamic> json) {
-    return SubmissionModel(data: json);
+    final entity = SubmissionEntity.fromJson(json);
+    return SubmissionModel(
+      id: entity.id,
+      entrepreneurId: entity.entrepreneurId,
+      title: entity.title,
+      summary: entity.summary,
+      sector: entity.sector,
+      stage: entity.stage,
+      targetAmount: entity.targetAmount,
+      currency: entity.currency,
+      problem: entity.problem,
+      solution: entity.solution,
+      businessModel: entity.businessModel,
+      financials: entity.financials,
+      documents: entity.documents,
+      aiScore: entity.aiScore,
+      aiAnalysis: entity.aiAnalysis,
+      currentStep: entity.currentStep,
+      status: entity.status,
+      reviewNotes: entity.reviewNotes,
+      submittedAt: entity.submittedAt,
+      closedAt: entity.closedAt,
+      createdAt: entity.createdAt,
+      updatedAt: entity.updatedAt,
+    );
+  }
+
+  factory SubmissionModel.fromEntity(SubmissionEntity entity) {
+    return SubmissionModel(
+      id: entity.id,
+      entrepreneurId: entity.entrepreneurId,
+      title: entity.title,
+      summary: entity.summary,
+      sector: entity.sector,
+      stage: entity.stage,
+      targetAmount: entity.targetAmount,
+      currency: entity.currency,
+      problem: entity.problem,
+      solution: entity.solution,
+      businessModel: entity.businessModel,
+      financials: entity.financials,
+      documents: entity.documents,
+      aiScore: entity.aiScore,
+      aiAnalysis: entity.aiAnalysis,
+      currentStep: entity.currentStep,
+      status: entity.status,
+      reviewNotes: entity.reviewNotes,
+      submittedAt: entity.submittedAt,
+      closedAt: entity.closedAt,
+      createdAt: entity.createdAt,
+      updatedAt: entity.updatedAt,
+    );
   }
 }
-

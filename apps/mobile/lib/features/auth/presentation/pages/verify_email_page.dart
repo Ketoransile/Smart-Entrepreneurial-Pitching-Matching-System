@@ -6,7 +6,6 @@ import '../../../../core/widgets/widgets.dart';
 import '../bloc/auth_bloc.dart';
 import '../bloc/auth_event.dart';
 import '../bloc/auth_state.dart';
-import 'login_page.dart';
 
 class VerifyEmailPage extends StatefulWidget {
   final String email;
@@ -82,7 +81,8 @@ class _VerifyEmailPageState extends State<VerifyEmailPage> {
           } else if (state.needsEmailVerification) {
             ScaffoldMessenger.of(context).showSnackBar(
               const SnackBar(
-                content: Text('Email not verified yet. Please check your inbox.'),
+                content:
+                    Text('Email not verified yet. Please check your inbox.'),
                 backgroundColor: AppColors.warning,
               ),
             );
@@ -91,93 +91,118 @@ class _VerifyEmailPageState extends State<VerifyEmailPage> {
       },
       child: Scaffold(
         body: SafeArea(
-          child: Padding(
+          child: SingleChildScrollView(
             padding: AppSpacing.screenPadding,
-            child: Column(
-              children: [
-                const Spacer(),
-                const Center(child: AppLogo(size: 56)),
-                AppSpacing.gapXl,
-                Container(
-                  width: 80,
-                  height: 80,
-                  decoration: BoxDecoration(
-                    color: AppColors.primary.withValues(alpha: 0.1),
-                    shape: BoxShape.circle,
+            keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+            child: ConstrainedBox(
+              constraints: BoxConstraints(
+                minHeight: MediaQuery.sizeOf(context).height -
+                    MediaQuery.paddingOf(context).vertical -
+                    AppSpacing.lg,
+              ),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  const SizedBox(height: AppSpacing.lg),
+                  const Center(child: AppLogo(size: 56)),
+                  AppSpacing.gapLg,
+                  Card(
+                    child: Padding(
+                      padding: AppSpacing.paddingLg,
+                      child: Column(
+                        children: [
+                          Container(
+                            width: 80,
+                            height: 80,
+                            decoration: BoxDecoration(
+                              color: AppColors.primary.withValues(alpha: 0.1),
+                              shape: BoxShape.circle,
+                            ),
+                            child: const Icon(
+                              Icons.email_outlined,
+                              size: 40,
+                              color: AppColors.primary,
+                            ),
+                          ),
+                          AppSpacing.gapLg,
+                          Text(
+                            'Check your email',
+                            style: Theme.of(context)
+                                .textTheme
+                                .headlineMedium
+                                ?.copyWith(
+                                  fontWeight: FontWeight.bold,
+                                ),
+                            textAlign: TextAlign.center,
+                          ),
+                          AppSpacing.gapMd,
+                          Text(
+                            "We've sent a verification link to:",
+                            style:
+                                Theme.of(context).textTheme.bodyLarge?.copyWith(
+                                      color: AppColors.mutedForeground,
+                                    ),
+                            textAlign: TextAlign.center,
+                          ),
+                          AppSpacing.gapSm,
+                          Text(
+                            widget.email,
+                            style:
+                                Theme.of(context).textTheme.bodyLarge?.copyWith(
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                            textAlign: TextAlign.center,
+                          ),
+                          AppSpacing.gapMd,
+                          Text(
+                            'Click the link in the email to verify your account and get started.',
+                            style: Theme.of(context)
+                                .textTheme
+                                .bodyMedium
+                                ?.copyWith(
+                                  color: AppColors.mutedForeground,
+                                ),
+                            textAlign: TextAlign.center,
+                          ),
+                          AppSpacing.gapXl,
+                          AppButton(
+                            text: _isResending
+                                ? 'Sending...'
+                                : 'Resend verification email',
+                            onPressed:
+                                _isResending ? null : _onResendVerification,
+                            variant: AppButtonVariant.outline,
+                            isLoading: _isResending,
+                          ),
+                          AppSpacing.gapMd,
+                          AppButton(
+                            text: _isChecking
+                                ? 'Checking...'
+                                : "I've verified my email",
+                            onPressed:
+                                _isChecking ? null : _onCheckVerification,
+                            isLoading: _isChecking,
+                          ),
+                        ],
+                      ),
+                    ),
                   ),
-                  child: const Icon(
-                    Icons.email_outlined,
-                    size: 40,
-                    color: AppColors.primary,
+                  AppSpacing.gapLg,
+                  TextButton(
+                    onPressed: () {
+                      context.read<AuthBloc>().add(const SignOutRequested());
+                    },
+                    child: Text(
+                      'Back to sign in',
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                            color: AppColors.mutedForeground,
+                          ),
+                    ),
                   ),
-                ),
-                AppSpacing.gapXl,
-                Text(
-                  'Check your email',
-                  style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
-                  textAlign: TextAlign.center,
-                ),
-                AppSpacing.gapMd,
-                Text(
-                  "We've sent a verification link to:",
-                  style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                        color: AppColors.mutedForeground,
-                      ),
-                  textAlign: TextAlign.center,
-                ),
-                AppSpacing.gapSm,
-                Text(
-                  widget.email,
-                  style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                        fontWeight: FontWeight.w600,
-                      ),
-                  textAlign: TextAlign.center,
-                ),
-                AppSpacing.gapMd,
-                Text(
-                  'Click the link in the email to verify your account and get started.',
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        color: AppColors.mutedForeground,
-                      ),
-                  textAlign: TextAlign.center,
-                ),
-                AppSpacing.gapXxl,
-                AppButton(
-                  text: _isResending
-                      ? 'Sending...'
-                      : 'Resend verification email',
-                  onPressed: _isResending ? null : _onResendVerification,
-                  variant: AppButtonVariant.outline,
-                  isLoading: _isResending,
-                ),
-                AppSpacing.gapMd,
-                AppButton(
-                  text: _isChecking ? 'Checking...' : "I've verified my email",
-                  onPressed: _isChecking ? null : _onCheckVerification,
-                  isLoading: _isChecking,
-                ),
-                AppSpacing.gapLg,
-                TextButton(
-                  onPressed: () {
-                    context.read<AuthBloc>().add(const SignOutRequested());
-                    Navigator.pushReplacement(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => const LoginPage(),
-                      ),
-                    );
-                  },
-                  child: Text(
-                    'Back to sign in',
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color: AppColors.mutedForeground,
-                        ),
-                  ),
-                ),
-                const Spacer(),
-              ],
+                  const SizedBox(height: AppSpacing.lg),
+                ],
+              ),
             ),
           ),
         ),
