@@ -4,7 +4,6 @@ import {
 	createUserWithEmailAndPassword,
 	signOut as firebaseSignOut,
 	onAuthStateChanged,
-	sendEmailVerification,
 	signInWithEmailAndPassword,
 	signInWithPopup,
 	type User,
@@ -35,6 +34,8 @@ export interface UserProfile {
 	status: "unverified" | "pending" | "verified" | "suspended";
 	kycRejectionReason?: string | null;
 	photoURL: string | null;
+	phoneNumber?: string | null;
+	phoneVerified?: boolean;
 	emailVerified: boolean;
 }
 
@@ -56,6 +57,14 @@ interface AuthContextType {
 	}) => Promise<UserProfile>;
 	signOut: () => Promise<void>;
 	resendVerificationEmail: () => Promise<void>;
+	requestEmailOtp: () => Promise<void>;
+	verifyEmailOtp: (code: string) => Promise<void>;
+	requestPasswordResetOtp: (email: string) => Promise<void>;
+	confirmPasswordReset: (options: {
+		email: string;
+		code: string;
+		newPassword: string;
+	}) => Promise<void>;
 	refreshUserProfile: () => Promise<void>;
 }
 
@@ -166,26 +175,158 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 		additionalData?: { role: string; companyName?: string; fundName?: string },
 	): Promise<UserProfile> => {
 		if (!auth) throw new Error("Firebase not initialized");
-		const credential = await createUserWithEmailAndPassword(
-			auth,
+
+		console.log(
+			"🚀 signUp — starting for email:",
 			email,
-			password,
+			"role:",
+			additionalData?.role,
 		);
-		await updateProfile(credential.user, { displayName: fullName });
 
-		// Send Firebase verification email
-		await sendEmailVerification(credential.user);
+		let firebaseUser: User;
+		let isNewFirebaseUser = true;
 
-		// Register in backend
+		try {
+			// Try to create a new Firebase user
+			console.log("🔑 signUp — attempting createUserWithEmailAndPassword...");
+			const credential = await createUserWithEmailAndPassword(
+				auth,
+				email,
+				password,
+			);
+			firebaseUser = credential.user;
+			console.log(
+				"✅ signUp — Firebase user created successfully, uid:",
+				firebaseUser.uid,
+			);
+			await updateProfile(firebaseUser, { displayName: fullName });
+			console.log("✅ signUp — profile updated with displayName:", fullName);
+		} catch (error: unknown) {
+			const firebaseError = error as { code?: string; message?: string };
+			console.log(
+				"⚠️ signUp — createUser failed, error code:",
+				firebaseError.code,
+				"message:",
+				firebaseError.message,
+			);
+
+			if (firebaseError.code === "auth/email-already-in-use") {
+				console.log(
+					"🔍 signUp — email already in Firebase Auth, attempting recovery...",
+				);
+				try {
+					// Attempt to sign in with the provided credentials
+					console.log("🔑 signUp — trying signInWithEmailAndPassword...");
+					const credential = await signInWithEmailAndPassword(
+						auth,
+						email,
+						password,
+					);
+					firebaseUser = credential.user;
+					isNewFirebaseUser = false;
+					console.log(
+						"✅ signUp — signed in to existing Firebase user, uid:",
+						firebaseUser.uid,
+					);
+
+					// Check whether the user already has a backend profile
+					console.log(
+						"🔍 signUp — checking if user exists in MongoDB backend...",
+					);
+					const existingProfile = await fetchUserProfile(firebaseUser);
+
+					if (existingProfile) {
+						console.log(
+							"❌ signUp — user exists in BOTH Firebase and MongoDB:",
+							{
+								uid: existingProfile.uid,
+								email: existingProfile.email,
+								role: existingProfile.role,
+								status: existingProfile.status,
+							},
+						);
+						// User fully exists in both Firebase and backend — they should sign in instead
+						await firebaseSignOut(auth);
+						throw new Error(
+							"An account with this email already exists. Please sign in instead.",
+						);
+					}
+
+					console.log(
+						"🔧 signUp — user exists in Firebase but NOT in MongoDB — will register in backend now",
+					);
+					// User exists in Firebase but NOT in backend — we'll register them below
+				} catch (signInError: unknown) {
+					const signInFirebaseError = signInError as {
+						code?: string;
+						message?: string;
+					};
+					console.log(
+						"⚠️ signUp — recovery sign-in failed, code:",
+						signInFirebaseError.code,
+						"message:",
+						signInFirebaseError.message,
+					);
+
+					// If sign-in failed because of wrong password, the user has a real
+					// Firebase account with a different password
+					if (
+						signInFirebaseError.code === "auth/wrong-password" ||
+						signInFirebaseError.code === "auth/invalid-credential"
+					) {
+						console.log(
+							"❌ signUp — password mismatch for existing Firebase user",
+						);
+						throw new Error(
+							"An account with this email already exists but the password does not match. Please sign in or reset your password.",
+						);
+					}
+					// Re-throw if it's our own "already exists" error from above
+					if (signInFirebaseError.message?.includes("already exists")) {
+						throw signInError;
+					}
+					throw error; // fallback: throw original error
+				}
+			} else {
+				throw error;
+			}
+		}
+
+		// Register in backend (works for both new Firebase users and orphaned ones)
+		console.log(
+			"📡 signUp — calling syncUserWithBackend, isNewFirebaseUser:",
+			isNewFirebaseUser,
+		);
 		const profile = await syncUserWithBackend(
-			credential.user,
+			firebaseUser,
 			true,
 			additionalData,
 		);
 
-		if (!profile) throw new Error("Failed to create profile in backend");
+		if (!profile) {
+			console.log("❌ signUp — syncUserWithBackend returned null");
+			throw new Error("Failed to create profile in backend");
+		}
+
+		console.log("✅ signUp — backend profile created/fetched:", {
+			_id: profile._id,
+			uid: profile.uid,
+			email: profile.email,
+			role: profile.role,
+			status: profile.status,
+		});
 
 		setUserProfile(profile);
+
+		// Only request email OTP for newly created Firebase accounts
+		if (isNewFirebaseUser) {
+			console.log("📧 signUp — requesting email OTP for new user...");
+			await requestEmailOtp();
+		} else {
+			console.log("⏭️ signUp — skipping OTP (orphaned user recovery)");
+		}
+
+		console.log("🎉 signUp — completed successfully");
 		return profile;
 	};
 
@@ -193,14 +334,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 		email: string,
 		password: string,
 	): Promise<UserProfile> => {
-		if (!auth) throw new Error("Firebase not initialized");
-		const credential = await signInWithEmailAndPassword(auth, email, password);
-		const profile = await fetchUserProfile(credential.user);
+		try {
+			if (!auth) throw new Error("Firebase not initialized");
+			const credential = await signInWithEmailAndPassword(
+				auth,
+				email,
+				password,
+			);
+			const profile = await fetchUserProfile(credential.user);
 
-		if (!profile) throw new Error("Failed to fetch user profile");
+			if (!profile) throw new Error("Failed to fetch user profile");
 
-		setUserProfile(profile);
-		return profile;
+			setUserProfile(profile);
+			return profile;
+		} catch (error) {
+			console.error("AuthContext signIn error:", error);
+			throw error;
+		}
 	};
 
 	const signInWithGoogle = async (additionalData?: {
@@ -208,29 +358,34 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 		companyName?: string;
 		fundName?: string;
 	}): Promise<UserProfile> => {
-		if (!auth || !googleProvider) throw new Error("Firebase not initialized");
-		const credential = await signInWithPopup(auth, googleProvider);
+		try {
+			if (!auth || !googleProvider) throw new Error("Firebase not initialized");
+			const credential = await signInWithPopup(auth, googleProvider);
 
-		let profile = await fetchUserProfile(credential.user);
+			let profile = await fetchUserProfile(credential.user);
 
-		if (!profile) {
-			profile = await syncUserWithBackend(
-				credential.user,
-				true,
-				additionalData,
-			);
+			if (!profile) {
+				profile = await syncUserWithBackend(
+					credential.user,
+					true,
+					additionalData,
+				);
+			}
+
+			if (!profile) throw new Error("Failed to authenticate with backend");
+
+			console.log("🔑 signInWithGoogle — profile:", {
+				role: profile.role,
+				email: profile.email,
+				uid: profile.uid,
+			});
+
+			setUserProfile(profile);
+			return profile;
+		} catch (error) {
+			console.error("AuthContext signInWithGoogle error:", error);
+			throw error;
 		}
-
-		if (!profile) throw new Error("Failed to authenticate with backend");
-
-		console.log("🔑 signInWithGoogle — profile:", {
-			role: profile.role,
-			email: profile.email,
-			uid: profile.uid,
-		});
-
-		setUserProfile(profile);
-		return profile;
 	};
 
 	const signOut = async () => {
@@ -240,11 +395,92 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 		setUserProfile(null);
 	};
 
-	// Resend Firebase verification email
-	const resendVerificationEmail = async () => {
+	const requestEmailOtp = useCallback(async (): Promise<void> => {
 		if (!auth?.currentUser) throw new Error("No user logged in");
-		await sendEmailVerification(auth.currentUser);
+		const token = await auth.currentUser.getIdToken();
+		const res = await fetch(`${API_URL}/auth/otp/request`, {
+			method: "POST",
+			headers: {
+				"Content-Type": "application/json",
+				Authorization: `Bearer ${token}`,
+			},
+			body: JSON.stringify({ channel: "email", purpose: "verify" }),
+		});
+
+		if (!res.ok) {
+			const data = await res.json().catch(() => null);
+			throw new Error(data?.message || "Failed to send OTP");
+		}
+	}, [API_URL]);
+
+	const verifyEmailOtp = useCallback(
+		async (code: string): Promise<void> => {
+			if (!auth?.currentUser) throw new Error("No user logged in");
+			const token = await auth.currentUser.getIdToken();
+			const res = await fetch(`${API_URL}/auth/otp/verify`, {
+				method: "POST",
+				headers: {
+					"Content-Type": "application/json",
+					Authorization: `Bearer ${token}`,
+				},
+				body: JSON.stringify({
+					channel: "email",
+					purpose: "verify",
+					code,
+				}),
+			});
+
+			if (!res.ok) {
+				const data = await res.json().catch(() => null);
+				throw new Error(data?.message || "Failed to verify OTP");
+			}
+		},
+		[API_URL],
+	);
+
+	const resendVerificationEmail = async () => {
+		await requestEmailOtp();
 	};
+
+	const requestPasswordResetOtp = useCallback(
+		async (email: string): Promise<void> => {
+			const res = await fetch(`${API_URL}/auth/password-reset/request`, {
+				method: "POST",
+				headers: {
+					"Content-Type": "application/json",
+				},
+				body: JSON.stringify({ email }),
+			});
+
+			if (!res.ok) {
+				const data = await res.json().catch(() => null);
+				throw new Error(data?.message || "Failed to send password reset OTP");
+			}
+		},
+		[API_URL],
+	);
+
+	const confirmPasswordReset = useCallback(
+		async (options: {
+			email: string;
+			code: string;
+			newPassword: string;
+		}): Promise<void> => {
+			const res = await fetch(`${API_URL}/auth/password-reset/confirm`, {
+				method: "POST",
+				headers: {
+					"Content-Type": "application/json",
+				},
+				body: JSON.stringify(options),
+			});
+
+			if (!res.ok) {
+				const data = await res.json().catch(() => null);
+				throw new Error(data?.message || "Failed to reset password");
+			}
+		},
+		[API_URL],
+	);
 
 	// Reload Firebase user and refresh profile from backend
 	const refreshUserProfile = useCallback(async () => {
@@ -269,6 +505,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 				signInWithGoogle,
 				signOut,
 				resendVerificationEmail,
+				requestEmailOtp,
+				verifyEmailOtp,
+				requestPasswordResetOtp,
+				confirmPasswordReset,
 				refreshUserProfile,
 			}}
 		>

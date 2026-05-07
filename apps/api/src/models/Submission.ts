@@ -20,6 +20,9 @@ export interface ISubmissionDocument {
 		| "financial_model"
 		| "product_demo"
 		| "customer_testimonials"
+		| "tin_certificate"
+		| "business_license"
+		| "moa_aoa"
 		| "other";
 	cloudinaryId?: string;
 	size?: number;
@@ -58,8 +61,22 @@ export interface ISubmission extends Document {
 	documents: ISubmissionDocument[];
 	aiScore?: number;
 	aiAnalysis?: Record<string, unknown>;
+	aiSummary?: {
+		executiveSummary: string;
+		keyStrengths: string[];
+		keyRisks: string[];
+		investmentReadiness: string;
+		marketOpportunity: string;
+		generatedAt: string;
+		model: string;
+	};
+	voiceSummaryUrl?: string;
+	summaryStatus?: "pending" | "generating" | "completed" | "failed";
+	summaryError?: string;
 	currentStep: number;
 	status: SubmissionStatus;
+	isAiOverride?: boolean;
+	aiOverrideReason?: string;
 	reviewNotes?: string;
 	submittedAt?: Date;
 	closedAt?: Date;
@@ -75,11 +92,11 @@ const documentSchema = new Schema<ISubmissionDocument>({
 		enum: [
 			"pitch_deck",
 			"financial_model",
-			"legal",
-			"business_plan",
-			"financial_statement",
-			"legal_doc",
-			"video",
+			"product_demo",
+			"customer_testimonials",
+			"tin_certificate",
+			"business_license",
+			"moa_aoa",
 			"other",
 		],
 		default: "other",
@@ -159,6 +176,22 @@ const SubmissionSchema = new Schema<ISubmission>(
 		documents: [documentSchema],
 		aiScore: { type: Number, min: 0, max: 100 },
 		aiAnalysis: { type: Schema.Types.Mixed },
+		aiSummary: {
+			executiveSummary: { type: String, default: null },
+			keyStrengths: [{ type: String }],
+			keyRisks: [{ type: String }],
+			investmentReadiness: { type: String, default: null },
+			marketOpportunity: { type: String, default: null },
+			generatedAt: { type: String, default: null },
+			model: { type: String, default: null },
+		},
+		voiceSummaryUrl: { type: String, default: null },
+		summaryStatus: {
+			type: String,
+			enum: ["pending", "generating", "completed", "failed"],
+			default: null,
+		},
+		summaryError: { type: String, default: null },
 		currentStep: { type: Number, default: 1, min: 1, max: 6 },
 		currency: {
 			type: String,
@@ -179,6 +212,14 @@ const SubmissionSchema = new Schema<ISubmission>(
 				"closed",
 			] satisfies SubmissionStatus[],
 			default: "draft",
+		},
+		isAiOverride: {
+			type: Boolean,
+			default: false,
+		},
+		aiOverrideReason: {
+			type: String,
+			default: null,
 		},
 		reviewNotes: {
 			type: String,

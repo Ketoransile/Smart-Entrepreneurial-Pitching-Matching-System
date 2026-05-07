@@ -1,5 +1,8 @@
+import { GoogleGenAI } from "@google/genai";
+import { DocumentModel } from "../models/Document";
 import { type ISubmission, Submission } from "../models/Submission";
 import type { IUser } from "../models/User";
+import { AIService } from "./ai.service";
 import { DocumentValidationService } from "./document-validation.service";
 
 class SubmissionServiceError extends Error {
@@ -280,6 +283,80 @@ export class SubmissionService {
 			throw SubmissionService.createError(
 				`Incomplete submission: ${errors.join("; ")}`,
 				400,
+			);
+		}
+
+		// ── Gemini gibberish / authenticity gate ──────────────────────────────
+		// Uses @google/genai SDK with gemini-2.5-flash directly from Node.
+		// No dependency on the Python service. Blocks gibberish before it
+		// reaches submitted status, admin review, or matching.
+		const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
+
+		const pitchText = [
+			submission.title,
+			submission.summary,
+			submission.problem?.statement,
+			submission.solution?.description,
+			submission.businessModel?.revenueStreams,
+		]
+			.filter(Boolean)
+			.join(" | ");
+
+		console.log(
+			`[SUBMISSION:GEMINI] Checking pitch authenticity for "${submission.title}"...`,
+		);
+
+		if (GEMINI_API_KEY) {
+			try {
+				const ai = new GoogleGenAI({ apiKey: GEMINI_API_KEY });
+
+				const response = await ai.models.generateContent({
+					model: "gemini-2.5-flash",
+					contents: `You are a content filter for a startup investment platform.
+Analyse this pitch text and return ONLY a valid JSON object — no markdown, no explanation, nothing else.
+
+{"is_gibberish": <true if random characters, keyboard mashing, or completely meaningless — false otherwise>, "reason": "<one sentence explanation>"}
+
+Pitch text:
+"""
+${pitchText.slice(0, 2000)}
+"""`,
+				});
+
+				const rawText = response.text ?? "";
+				console.log(`[SUBMISSION:GEMINI] Raw response: ${rawText.trim()}`);
+
+				const cleaned = rawText
+					.replace(/```json\s*/gi, "")
+					.replace(/```\s*/g, "")
+					.trim();
+
+				const parsed = JSON.parse(cleaned) as {
+					is_gibberish: boolean;
+					reason: string;
+				};
+
+				console.log(
+					`[SUBMISSION:GEMINI] is_gibberish=${parsed.is_gibberish} reason="${parsed.reason}"`,
+				);
+
+				if (parsed.is_gibberish === true) {
+					throw SubmissionService.createError(
+						`Your pitch was rejected by our AI content filter: ${parsed.reason}. Please write a genuine, professional pitch.`,
+						400,
+					);
+				}
+			} catch (err) {
+				if (SubmissionService.isServiceError(err)) throw err;
+				console.error(
+					"[SUBMISSION:GEMINI] Check failed:",
+					(err as Error).message,
+				);
+				// Gemini unreachable — do not block legitimate pitches
+			}
+		} else {
+			console.warn(
+				"[SUBMISSION:GEMINI] GEMINI_API_KEY not set — skipping authenticity check",
 			);
 		}
 

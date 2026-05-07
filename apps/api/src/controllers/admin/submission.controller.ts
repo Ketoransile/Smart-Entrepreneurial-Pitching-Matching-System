@@ -70,6 +70,8 @@ export class AdminSubmissionController {
 				submissionId: req.params.submissionId,
 				decision,
 				notes: req.body.notes,
+				isAiOverride: req.body.isAiOverride,
+				overrideReason: req.body.overrideReason,
 			});
 
 			res.status(200).json({ status: "success", submission });

@@ -32,6 +32,19 @@ const router = Router();
  *     responses:
  *       200:
  *         description: Checkout URL generated
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               required: [status]
+ *               properties:
+ *                 status: { type: string, enum: [success] }
+ *                 checkoutUrl:
+ *                   type: string
+ *                 tx_ref:
+ *                   type: string
+ *                 payment:
+ *                   type: object
  */
 router.post(
 	"/initiate",
@@ -47,6 +60,20 @@ router.post(
  *     tags: [Payments]
  *     summary: Chapa webhook endpoint
  *     description: Endpoint for Chapa to send payment notifications
+ *     responses:
+ *       200:
+ *         description: Webhook processed or acknowledged
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               required: [status, message]
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   enum: [success, error]
+ *                 message:
+ *                   type: string
  */
 router.post("/webhook", PaymentController.handleWebhook);
 
@@ -67,6 +94,16 @@ router.post("/webhook", PaymentController.handleWebhook);
  *     responses:
  *       200:
  *         description: Verification result
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               required: [status, message]
+ *               properties:
+ *                 status: { type: string, enum: [success] }
+ *                 message:
+ *                   type: string
+ *                   example: Payment verification processed
  */
 router.get("/verify/:tx_ref", authenticate, PaymentController.verifyPayment);
 

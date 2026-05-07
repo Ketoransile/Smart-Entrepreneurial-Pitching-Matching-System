@@ -1,4 +1,5 @@
 "use client";
+
 import { motion, useScroll, useTransform } from "framer-motion";
 import {
 	BarChart3,
@@ -11,7 +12,7 @@ import {
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect, useRef } from "react";
+import { useRef } from "react";
 import { Logo } from "@/components/Logo";
 import Navbar from "@/components/Navbar";
 import {
@@ -156,20 +157,8 @@ export default function Home() {
 	const { user, userProfile } = useAuth();
 	const router = useRouter();
 
-	useEffect(() => {
-		console.log("Home mounted");
-	}, []);
-
-	// 3D Dashboard Scroll Effect setup
+	// Dashboard Mockup setup
 	const dashboardRef = useRef<HTMLDivElement>(null);
-	const { scrollYProgress } = useScroll({
-		target: dashboardRef,
-		offset: ["start end", "center center"],
-	});
-
-	const rotateX = useTransform(scrollYProgress, [0, 1], [35, 0]);
-	const scale = useTransform(scrollYProgress, [0, 1], [0.85, 1]);
-	const opacity = useTransform(scrollYProgress, [0, 1], [0.3, 1]);
 
 	const getDashboardRoute = () => {
 		if (userProfile?.role) {
@@ -186,74 +175,42 @@ export default function Home() {
 	const dashboardRoute = getDashboardRoute();
 
 	return (
-		<div className="flex min-h-screen flex-col relative">
-			{/* Premium Fancy Vertical Lines */}
-			<div className="pointer-events-none fixed inset-0 flex justify-center z-[-1] overflow-hidden">
-				<div className="w-full max-w-7xl h-full flex justify-between border-x border-foreground/[0.04] dark:border-white/[0.04] relative">
-					{/* Animated particle on left border */}
-					<motion.div
-						className="absolute top-0 left-0 w-px h-[30vh] bg-gradient-to-b from-transparent via-foreground/20 dark:via-white/20 to-transparent"
-						animate={{ y: ["-100vh", "100vh"] }}
-						transition={{ duration: 8, repeat: Infinity, ease: "linear" }}
-					/>
-					{/* Animated particle on right border */}
-					<motion.div
-						className="absolute top-0 right-0 w-px h-[35vh] bg-gradient-to-b from-transparent via-foreground/20 dark:via-white/20 to-transparent"
-						animate={{ y: ["-100vh", "100vh"] }}
-						transition={{
-							duration: 10,
-							repeat: Infinity,
-							ease: "linear",
-							delay: 2,
-						}}
-					/>
-
-					{/* Left inner line */}
-					<div className="w-px h-full bg-gradient-to-b from-transparent via-foreground/[0.08] dark:via-white/[0.08] to-transparent mr-auto ml-[25%] relative">
-						<motion.div
-							className="absolute top-0 left-0 w-px h-[20vh] bg-gradient-to-b from-transparent via-foreground/30 dark:via-white/30 to-transparent"
-							animate={{ y: ["-100vh", "100vh"] }}
-							transition={{
-								duration: 7,
-								repeat: Infinity,
-								ease: "linear",
-								delay: 1,
-							}}
-						/>
-					</div>
-					{/* Right inner line */}
-					<div className="w-px h-full bg-gradient-to-b from-transparent via-foreground/[0.08] dark:via-white/[0.08] to-transparent ml-auto mr-[25%] relative">
-						<motion.div
-							className="absolute top-0 left-0 w-px h-[25vh] bg-gradient-to-b from-transparent via-foreground/30 dark:via-white/30 to-transparent"
-							animate={{ y: ["-100vh", "100vh"] }}
-							transition={{
-								duration: 9,
-								repeat: Infinity,
-								ease: "linear",
-								delay: 3,
-							}}
-						/>
-					</div>
-				</div>
+		<div className="flex min-h-screen flex-col relative overflow-hidden bg-background">
+			{/* Modern SaaS Background */}
+			<div className="pointer-events-none fixed inset-0 z-[-1]">
+				{/* Grid Pattern */}
+				<div className="absolute inset-0 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:40px_40px] [mask-image:radial-gradient(ellipse_80%_80%_at_50%_0%,#000_70%,transparent_100%)]" />
+				{/* Ambient Glows */}
+				<motion.div
+					className="absolute top-[-10%] left-1/2 -translate-x-1/2 w-[800px] h-[500px] bg-indigo-500/20 dark:bg-indigo-500/20 rounded-full blur-[120px] mix-blend-normal"
+					animate={{
+						scale: [1, 1.1, 1],
+						opacity: [0.4, 0.6, 0.4],
+					}}
+					transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
+				/>
+				<motion.div
+					className="absolute top-[20%] left-[-10%] w-[500px] h-[500px] bg-blue-500/10 dark:bg-blue-500/10 rounded-full blur-[100px]"
+					animate={{
+						x: [0, 50, 0],
+						y: [0, -50, 0],
+					}}
+					transition={{ duration: 10, repeat: Infinity, ease: "easeInOut" }}
+				/>
+				<motion.div
+					className="absolute top-[10%] right-[-10%] w-[600px] h-[600px] bg-purple-500/10 dark:bg-purple-500/10 rounded-full blur-[120px]"
+					animate={{
+						x: [0, -50, 0],
+						y: [0, 50, 0],
+					}}
+					transition={{ duration: 12, repeat: Infinity, ease: "easeInOut" }}
+				/>
 			</div>
 
 			<Navbar />
 			{/* ─── Hero ─── */}
-			<section className="relative overflow-hidden">
-				<div className="pointer-events-none absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.01)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.01)_1px,transparent_1px)] bg-[size:64px_64px] dark:block hidden" />
-				<div className="pointer-events-none absolute inset-0 bg-[linear-gradient(rgba(0,0,0,0.015)_1px,transparent_1px),linear-gradient(90deg,rgba(0,0,0,0.015)_1px,transparent_1px)] bg-[size:64px_64px] dark:hidden block" />
-
-				{/* Centered Ambient Lighting (Responsive for Light/Dark Mode) */}
-				<motion.div
-					className="pointer-events-none absolute top-[120px] left-1/2 -translate-x-1/2 w-[350px] sm:w-[800px] h-[300px] sm:h-[400px] bg-indigo-500/15 dark:bg-indigo-500/20 blur-[75px] sm:blur-[130px] rounded-full"
-					animate={{
-						opacity: [0.3, 0.6, 0.3],
-						scale: [1, 1.05, 1],
-					}}
-					transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
-				/>
-
-				<div className="relative w-full px-4 sm:px-8 lg:px-16 pt-44 pb-20 sm:pt-40 sm:pb-32 lg:pt-52 lg:pb-40">
+			<section className="relative overflow-hidden pt-32 pb-20 sm:pt-40 sm:pb-32 lg:pt-48 lg:pb-40">
+				<div className="relative w-full px-4 sm:px-8 lg:px-16">
 					<motion.div
 						className="mx-auto max-w-3xl text-center"
 						initial="hidden"
@@ -279,17 +236,19 @@ export default function Home() {
 									transition: { type: "spring", bounce: 0, duration: 1 },
 								},
 							}}
+							className="mb-8 flex justify-center"
 						>
-							<Badge
-								variant="secondary"
-								className="mb-6 px-4 py-1.5 text-xs font-medium tracking-wide"
-							>
+							<div className="inline-flex items-center rounded-full border border-indigo-500/30 bg-indigo-500/10 px-4 py-1.5 text-sm font-medium text-indigo-600 dark:text-indigo-400 backdrop-blur-sm transition-all hover:bg-indigo-500/20 cursor-default">
+								<span className="relative flex h-2 w-2 mr-2.5">
+									<span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-indigo-400 opacity-75" />
+									<span className="relative inline-flex rounded-full h-2 w-2 bg-indigo-500" />
+								</span>
 								AI-Powered Investment Matching Platform
-							</Badge>
+							</div>
 						</motion.div>
 
 						<h1
-							className="text-4xl font-bold tracking-tight sm:text-5xl lg:text-6xl xl:text-7xl leading-[1.1]"
+							className="text-5xl font-extrabold tracking-tight sm:text-6xl lg:text-7xl xl:text-[5rem] leading-[1.05]"
 							style={{ perspective: 1000 }}
 						>
 							<motion.span
@@ -372,7 +331,7 @@ export default function Home() {
 						</h1>
 
 						<motion.p
-							className="mx-auto mt-6 max-w-xl text-base sm:text-lg text-muted-foreground leading-relaxed"
+							className="mx-auto mt-8 max-w-2xl text-lg sm:text-xl text-muted-foreground leading-relaxed"
 							variants={{
 								hidden: { opacity: 0, y: 20, filter: "blur(10px)" },
 								visible: {
@@ -456,38 +415,29 @@ export default function Home() {
 					</motion.div>
 				</div>
 
-				{/* ─── Modern 3D Dashboard Mockup Reveal ─── */}
+				{/* ─── Modern Dashboard Mockup Reveal ─── */}
 				<div
 					ref={dashboardRef}
 					className="relative mx-auto max-w-6xl px-4 sm:px-8 pb-32 pt-10"
-					style={{ perspective: "2000px" }}
 				>
-					{/* Elegant Pulsating Aurora Glow Behind Dashboard */}
 					<motion.div
-						style={{ opacity }}
-						animate={{
-							scale: [0.95, 1.05, 0.95],
-						}}
-						transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
-						className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[95%] sm:w-[80%] h-[70%] bg-gradient-to-r from-blue-500/30 via-indigo-500/30 to-purple-500/30 dark:from-blue-500/40 dark:via-indigo-500/40 dark:to-purple-500/40 blur-[80px] sm:blur-[100px] rounded-full pointer-events-none"
-					/>
-
-					<motion.div
-						style={{
-							rotateX,
-							scale,
-							opacity,
-						}}
-						className="w-full relative rounded-[1.5rem] border border-white/40 dark:border-white/10 bg-white/40 dark:bg-black/40 shadow-[0_0_80px_-15px_rgba(0,0,0,0.3)] p-2 sm:p-4 backdrop-blur-xl z-10"
+						initial={{ opacity: 0, y: 40 }}
+						whileInView={{ opacity: 1, y: 0 }}
+						viewport={{ once: true, margin: "-100px" }}
+						transition={{ duration: 1, type: "spring", bounce: 0 }}
+						className="w-full relative rounded-2xl sm:rounded-[2rem] border border-white/20 dark:border-white/10 bg-white/50 dark:bg-black/50 shadow-2xl p-2 sm:p-4 backdrop-blur-md z-10"
 					>
+						{/* Subtle top reflection line */}
+						<div className="absolute top-0 inset-x-4 h-px bg-gradient-to-r from-transparent via-white/50 dark:via-white/20 to-transparent" />
+
 						{/* The Image */}
-						<div className="relative w-full aspect-[16/9] overflow-hidden rounded-lg border border-border/50">
+						<div className="relative w-full aspect-[16/9] overflow-hidden rounded-xl sm:rounded-2xl border border-border/50 bg-muted/50">
 							{/* Light Mode Mockup */}
 							<Image
 								src="/light-dashboard.png"
 								alt="SEPMS Platform Dashboard Mockup Light"
 								fill
-								className="object-cover object-top dark:hidden block"
+								className="object-cover object-left-top dark:hidden block transition-transform duration-700 hover:scale-[1.02]"
 								priority
 							/>
 							{/* Dark Mode Mockup */}
@@ -495,7 +445,7 @@ export default function Home() {
 								src="/dark-dashboard.png"
 								alt="SEPMS Platform Dashboard Mockup Dark"
 								fill
-								className="object-cover object-top hidden dark:block"
+								className="object-cover object-left-top hidden dark:block transition-transform duration-700 hover:scale-[1.02]"
 								priority
 							/>
 						</div>

@@ -707,6 +707,21 @@ function MessagesContent() {
 															{getLastMessageTime(convo)}
 														</span>
 													</div>
+													{/* Show pitch title if this conversation is linked to a specific submission */}
+													{convo.submissionId &&
+														typeof convo.submissionId === "object" && (
+															<p className="text-[10px] text-primary/70 font-medium truncate mt-0.5">
+																📌{" "}
+																{
+																	(
+																		convo.submissionId as {
+																			_id: string;
+																			title: string;
+																		}
+																	).title
+																}
+															</p>
+														)}
 													<div className="flex items-center justify-between gap-2 mt-0.5">
 														<p
 															className={`text-xs truncate ${unread > 0 ? "text-foreground font-medium" : "text-muted-foreground"}`}

@@ -41,6 +41,16 @@ const router = Router();
  *     responses:
  *       200:
  *         description: Matching completed
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               required: [status, message, result]
+ *               properties:
+ *                 status: { type: string, enum: [success] }
+ *                 message: { type: string, example: Matching completed }
+ *                 result:
+ *                   type: object
  */
 router.post(
 	"/submissions/:submissionId/run",
@@ -66,6 +76,18 @@ router.post(
  *     responses:
  *       200:
  *         description: Matches fetched
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               required: [status, count, matches]
+ *               properties:
+ *                 status: { type: string, enum: [success] }
+ *                 count: { type: integer }
+ *                 matches:
+ *                   type: array
+ *                   items:
+ *                     type: object
  */
 router.get(
 	"/submissions/:submissionId",
@@ -90,6 +112,18 @@ router.get(
  *     responses:
  *       200:
  *         description: Investor matches fetched
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               required: [status, count, matches]
+ *               properties:
+ *                 status: { type: string, enum: [success] }
+ *                 count: { type: integer }
+ *                 matches:
+ *                   type: array
+ *                   items:
+ *                     type: object
  */
 router.get(
 	"/me/investor",
@@ -126,6 +160,16 @@ router.get(
  *     responses:
  *       200:
  *         description: Match status updated (or match created)
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               required: [status, message, match]
+ *               properties:
+ *                 status: { type: string, enum: [success] }
+ *                 message: { type: string }
+ *                 match:
+ *                   type: object
  */
 router.patch(
 	"/direct-respond/:submissionId",
@@ -162,6 +206,16 @@ router.patch(
  *     responses:
  *       200:
  *         description: Match status updated
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               required: [status, message, match]
+ *               properties:
+ *                 status: { type: string, enum: [success] }
+ *                 message: { type: string, example: Match status updated }
+ *                 match:
+ *                   type: object
  */
 router.patch(
 	"/:matchId/status",
@@ -197,6 +251,16 @@ router.patch(
  *     responses:
  *       200:
  *         description: Match status updated
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               required: [status, message, match]
+ *               properties:
+ *                 status: { type: string, enum: [success] }
+ *                 message: { type: string }
+ *                 match:
+ *                   type: object
  */
 router.patch(
 	"/matches/:matchId/approve",

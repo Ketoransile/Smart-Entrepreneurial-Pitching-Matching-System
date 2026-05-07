@@ -41,6 +41,20 @@ const router = Router();
  *     responses:
  *       201:
  *         description: Draft created
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               required: [status, message, submission]
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   enum: [success]
+ *                 message:
+ *                   type: string
+ *                   example: Draft created
+ *                 submission:
+ *                   type: object
  *       403:
  *         description: User is not verified
  */
@@ -63,6 +77,21 @@ router.post(
  *     responses:
  *       200:
  *         description: Submission list fetched
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               required: [status, count, submissions]
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   enum: [success]
+ *                 count:
+ *                   type: integer
+ *                 submissions:
+ *                   type: array
+ *                   items:
+ *                     type: object
  */
 router.get(
 	"/",
@@ -100,6 +129,27 @@ router.get(
  *     responses:
  *       200:
  *         description: Feed fetched
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               required: [status, count, total, page, totalPages, submissions]
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   enum: [success]
+ *                 count:
+ *                   type: integer
+ *                 total:
+ *                   type: integer
+ *                 page:
+ *                   type: integer
+ *                 totalPages:
+ *                   type: integer
+ *                 submissions:
+ *                   type: array
+ *                   items:
+ *                     type: object
  */
 router.get(
 	"/feed/browse",
@@ -132,6 +182,29 @@ router.get(
  *     responses:
  *       200:
  *         description: Admin submissions fetched
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               required: [status, count, total, page, totalPages, submissions, stats]
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   enum: [success]
+ *                 count:
+ *                   type: integer
+ *                 total:
+ *                   type: integer
+ *                 page:
+ *                   type: integer
+ *                 totalPages:
+ *                   type: integer
+ *                 submissions:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                 stats:
+ *                   type: object
  */
 router.get(
 	"/admin/all",
@@ -157,6 +230,17 @@ router.get(
  *     responses:
  *       200:
  *         description: Submission fetched
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               required: [status, submission]
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   enum: [success]
+ *                 submission:
+ *                   type: object
  *       404:
  *         description: Submission not found
  */
@@ -199,6 +283,20 @@ router.get("/:id", authenticate, SubmissionController.getOne);
  *     responses:
  *       200:
  *         description: Draft updated
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               required: [status, message, submission]
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   enum: [success]
+ *                 message:
+ *                   type: string
+ *                   example: Draft saved
+ *                 submission:
+ *                   type: object
  *       400:
  *         description: Validation or status error
  */
@@ -227,8 +325,38 @@ router.patch(
  *     responses:
  *       200:
  *         description: Pitch submitted
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               required: [status, message, submission]
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   enum: [success]
+ *                 message:
+ *                   type: string
+ *                   example: Pitch submitted for AI review
+ *                 submission:
+ *                   type: object
  *       400:
  *         description: Incomplete or invalid draft
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               required: [status, message, errors]
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   enum: [error]
+ *                 message:
+ *                   type: string
+ *                   example: Incomplete submission
+ *                 errors:
+ *                   type: array
+ *                   items:
+ *                     type: string
  */
 router.post(
 	"/:id/submit",
@@ -254,6 +382,17 @@ router.post(
  *     responses:
  *       200:
  *         description: Completeness result
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               required: [status, completeness]
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   enum: [success]
+ *                 completeness:
+ *                   type: object
  */
 router.get(
 	"/:id/completeness",
@@ -279,6 +418,18 @@ router.get(
  *     responses:
  *       200:
  *         description: Draft deleted
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               required: [status, message]
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   enum: [success]
+ *                 message:
+ *                   type: string
+ *                   example: Draft deleted
  *       404:
  *         description: Draft not found
  */
@@ -317,12 +468,92 @@ router.delete(
  *     responses:
  *       200:
  *         description: Status updated
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               required: [status, message, submission]
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   enum: [success]
+ *                 message:
+ *                   type: string
+ *                 submission:
+ *                   type: object
  */
 router.patch(
 	"/:id/status",
 	authenticate,
 	authorize("admin", "super_admin"),
 	SubmissionController.updateStatusAdmin,
+);
+
+/**
+ * @openapi
+ * /api/submissions/{id}/generate-summary:
+ *   post:
+ *     tags: [Submissions]
+ *     summary: Admin (re)generate Gemini AI pitch summary
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: AI summary generated
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               required: [status, message, summary]
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   enum: [success]
+ *                 message:
+ *                   type: string
+ *                   example: AI summary generated successfully
+ *                 summary:
+ *                   type: object
+ *       404:
+ *         description: Submission not found
+ */
+router.post(
+	"/:id/generate-summary",
+	authenticate,
+	authorize("admin", "super_admin"),
+	SubmissionController.generateSummary,
+);
+
+/**
+ * @openapi
+ * /api/submissions/{id}/summary-status:
+ *   get:
+ *     tags: [Submissions]
+ *     summary: Lightweight poll for AI summary generation status
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Summary status
+ *       404:
+ *         description: Submission not found
+ */
+router.get(
+	"/:id/summary-status",
+	authenticate,
+	SubmissionController.getSummaryStatus,
 );
 
 export default router;

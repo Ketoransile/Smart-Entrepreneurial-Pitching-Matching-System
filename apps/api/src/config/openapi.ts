@@ -166,6 +166,53 @@ const swaggerDefinition = {
 				description: "Standard paginated list response envelope",
 			},
 
+			/* ── Auth models (upstream) ───────────────────────────────── */
+			AuthUser: {
+				type: "object",
+				required: ["_id", "uid", "email", "displayName", "role", "status"],
+				properties: {
+					_id: { type: "string" },
+					uid: { type: "string" },
+					email: { type: "string", format: "email" },
+					displayName: { type: "string" },
+					role: { type: "string", enum: ["admin", "entrepreneur", "investor"] },
+					adminLevel: { type: "string", nullable: true },
+					status: { type: "string" },
+					photoURL: { type: "string", nullable: true },
+					phoneNumber: { type: "string", nullable: true },
+					phoneVerified: { type: "boolean" },
+					emailVerified: { type: "boolean" },
+				},
+			},
+			AuthUserEnvelope: {
+				type: "object",
+				required: ["status", "message", "user"],
+				properties: {
+					status: { type: "string", enum: ["success"] },
+					message: { type: "string" },
+					user: { $ref: "#/components/schemas/AuthUser" },
+				},
+			},
+			AuthUserEnvelopeWithKycReason: {
+				type: "object",
+				required: ["status", "user"],
+				properties: {
+					status: { type: "string", enum: ["success"] },
+					message: { type: "string" },
+					user: {
+						allOf: [
+							{ $ref: "#/components/schemas/AuthUser" },
+							{
+								type: "object",
+								properties: {
+									kycRejectionReason: { type: "string", nullable: true },
+								},
+							},
+						],
+					},
+				},
+			},
+
 			/* ── Domain models ─────────────────────────────────────────── */
 			UserObject: {
 				type: "object",

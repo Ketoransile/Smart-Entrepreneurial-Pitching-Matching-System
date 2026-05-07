@@ -42,6 +42,15 @@ const router = Router();
  *     responses:
  *       201:
  *         description: Invitation created
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               required: [status, invitation]
+ *               properties:
+ *                 status: { type: string, enum: [success] }
+ *                 invitation:
+ *                   type: object
  */
 router.post("/", authenticate, InvitationController.send);
 
@@ -64,6 +73,21 @@ router.post("/", authenticate, InvitationController.send);
  *         schema:
  *           type: string
  *           enum: [sent, received, all]
+ *     responses:
+ *       200:
+ *         description: Invitations fetched
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               required: [status, count, invitations]
+ *               properties:
+ *                 status: { type: string, enum: [success] }
+ *                 count: { type: integer }
+ *                 invitations:
+ *                   type: array
+ *                   items:
+ *                     type: object
  */
 router.get("/me", authenticate, InvitationController.listMine);
 
@@ -91,6 +115,18 @@ router.get("/me", authenticate, InvitationController.listMine);
  *           example:
  *             status: "accepted"
  *             responseMessage: "Accepted. Let's align on a time tomorrow."
+ *     responses:
+ *       200:
+ *         description: Invitation response recorded
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               required: [status, invitation]
+ *               properties:
+ *                 status: { type: string, enum: [success] }
+ *                 invitation:
+ *                   type: object
  */
 router.patch(
 	"/:invitationId/respond",
@@ -106,6 +142,18 @@ router.patch(
  *     summary: Cancel a pending invitation
  *     security:
  *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Invitation cancelled
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               required: [status, invitation]
+ *               properties:
+ *                 status: { type: string, enum: [success] }
+ *                 invitation:
+ *                   type: object
  */
 router.patch(
 	"/:invitationId/cancel",

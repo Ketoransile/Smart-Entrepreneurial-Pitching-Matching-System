@@ -50,6 +50,18 @@ router.use(authorize("entrepreneur"));
  *     responses:
  *       201:
  *         description: Profile created
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               required: [success, message, data]
+ *               properties:
+ *                 success: { type: boolean, enum: [true] }
+ *                 message:
+ *                   type: string
+ *                   example: Entrepreneur profile created successfully
+ *                 data:
+ *                   type: object
  *       400:
  *         description: Validation or duplicate profile error
  *       401:
@@ -74,6 +86,15 @@ router.post(
  *     responses:
  *       200:
  *         description: Profile fetched
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               required: [success, data]
+ *               properties:
+ *                 success: { type: boolean, enum: [true] }
+ *                 data:
+ *                   type: object
  *       401:
  *         description: Unauthorized
  *       404:
@@ -107,6 +128,18 @@ router.get("/profile", EntrepreneurController.getProfile);
  *     responses:
  *       200:
  *         description: Profile updated
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               required: [success, message, data]
+ *               properties:
+ *                 success: { type: boolean, enum: [true] }
+ *                 message:
+ *                   type: string
+ *                   example: Profile updated successfully
+ *                 data:
+ *                   type: object
  *       400:
  *         description: Validation error
  *       401:
@@ -131,6 +164,18 @@ router.put(
  *     responses:
  *       200:
  *         description: Profile existence returned
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               required: [success, data]
+ *               properties:
+ *                 success: { type: boolean, enum: [true] }
+ *                 data:
+ *                   type: object
+ *                   required: [hasProfile]
+ *                   properties:
+ *                     hasProfile: { type: boolean }
  *       401:
  *         description: Unauthorized
  */

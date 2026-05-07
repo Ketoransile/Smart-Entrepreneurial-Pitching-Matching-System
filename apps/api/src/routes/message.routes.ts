@@ -36,6 +36,15 @@ const router = Router();
  *     responses:
  *       200:
  *         description: Conversation returned
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               required: [status, conversation]
+ *               properties:
+ *                 status: { type: string, enum: [success] }
+ *                 conversation:
+ *                   type: object
  */
 router.post(
 	"/conversations",
@@ -54,6 +63,18 @@ router.post(
  *     responses:
  *       200:
  *         description: Conversations fetched
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               required: [status, count, conversations]
+ *               properties:
+ *                 status: { type: string, enum: [success] }
+ *                 count: { type: integer }
+ *                 conversations:
+ *                   type: array
+ *                   items:
+ *                     type: object
  */
 router.get("/conversations", authenticate, MessageController.listConversations);
 
@@ -74,6 +95,15 @@ router.get("/conversations", authenticate, MessageController.listConversations);
  *     responses:
  *       200:
  *         description: Conversation fetched
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               required: [status, conversation]
+ *               properties:
+ *                 status: { type: string, enum: [success] }
+ *                 conversation:
+ *                   type: object
  */
 router.get(
 	"/conversations/:conversationId",
@@ -106,6 +136,21 @@ router.get(
  *     responses:
  *       200:
  *         description: Messages fetched
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               required: [status, count, total, page, totalPages, messages]
+ *               properties:
+ *                 status: { type: string, enum: [success] }
+ *                 count: { type: integer }
+ *                 total: { type: integer }
+ *                 page: { type: integer }
+ *                 totalPages: { type: integer }
+ *                 messages:
+ *                   type: array
+ *                   items:
+ *                     type: object
  */
 router.get(
 	"/conversations/:conversationId/messages",
@@ -144,6 +189,16 @@ router.get(
  *     responses:
  *       201:
  *         description: Message sent
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               required: [status, message, data]
+ *               properties:
+ *                 status: { type: string, enum: [success] }
+ *                 message: { type: string, example: Message sent }
+ *                 data:
+ *                   type: object
  */
 router.post(
 	"/conversations/:conversationId/messages",
@@ -151,6 +206,44 @@ router.post(
 	MessageController.sendMessage,
 );
 
+/**
+ * @openapi
+ * /api/messages/conversations/{conversationId}/participants:
+ *   post:
+ *     tags: [Communication]
+ *     summary: Admin add participant to a conversation
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: conversationId
+ *         required: true
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [targetUserId]
+ *             properties:
+ *               targetUserId:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Participant added
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               required: [status, message, data]
+ *               properties:
+ *                 status: { type: string, enum: [success] }
+ *                 message: { type: string, example: Participant added }
+ *                 data:
+ *                   type: object
+ */
 router.post(
 	"/conversations/:conversationId/participants",
 	authenticate,
@@ -158,6 +251,39 @@ router.post(
 	MessageController.addParticipant,
 );
 
+/**
+ * @openapi
+ * /api/messages/conversations/{conversationId}/participants/{userId}:
+ *   delete:
+ *     tags: [Communication]
+ *     summary: Admin remove participant from a conversation
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: conversationId
+ *         required: true
+ *         schema:
+ *           type: string
+ *       - in: path
+ *         name: userId
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Participant removed
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               required: [status, message, data]
+ *               properties:
+ *                 status: { type: string, enum: [success] }
+ *                 message: { type: string, example: Participant removed }
+ *                 data:
+ *                   type: object
+ */
 router.delete(
 	"/conversations/:conversationId/participants/:userId",
 	authenticate,
@@ -182,6 +308,16 @@ router.delete(
  *     responses:
  *       200:
  *         description: Conversation marked as read
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               required: [status, message]
+ *               properties:
+ *                 status: { type: string, enum: [success] }
+ *                 message:
+ *                   type: string
+ *                   example: Conversation marked as read
  */
 router.post(
 	"/conversations/:conversationId/read",
@@ -218,6 +354,20 @@ router.post(
  *     responses:
  *       201:
  *         description: Report created, conversation frozen, and admins alerted
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               required: [status, message]
+ *               properties:
+ *                 status: { type: string, enum: [success] }
+ *                 message:
+ *                   type: string
+ *                   example: Conversation frozen and admin alerted
+ *                 report:
+ *                   type: object
+ *                 conversation:
+ *                   type: object
  */
 router.post(
 	"/conversations/:conversationId/report",
@@ -236,6 +386,14 @@ router.post(
  *     responses:
  *       200:
  *         description: Unread count fetched
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               required: [status, unreadCount]
+ *               properties:
+ *                 status: { type: string, enum: [success] }
+ *                 unreadCount: { type: integer }
  */
 router.get("/unread-count", authenticate, MessageController.getUnreadCount);
 
@@ -250,6 +408,18 @@ router.get("/unread-count", authenticate, MessageController.getUnreadCount);
  *     responses:
  *       200:
  *         description: Notifications fetched
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               required: [status, count, notifications]
+ *               properties:
+ *                 status: { type: string, enum: [success] }
+ *                 count: { type: integer }
+ *                 notifications:
+ *                   type: array
+ *                   items:
+ *                     type: object
  */
 router.get("/notifications", authenticate, MessageController.listNotifications);
 
@@ -264,6 +434,16 @@ router.get("/notifications", authenticate, MessageController.listNotifications);
  *     responses:
  *       200:
  *         description: All notifications marked as read
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               required: [status, message]
+ *               properties:
+ *                 status: { type: string, enum: [success] }
+ *                 message:
+ *                   type: string
+ *                   example: All notifications marked as read
  */
 router.patch(
 	"/notifications/read-all",
@@ -288,6 +468,15 @@ router.patch(
  *     responses:
  *       200:
  *         description: Notification updated
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               required: [status, notification]
+ *               properties:
+ *                 status: { type: string, enum: [success] }
+ *                 notification:
+ *                   type: object
  */
 router.patch(
 	"/notifications/:notificationId/read",
@@ -312,6 +501,18 @@ router.patch(
  *     responses:
  *       200:
  *         description: Reports fetched
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               required: [status, count, reports]
+ *               properties:
+ *                 status: { type: string, enum: [success] }
+ *                 count: { type: integer }
+ *                 reports:
+ *                   type: array
+ *                   items:
+ *                     type: object
  */
 router.get(
 	"/admin/reports",
@@ -348,6 +549,16 @@ router.get(
  *     responses:
  *       200:
  *         description: Report resolved
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               required: [status, message, report]
+ *               properties:
+ *                 status: { type: string, enum: [success] }
+ *                 message: { type: string }
+ *                 report:
+ *                   type: object
  */
 router.patch(
 	"/admin/reports/:reportId/resolve",

@@ -1,5 +1,6 @@
 import type { Request, Response } from "express";
 import { DocumentValidationService } from "../services/document-validation.service";
+import { GeminiSummaryService } from "../services/gemini-summary.service";
 import { SubmissionService } from "../services/submission.service";
 import { enqueueSubmissionAnalysis } from "../workers/ai.processor";
 
@@ -255,6 +256,57 @@ export class SubmissionController {
 			});
 		} catch (error) {
 			handleSubmissionError(res, error, "Failed to update submission status");
+		}
+	}
+
+	/**
+	 * POST /submissions/:id/generate-summary
+	 * Admin-only: (re)generate Gemini AI pitch summary for a submission.
+	 */
+	static async generateSummary(req: Request, res: Response): Promise<void> {
+		try {
+			if (!req.user) {
+				res.status(401).json({ status: "error", message: "Unauthorized" });
+				return;
+			}
+
+			const summary = await GeminiSummaryService.regenerate(req.params.id);
+
+			res.status(200).json({
+				status: "success",
+				message: "AI summary generated successfully",
+				summary,
+			});
+		} catch (error) {
+			handleSubmissionError(res, error, "Failed to generate AI summary");
+		}
+	}
+
+	/**
+	 * GET /submissions/:id/summary-status
+	 * Lightweight polling endpoint — returns only summary status and data.
+	 */
+	static async getSummaryStatus(req: Request, res: Response): Promise<void> {
+		try {
+			if (!req.user) {
+				res.status(401).json({ status: "error", message: "Unauthorized" });
+				return;
+			}
+
+			const submission = await SubmissionService.getOneForUser(
+				req.params.id,
+				req.user,
+			);
+
+			res.status(200).json({
+				status: "success",
+				summaryStatus: submission.summaryStatus || null,
+				summaryError: submission.summaryError || null,
+				aiSummary: submission.aiSummary || null,
+				voiceSummaryUrl: submission.voiceSummaryUrl || null,
+			});
+		} catch (error) {
+			handleSubmissionError(res, error, "Failed to fetch summary status");
 		}
 	}
 }

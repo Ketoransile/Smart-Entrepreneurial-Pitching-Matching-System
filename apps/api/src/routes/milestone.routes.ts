@@ -51,6 +51,15 @@ const router = Router();
  *     responses:
  *       201:
  *         description: Milestone created
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               required: [status, milestone]
+ *               properties:
+ *                 status: { type: string, enum: [success] }
+ *                 milestone:
+ *                   type: object
  */
 router.post(
 	"/",
@@ -84,6 +93,18 @@ router.post(
  *     responses:
  *       200:
  *         description: Milestones fetched
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               required: [status, count, milestones]
+ *               properties:
+ *                 status: { type: string, enum: [success] }
+ *                 count: { type: integer }
+ *                 milestones:
+ *                   type: array
+ *                   items:
+ *                     type: object
  */
 router.get(
 	"/",
@@ -114,6 +135,15 @@ router.get(
  *     responses:
  *       200:
  *         description: Milestone returned
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               required: [status, milestone]
+ *               properties:
+ *                 status: { type: string, enum: [success] }
+ *                 milestone:
+ *                   type: object
  */
 router.get(
 	"/single/:milestoneId",
@@ -139,6 +169,18 @@ router.get(
  *     responses:
  *       200:
  *         description: Project milestones returned
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               required: [status, count, milestones]
+ *               properties:
+ *                 status: { type: string, enum: [success] }
+ *                 count: { type: integer }
+ *                 milestones:
+ *                   type: array
+ *                   items:
+ *                     type: object
  */
 router.get(
 	"/:projectId",
@@ -183,6 +225,15 @@ router.get(
  *     responses:
  *       200:
  *         description: Milestone updated
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               required: [status, milestone]
+ *               properties:
+ *                 status: { type: string, enum: [success] }
+ *                 milestone:
+ *                   type: object
  */
 router.put(
 	"/:milestoneId",
@@ -231,6 +282,15 @@ router.put(
  *     responses:
  *       200:
  *         description: Status transitioned
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               required: [status, milestone]
+ *               properties:
+ *                 status: { type: string, enum: [success] }
+ *                 milestone:
+ *                   type: object
  *       400:
  *         description: Invalid status or transition not allowed
  *       403:
@@ -275,6 +335,15 @@ router.patch(
  *     responses:
  *       200:
  *         description: Proof attached
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               required: [status, milestone]
+ *               properties:
+ *                 status: { type: string, enum: [success] }
+ *                 milestone:
+ *                   type: object
  *       403:
  *         description: Only the entrepreneur can upload proof
  */
@@ -302,6 +371,15 @@ router.post(
  *     responses:
  *       200:
  *         description: Proof retrieved
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               required: [status, proof]
+ *               properties:
+ *                 status: { type: string, enum: [success] }
+ *                 proof:
+ *                   type: object
  */
 router.get(
 	"/:milestoneId/proof",
@@ -352,6 +430,15 @@ router.get(
  *     responses:
  *       200:
  *         description: Evidence submitted
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               required: [status, milestone]
+ *               properties:
+ *                 status: { type: string, enum: [success] }
+ *                 milestone:
+ *                   type: object
  */
 router.post(
 	"/:milestoneId/evidence",
@@ -389,6 +476,19 @@ router.post(
  *     responses:
  *       200:
  *         description: Milestone verification handled
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               required: [status]
+ *               properties:
+ *                 status: { type: string, enum: [success] }
+ *                 milestone:
+ *                   type: object
+ *                 transaction:
+ *                   type: object
+ *                 message:
+ *                   type: string
  */
 router.post(
 	"/:milestoneId/verify",
@@ -414,6 +514,16 @@ router.post(
  *     responses:
  *       200:
  *         description: Milestone deleted
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               required: [status, message]
+ *               properties:
+ *                 status: { type: string, enum: [success] }
+ *                 message:
+ *                   type: string
+ *                   example: Milestone deleted
  *       400:
  *         description: Milestone is not in pending status
  *       403:

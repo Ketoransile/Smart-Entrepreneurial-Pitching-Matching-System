@@ -4,6 +4,7 @@ import { Message } from "../models/Message";
 import { MisconductReport } from "../models/MisconductReport";
 import { User } from "../models/User";
 import { emitToConversation } from "../socket";
+// import { redactObject, redactString } from "../utils/redaction";
 import { NotificationService } from "./notification.service";
 
 class MessageServiceError extends Error {
@@ -62,10 +63,19 @@ export class MessageService {
 			payload.otherUserId,
 		);
 
-		let conversation = await Conversation.findOne({
+		// If a submissionId is provided, scope the lookup to that specific pitch.
+		// This ensures investor A accepting 5 pitches from entrepreneur B gets
+		// 5 separate conversations — one per pitch — not one shared thread.
+		const filter: Record<string, unknown> = {
 			participants: { $all: participants, $size: participants.length },
 			isArchived: false,
-		});
+		};
+
+		if (payload.submissionId) {
+			filter.submissionId = payload.submissionId;
+		}
+
+		let conversation = await Conversation.findOne(filter);
 
 		if (!conversation) {
 			conversation = await Conversation.create({
@@ -319,10 +329,13 @@ export class MessageService {
 			);
 		}
 
+		// Redact PII from message body before storing
+		const redactedBody = redactString(messageBody);
+
 		const message = await Message.create({
 			conversationId: payload.conversationId,
 			senderId: payload.senderId,
-			body: messageBody || "Attachment",
+			body: redactedBody || "Attachment",
 			type: payload.type || (payload.attachmentUrl ? "file" : "text"),
 			attachmentUrl: payload.attachmentUrl || null,
 			readBy: [{ userId: payload.senderId, readAt: new Date() }],
@@ -340,7 +353,7 @@ export class MessageService {
 				userId: recipientId,
 				type: "message_received",
 				title: "New message",
-				body: messageBody || "You received a new attachment",
+				body: redactedBody || "You received a new attachment",
 				metadata: {
 					conversationId: payload.conversationId,
 					messageId: message._id,

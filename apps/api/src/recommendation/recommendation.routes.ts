@@ -34,6 +34,39 @@ const router = Router();
 // ── POST /api/recommendation/classify ────────────────────────────────────────
 // Admin-only proxy to the Python /classify-pitch endpoint.
 // Keeps the AI service off the public internet — browser calls Node, Node calls Python.
+/**
+ * @openapi
+ * /api/recommendation/classify:
+ *   post:
+ *     tags: [Recommendation]
+ *     summary: Classify pitch text using AI
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [pitchText]
+ *             properties:
+ *               pitchText:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Classification completed
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               required: [status]
+ *               properties:
+ *                 status: { type: string, enum: [success] }
+ *       400:
+ *         description: Missing pitch text
+ *       500:
+ *         description: Classification failed
+ */
 router.post(
 	"/classify",
 	authenticate,
@@ -61,6 +94,26 @@ router.post(
 // ── GET /api/recommendation/matches/count ────────────────────────────────────
 // Returns accepted match count for the authenticated entrepreneur's submissions.
 // Used by the entrepreneur dashboard stat card.
+/**
+ * @openapi
+ * /api/recommendation/matches/count:
+ *   get:
+ *     tags: [Recommendation]
+ *     summary: Get accepted match count for entrepreneur
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Match count fetched
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               required: [status, count]
+ *               properties:
+ *                 status: { type: string, enum: [success] }
+ *                 count: { type: integer }
+ */
 router.get(
 	"/matches/count",
 	authenticate,
@@ -85,6 +138,34 @@ router.get(
 // Records an implicit "click" Rocchio signal (+0.05) when an investor opens
 // a pitch detail page. Also returns the match context (score, breakdown,
 // status) so the pitch page can display it without a separate fetch.
+/**
+ * @openapi
+ * /api/recommendation/matches/click/{submissionId}:
+ *   post:
+ *     tags: [Recommendation]
+ *     summary: Record investor click signal for a submission
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: submissionId
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Click signal recorded
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               required: [status, match]
+ *               properties:
+ *                 status: { type: string, enum: [success] }
+ *                 match:
+ *                   type: object
+ *                   nullable: true
+ */
 router.post(
 	"/matches/click/:submissionId",
 	authenticate,
@@ -144,6 +225,18 @@ router.post(
  *     responses:
  *       200:
  *         description: Matches fetched
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               required: [status, count, matches]
+ *               properties:
+ *                 status: { type: string, enum: [success] }
+ *                 count: { type: integer }
+ *                 matches:
+ *                   type: array
+ *                   items:
+ *                     type: object
  *       500:
  *         description: Failed to fetch matches
  */
@@ -208,6 +301,19 @@ router.get(
  *     responses:
  *       200:
  *         description: Match response recorded
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               required: [status, message, match]
+ *               properties:
+ *                 status: { type: string, enum: [success] }
+ *                 message: { type: string }
+ *                 match:
+ *                   type: object
+ *                 conversationId:
+ *                   type: string
+ *                   nullable: true
  *       400:
  *         description: Invalid status
  *       404:

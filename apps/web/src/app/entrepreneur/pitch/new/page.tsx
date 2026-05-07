@@ -30,6 +30,7 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Progress } from "@/components/ui/progress";
 import {
 	Select,
 	SelectContent,
@@ -43,9 +44,10 @@ import { useAuth } from "@/context/AuthContext";
 import {
 	type BusinessModelData,
 	businessModelSchema,
-	DOC_CATEGORIES,
 	type FinancialsData,
 	financialsSchema,
+	getDocCategories,
+	getDocLabel,
 	type MetadataData,
 	metadataSchema,
 	type ProblemData,
@@ -102,6 +104,10 @@ function NewPitchPageInner() {
 	// Document upload state
 	const [uploadedDocs, setUploadedDocs] = useState<UploadedDoc[]>([]);
 	const [uploading, setUploading] = useState(false);
+	const [uploadProgress, setUploadProgress] = useState(0);
+	const [uploadingFileName, setUploadingFileName] = useState<string | null>(
+		null,
+	);
 	const [selectedDocType, setSelectedDocType] = useState("pitch_deck");
 
 	const API_URL = (
@@ -119,6 +125,9 @@ function NewPitchPageInner() {
 			summary: "",
 		},
 	});
+
+	const selectedStage = metadataForm.watch("stage");
+	const docCategories = getDocCategories(selectedStage);
 
 	const problemForm = useForm<ProblemData>({
 		resolver: zodResolver(problemSchema),
@@ -288,28 +297,152 @@ function NewPitchPageInner() {
 		if (!files || files.length === 0 || !user || !submissionId) return;
 
 		setUploading(true);
+		setUploadProgress(0);
+		setUploadingFileName(files[0]?.name ?? null);
 		try {
 			const token = await user.getIdToken();
 
-			for (let i = 0; i < files.length; i++) {
-				const formData = new FormData();
-				formData.append("file", files[i]);
-				formData.append("type", selectedDocType);
-				formData.append("submissionId", submissionId);
+			const uploadWithProgress = (
+				file: File,
+				signature: {
+					apiKey: string;
+					timestamp: number;
+					signature: string;
+					folder: string;
+					publicId: string;
+					chunkSize: number;
+					uploadUrl: string;
+				},
+			) =>
+				new Promise<{
+					public_id: string;
+					secure_url: string;
+					bytes: number;
+					format: string;
+				}>((resolve, reject) => {
+					const formData = new FormData();
+					formData.append("file", file);
+					formData.append("api_key", signature.apiKey);
+					formData.append("timestamp", signature.timestamp.toString());
+					formData.append("signature", signature.signature);
+					formData.append("folder", signature.folder);
+					formData.append("public_id", signature.publicId);
+					formData.append("resource_type", "auto");
+					formData.append("chunk_size", signature.chunkSize.toString());
+					formData.append("use_filename", "true");
+					formData.append("unique_filename", "false");
 
-				const res = await fetch(`${API_URL}/documents`, {
-					method: "POST",
-					headers: { Authorization: `Bearer ${token}` },
-					body: formData,
+					const xhr = new XMLHttpRequest();
+					xhr.open("POST", signature.uploadUrl, true);
+					xhr.upload.onprogress = (event) => {
+						if (!event.lengthComputable) return;
+						setUploadProgress(Math.round((event.loaded / event.total) * 100));
+					};
+					xhr.onload = () => {
+						if (xhr.status >= 200 && xhr.status < 300) {
+							try {
+								resolve(JSON.parse(xhr.responseText));
+							} catch {
+								reject(new Error("Invalid Cloudinary response"));
+							}
+							return;
+						}
+
+						try {
+							const data = JSON.parse(xhr.responseText) as {
+								error?: { message?: string };
+							};
+							reject(new Error(data.error?.message || "Upload failed"));
+						} catch {
+							reject(new Error("Upload failed"));
+						}
+					};
+					xhr.onerror = () => reject(new Error("Upload failed"));
+					xhr.send(formData);
 				});
 
-				if (res.ok) {
-					const { document } = await res.json();
+			for (let i = 0; i < files.length; i++) {
+				const file = files[i];
+				setUploadingFileName(file.name);
+				setUploadProgress(0);
+
+				if (file.size > 70 * 1024 * 1024) {
+					toast.error(`${file.name} exceeds the 70MB upload limit`);
+					continue;
+				}
+
+				const signatureRes = await fetch(
+					`${API_URL}/documents/direct-upload/signature`,
+					{
+						method: "POST",
+						headers: {
+							"Content-Type": "application/json",
+							Authorization: `Bearer ${token}`,
+						},
+						body: JSON.stringify({
+							type: selectedDocType,
+							submissionId,
+							filename: file.name,
+							fileSize: file.size,
+						}),
+					},
+				);
+
+				if (!signatureRes.ok) {
+					const data = await signatureRes.json();
+					toast.error(data.message || `Failed to prepare ${file.name}`);
+					continue;
+				}
+
+				const signature = (await signatureRes.json()) as {
+					cloudName: string;
+					apiKey: string;
+					timestamp: number;
+					signature: string;
+					folder: string;
+					publicId: string;
+					chunkSize: number;
+					uploadUrl: string;
+				};
+
+				const cloudinaryResult = (await uploadWithProgress(
+					file,
+					signature,
+				)) as {
+					public_id: string;
+					secure_url: string;
+					bytes: number;
+					format: string;
+				};
+
+				const registerRes = await fetch(
+					`${API_URL}/documents/direct-upload/complete`,
+					{
+						method: "POST",
+						headers: {
+							"Content-Type": "application/json",
+							Authorization: `Bearer ${token}`,
+						},
+						body: JSON.stringify({
+							type: selectedDocType,
+							submissionId,
+							cloudinaryPublicId: cloudinaryResult.public_id,
+							url: cloudinaryResult.secure_url,
+							sizeBytes: cloudinaryResult.bytes,
+							mimeType: file.type || "application/octet-stream",
+							filename: file.name,
+						}),
+					},
+				);
+
+				if (registerRes.ok) {
+					const { document } = await registerRes.json();
 					setUploadedDocs((prev) => [...prev, document]);
-					toast.success(`Uploaded: ${files[i].name}`);
+					setUploadProgress(100);
+					toast.success(`Uploaded: ${file.name}`);
 				} else {
-					const data = await res.json();
-					toast.error(data.message || `Failed to upload ${files[i].name}`);
+					const data = await registerRes.json();
+					toast.error(data.message || `Failed to register ${file.name}`);
 				}
 			}
 		} catch (err) {
@@ -317,6 +450,8 @@ function NewPitchPageInner() {
 			toast.error("Upload failed");
 		} finally {
 			setUploading(false);
+			setUploadProgress(0);
+			setUploadingFileName(null);
 			// Reset input
 			e.target.value = "";
 		}
@@ -950,7 +1085,7 @@ function NewPitchPageInner() {
 																	<SelectValue />
 																</SelectTrigger>
 																<SelectContent>
-																	{DOC_CATEGORIES.map((dt) => (
+																	{docCategories.map((dt) => (
 																		<SelectItem key={dt.value} value={dt.value}>
 																			{dt.label} {dt.required && "*"}
 																		</SelectItem>
@@ -990,6 +1125,20 @@ function NewPitchPageInner() {
 																	disabled={uploading}
 																/>
 															</label>
+															{uploading && (
+																<div className="space-y-2 rounded-lg border border-border/60 bg-muted/20 p-3">
+																	<div className="flex items-center justify-between text-xs text-muted-foreground">
+																		<span className="truncate pr-2">
+																			Uploading {uploadingFileName || "file"}
+																		</span>
+																		<span>{uploadProgress}%</span>
+																	</div>
+																	<Progress
+																		value={uploadProgress}
+																		className="h-2"
+																	/>
+																</div>
+															)}
 														</div>
 													</div>
 
@@ -1011,9 +1160,7 @@ function NewPitchPageInner() {
 																				{doc.filename}
 																			</p>
 																			<p className="text-xs text-muted-foreground">
-																				{DOC_CATEGORIES.find(
-																					(dt) => dt.value === doc.type,
-																				)?.label || doc.type}
+																				{getDocLabel(doc.type)}
 																			</p>
 																			{doc.processingError && (
 																				<p className="text-xs text-destructive mt-1">

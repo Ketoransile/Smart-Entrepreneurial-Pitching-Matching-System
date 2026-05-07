@@ -8,7 +8,8 @@
 			"!!**/dist",
 			"!!**/build",
 			"!!**/out",
-			"!!apps/web/eslint.json"
+			"!!apps/web/eslint.json",
+			"!!apps/web/postcss.config.mjs"
 		]
 	},
 	"linter": {

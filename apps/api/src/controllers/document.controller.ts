@@ -6,7 +6,9 @@ import cloudinary, { isCloudinaryConfigured } from "../config/cloudinary";
 import type { AuthRequest } from "../middleware/auth";
 import { handleMulterError } from "../middleware/upload";
 import { DocumentModel, type DocumentType } from "../models/Document";
+import { DocumentEntity } from "../models/DocumentEntity";
 import { Submission } from "../models/Submission";
+import { ConflictDetectionService } from "../services/conflict-detection.service";
 import { enqueueDocumentProcessing } from "../workers/document.processor";
 
 const validDocumentTypes: DocumentType[] = [
@@ -92,7 +94,6 @@ export class DocumentController {
 					{
 						folder,
 						resource_type: "auto",
-						access_mode: "public",
 					},
 					(error, uploadResult) => {
 						if (error) {
@@ -189,7 +190,6 @@ export class DocumentController {
 							{
 								folder,
 								resource_type: "auto",
-								access_mode: "public",
 							},
 							(error, uploadResult) => {
 								if (error) {
@@ -432,24 +432,128 @@ export class DocumentController {
 	}
 
 	/**
-	 * Generate a time-limited signed Cloudinary URL for a document.
-	 * This is needed because the Cloudinary account has strict/signed delivery enabled.
+	 * UC-13: Check for document conflicts across user's documents
 	 */
-	static async getSignedUrl(req: AuthRequest, res: Response): Promise<void> {
+	static async checkConflicts(req: AuthRequest, res: Response): Promise<void> {
 		try {
 			if (!req.user) {
 				res.status(401).json({ status: "error", message: "Unauthorized" });
 				return;
 			}
 
-			if (!isCloudinaryConfigured) {
-				res.status(500).json({
+			const submissionId = req.query.submissionId as string | undefined;
+			const documentIds = req.query.documentIds
+				? (req.query.documentIds as string).split(",")
+				: undefined;
+
+			const conflictResult = await ConflictDetectionService.checkForConflicts({
+				ownerId: req.user._id,
+				submissionId: submissionId
+					? new mongoose.Types.ObjectId(submissionId)
+					: undefined,
+				documentIds: documentIds?.map((id) => new mongoose.Types.ObjectId(id)),
+			});
+
+			res.status(200).json({
+				status: "success",
+				conflicts: conflictResult.conflicts,
+				summary: conflictResult.summary,
+				hasConflicts: conflictResult.hasConflicts,
+			});
+		} catch (error) {
+			const message =
+				error instanceof Error
+					? error.message
+					: "Failed to check for conflicts";
+			res.status(500).json({ status: "error", message });
+		}
+	}
+
+	/**
+	 * UC-13: Get extracted entities for a specific document
+	 */
+	static async getDocumentEntities(req: Request, res: Response): Promise<void> {
+		try {
+			const documentId = req.params.id;
+
+			if (!mongoose.Types.ObjectId.isValid(documentId)) {
+				res.status(400).json({
 					status: "error",
-					message: "Cloudinary is not configured on the server",
+					message: "Invalid document ID",
 				});
 				return;
 			}
 
+			const entities = await DocumentEntity.find({
+				documentId: new mongoose.Types.ObjectId(documentId),
+			}).lean();
+
+			res.status(200).json({
+				status: "success",
+				entities,
+			});
+		} catch (error) {
+			const message =
+				error instanceof Error
+					? error.message
+					: "Failed to fetch document entities";
+			res.status(500).json({ status: "error", message });
+		}
+	}
+
+	/**
+	 * UC-13: Get conflict status for a specific document
+	 */
+	static async getConflictStatus(req: Request, res: Response): Promise<void> {
+		try {
+			const document = await DocumentModel.findById(req.params.id).select(
+				"status conflictCheckStatus conflictsProcessed processedAt",
+			);
+
+			if (!document) {
+				res
+					.status(404)
+					.json({ status: "error", message: "Document not found" });
+				return;
+			}
+
+			res.status(200).json({
+				status: "success",
+				conflictStatus: {
+					documentId: document._id,
+					documentStatus: document.status,
+					conflictCheckStatus: document.conflictCheckStatus,
+					conflictsDetected: document.conflictsDetected,
+					processedAt: document.processedAt,
+				},
+			});
+		} catch (error) {
+			const message =
+				error instanceof Error
+					? error.message
+					: "Failed to fetch conflict status";
+			res.status(500).json({ status: "error", message });
+		}
+	}
+
+	/**
+	 * UC-13: Admin override for conflict status (allow submission despite conflicts)
+	 */
+	static async overrideConflictStatus(
+		req: AuthRequest,
+		res: Response,
+	): Promise<void> {
+		try {
+			if (
+				!req.user ||
+				((req.user.role as string) !== "admin" &&
+					(req.user.role as string) !== "super_admin")
+			) {
+				res.status(403).json({ status: "error", message: "Forbidden" });
+				return;
+			}
+
+			const { note } = req.body;
 			const document = await DocumentModel.findById(req.params.id);
 
 			if (!document) {
@@ -459,43 +563,93 @@ export class DocumentController {
 				return;
 			}
 
-			// Determine the resource type from the stored URL
-			let resourceType: string = "image";
-			if (document.url.includes("/raw/upload/")) {
-				resourceType = "raw";
-			} else if (document.url.includes("/video/upload/")) {
-				resourceType = "video";
+			if (document.status !== "conflict_detected") {
+				res.status(400).json({
+					status: "error",
+					message:
+						"Only documents with conflict_detected status can be overridden.",
+				});
+				return;
 			}
 
-			// Generate a signed URL valid for 1 hour
-			const signedUrl = cloudinary.url(document.cloudinaryPublicId, {
-				sign_url: true,
-				type: "authenticated",
-				resource_type: resourceType as "image" | "raw" | "video",
-				secure: true,
-				flags: "attachment",
-			});
+			// Admin overrides conflict (UC-13 step 6: Human resolution)
+			document.status = "processed";
+			document.conflictCheckStatus = "passed";
+			document.conflictsDetected = [];
 
-			// Also try a public URL in case the file was uploaded with public access
-			const publicUrl = cloudinary.url(document.cloudinaryPublicId, {
-				secure: true,
-				resource_type: resourceType as "image" | "raw" | "video",
-				flags: "attachment",
-			});
+			await document.save();
+
+			// Log the override for audit trail
+			console.log(
+				`[UC-13] Admin ${req.user._id} overrode conflicts for document ${document._id}: ${note || "No note provided"}`,
+			);
 
 			res.status(200).json({
 				status: "success",
-				signedUrl,
-				publicUrl,
-				originalUrl: document.url,
-				filename: document.filename,
-				mimeType: document.mimeType,
+				message: "Document conflict status overridden by admin.",
+				document,
 			});
 		} catch (error) {
 			const message =
 				error instanceof Error
 					? error.message
-					: "Failed to generate signed URL";
+					: "Failed to override conflict status";
+			res.status(500).json({ status: "error", message });
+		}
+	}
+
+	/**
+	 * UC-3.7: Check for multi-entity conflicts (documents from different legal entities)
+	 */
+	static async checkMultiEntityConflicts(
+		req: AuthRequest,
+		res: Response,
+	): Promise<void> {
+		try {
+			if (!req.user) {
+				res.status(401).json({ status: "error", message: "Unauthorized" });
+				return;
+			}
+
+			const submissionId = req.query.submissionId as string | undefined;
+			const documentIds = req.query.documentIds
+				? (req.query.documentIds as string).split(",")
+				: undefined;
+
+			const multiEntityConflicts =
+				await ConflictDetectionService.detectMultiEntityConflicts({
+					ownerId: req.user._id,
+					submissionId: submissionId
+						? new mongoose.Types.ObjectId(submissionId)
+						: undefined,
+					documentIds: documentIds?.map(
+						(id) => new mongoose.Types.ObjectId(id),
+					),
+				});
+
+			const hasMultiEntityConflict = multiEntityConflicts.length > 0;
+
+			res.status(200).json({
+				status: "success",
+				multiEntityConflicts,
+				hasMultiEntityConflict,
+				summary: {
+					total: multiEntityConflicts.length,
+					critical: multiEntityConflicts.filter(
+						(c) => c.severity === "critical",
+					).length,
+					high: multiEntityConflicts.filter((c) => c.severity === "high")
+						.length,
+				},
+				message: hasMultiEntityConflict
+					? "Documents appear to belong to different legal entities. All documents in a submission must be from the same company."
+					: "No multi-entity conflicts detected.",
+			});
+		} catch (error) {
+			const message =
+				error instanceof Error
+					? error.message
+					: "Failed to check for multi-entity conflicts";
 			res.status(500).json({ status: "error", message });
 		}
 	}

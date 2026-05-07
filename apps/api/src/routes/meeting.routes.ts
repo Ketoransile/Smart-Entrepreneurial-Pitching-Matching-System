@@ -40,6 +40,15 @@ const router = Router();
  *     responses:
  *       201:
  *         description: Meeting created
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               required: [status, meeting]
+ *               properties:
+ *                 status: { type: string, enum: [success] }
+ *                 meeting:
+ *                   type: object
  */
 router.post("/", authenticate, MeetingController.schedule);
 
@@ -60,6 +69,18 @@ router.post("/", authenticate, MeetingController.schedule);
  *     responses:
  *       200:
  *         description: Meetings fetched
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               required: [status, count, meetings]
+ *               properties:
+ *                 status: { type: string, enum: [success] }
+ *                 count: { type: integer }
+ *                 meetings:
+ *                   type: array
+ *                   items:
+ *                     type: object
  */
 router.get("/", authenticate, MeetingController.listMine);
 
@@ -93,6 +114,15 @@ router.get("/", authenticate, MeetingController.listMine);
  *     responses:
  *       200:
  *         description: Meeting updated
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               required: [status, meeting]
+ *               properties:
+ *                 status: { type: string, enum: [success] }
+ *                 meeting:
+ *                   type: object
  */
 router.patch(
 	"/:meetingId/status",
@@ -117,6 +147,15 @@ router.patch(
  *     responses:
  *       200:
  *         description: LiveKit JWT token
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               required: [status, token]
+ *               properties:
+ *                 status: { type: string, enum: [success] }
+ *                 token:
+ *                   type: string
  */
 router.get("/:meetingId/token", authenticate, MeetingController.getToken);
 

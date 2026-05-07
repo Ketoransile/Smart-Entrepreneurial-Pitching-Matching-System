@@ -18,6 +18,7 @@ import Image from "next/image";
 import { useParams, useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
+import AiPitchSummary from "@/components/AiPitchSummary";
 import DashboardLayout from "@/components/DashboardLayout";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import { Badge } from "@/components/ui/badge";
@@ -68,6 +69,17 @@ interface Submission {
 	};
 	documents: SubmissionDoc[];
 	aiScore?: number;
+	aiSummary?: {
+		executiveSummary: string;
+		keyStrengths: string[];
+		keyRisks: string[];
+		investmentReadiness: string;
+		marketOpportunity: string;
+		generatedAt: string;
+		model: string;
+	} | null;
+	voiceSummaryUrl?: string | null;
+	summaryStatus?: "pending" | "generating" | "completed" | "failed" | null;
 	entrepreneurId?: {
 		_id: string;
 		fullName: string;
@@ -110,6 +122,12 @@ export default function AdminPitchViewPage() {
 	const [trustScore, setTrustScore] = useState<{
 		score: number;
 		flag: string;
+		authenticity?: {
+			is_gibberish: boolean;
+			language_quality: string;
+			confidence: number;
+			gemini_note: string;
+		} | null;
 	} | null>(null);
 
 	const api = (
@@ -153,6 +171,7 @@ export default function AdminPitchViewPage() {
 						setTrustScore({
 							score: classData.trust_score_percentage,
 							flag: classData.ai_flag,
+							authenticity: classData.authenticity ?? null,
 						});
 					}
 				} catch {
@@ -257,7 +276,7 @@ export default function AdminPitchViewPage() {
 							<div className="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-primary/20 bg-primary/5">
 								<Sparkles className="h-4 w-4 text-primary" />
 								<span className="text-sm font-bold text-primary">
-									AI Score: {pitch.aiScore}%
+									{/* AI Score: {pitch.aiScore}% */}
 								</span>
 							</div>
 						)}
@@ -276,17 +295,17 @@ export default function AdminPitchViewPage() {
 					</div>
 				</div>
 
-				{/* AI Trust Score Banner */}
+				{/* AI Intelligence Report — scikit-learn quality score + Gemini authenticity */}
 				{trustScore && (
 					<div
-						className={`mb-8 overflow-hidden rounded-2xl shadow-sm border flex items-center justify-between gap-6 relative ${
+						className={`mb-8 overflow-hidden rounded-2xl shadow-sm border relative ${
 							trustScore.flag === "Flagged: Suspect Content"
 								? "border-destructive/30 bg-gradient-to-r from-destructive/10 to-transparent"
 								: "border-emerald-500/20 bg-gradient-to-r from-emerald-500/10 to-transparent"
 						}`}
 					>
 						<div
-							className="absolute left-0 top-0 bottom-0 w-1.5 opacity-80 backdrop-blur-sm shadow-inner"
+							className="absolute left-0 top-0 bottom-0 w-1.5 opacity-80"
 							style={{
 								backgroundColor:
 									trustScore.flag === "Flagged: Suspect Content"
@@ -295,107 +314,193 @@ export default function AdminPitchViewPage() {
 							}}
 						/>
 
-						<div className="p-5 sm:p-6 flex items-center gap-5 w-full">
-							<div
-								className={`flex flex-col items-center justify-center h-16 w-16 rounded-2xl border-2 shrink-0 shadow-sm bg-background/50 backdrop-blur-md ${
-									trustScore.flag === "Flagged: Suspect Content"
-										? "border-destructive/40 text-destructive"
-										: "border-emerald-500/40 text-emerald-600"
-								}`}
-							>
-								<span className="text-lg font-bold tracking-tighter">
-									{trustScore.score.toFixed(0)}%
-								</span>
-							</div>
-							<div className="flex-1">
-								<div className="flex items-center gap-3 mb-1">
-									<h3 className="text-base font-bold text-foreground">
-										AI Intelligence Report
-									</h3>
-									{trustScore.flag === "Flagged: Suspect Content" && (
-										<Badge
-											variant="destructive"
-											className="shrink-0 uppercase text-[10px] tracking-widest animate-pulse"
-										>
-											Action Required
-										</Badge>
-									)}
-								</div>
-								<p
-									className={`text-sm font-semibold tracking-wide ${
+						<div className="p-5 sm:p-6 flex flex-col gap-4 w-full">
+							{/* Row 1: scikit-learn quality score */}
+							<div className="flex items-start gap-5">
+								<div
+									className={`flex flex-col items-center justify-center h-16 w-16 rounded-2xl border-2 shrink-0 shadow-sm bg-background/50 ${
 										trustScore.flag === "Flagged: Suspect Content"
-											? "text-destructive"
-											: "text-emerald-600"
+											? "border-destructive/40 text-destructive"
+											: "border-emerald-500/40 text-emerald-600"
 									}`}
 								>
-									{trustScore.flag}
-								</p>
-								<p className="text-xs text-muted-foreground mt-1.5 font-medium max-w-2xl">
-									This evaluation is generated automatically by analyzing the
-									linguistic patterns, semantic density, and overall structural
-									coherence of the submitted pitch text.
-								</p>
+									<span className="text-lg font-bold tracking-tighter">
+										{trustScore.score.toFixed(0)}%
+									</span>
+									<span className="text-[9px] text-muted-foreground font-medium">
+										quality
+									</span>
+								</div>
+								<div className="flex-1">
+									<div className="flex items-center gap-3 mb-1">
+										<h3 className="text-base font-bold text-foreground">
+											AI Intelligence Report
+										</h3>
+										{trustScore.flag === "Flagged: Suspect Content" && (
+											<Badge
+												variant="destructive"
+												className="shrink-0 uppercase text-[10px] tracking-widest animate-pulse"
+											>
+												Action Required
+											</Badge>
+										)}
+									</div>
+									<p
+										className={`text-sm font-semibold ${
+											trustScore.flag === "Flagged: Suspect Content"
+												? "text-destructive"
+												: "text-emerald-600"
+										}`}
+									>
+										{trustScore.flag}
+									</p>
+									<p className="text-xs text-muted-foreground mt-1 max-w-2xl">
+										Quality score from TF-IDF + Logistic Regression trained on
+										500+ funded startup pitches (Crunchbase dataset).
+									</p>
+								</div>
 							</div>
+
+							{/* Row 2: Gemini authenticity result */}
+							{trustScore.authenticity && (
+								<div className="border-t border-border/40 pt-4 flex flex-col sm:flex-row sm:items-center gap-3">
+									<div className="flex items-center gap-2 shrink-0 flex-wrap">
+										<div
+											className={`h-2 w-2 rounded-full shrink-0 ${
+												trustScore.authenticity.is_gibberish
+													? "bg-destructive animate-pulse"
+													: trustScore.authenticity.language_quality ===
+															"professional"
+														? "bg-emerald-500"
+														: trustScore.authenticity.language_quality ===
+																"acceptable"
+															? "bg-amber-500"
+															: "bg-destructive"
+											}`}
+										/>
+										<span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+											Gemini Authenticity
+										</span>
+										<Badge
+											variant={
+												trustScore.authenticity.is_gibberish
+													? "destructive"
+													: trustScore.authenticity.language_quality ===
+															"professional"
+														? "default"
+														: "secondary"
+											}
+											className="text-[10px] capitalize"
+										>
+											{trustScore.authenticity.language_quality}
+										</Badge>
+										<span className="text-xs text-muted-foreground">
+											{Math.round(trustScore.authenticity.confidence * 100)}%
+											confidence
+										</span>
+									</div>
+									<p className="text-xs text-muted-foreground italic flex-1">
+										"{trustScore.authenticity.gemini_note}"
+									</p>
+								</div>
+							)}
 						</div>
 					</div>
 				)}
 
-				<div className="grid gap-6 md:grid-cols-3">
-					<div className="md:col-span-2 space-y-6">
-						<Card className="bg-card shadow-sm border-border/60 hover:shadow-md transition-shadow overflow-hidden rounded-2xl">
-							<CardHeader className="bg-muted/30 border-b border-border/40 pb-4 pt-6">
-								<CardTitle className="flex items-center gap-2.5 text-lg admin-header-gradient">
-									<Search className="h-5 w-5 text-primary" />
-									Executive Summary
+				{/* Gemini AI Pitch Summary */}
+				<div className="mb-8">
+					<AiPitchSummary
+						submissionId={pitchId}
+						aiSummary={pitch.aiSummary}
+						voiceSummaryUrl={pitch.voiceSummaryUrl}
+						summaryStatus={pitch.summaryStatus}
+						showRegenerate={true}
+						onRegenerated={() => fetchPitch()}
+					/>
+				</div>
+
+				<div className="grid gap-6 md:grid-cols-3 pitch-section-grid">
+					<div className="md:col-span-2 space-y-6 pitch-section-grid">
+						<Card
+							className="pitch-card bg-card shadow-sm border-border/60"
+							style={{ "--pitch-accent": "#3b82f6" } as React.CSSProperties}
+						>
+							<CardHeader className="pb-4 pt-6 px-6">
+								<CardTitle className="flex items-center gap-3 text-lg">
+									<div className="pitch-icon-badge bg-gradient-to-br from-blue-500 to-indigo-500 text-white">
+										<Search className="h-4 w-4" />
+									</div>
+									<span className="admin-header-gradient font-bold">
+										Executive Summary
+									</span>
 								</CardTitle>
 							</CardHeader>
-							<CardContent className="pt-6">
+							<CardContent className="pt-2 px-6">
 								<p className="text-sm whitespace-pre-wrap leading-relaxed text-muted-foreground">
 									{pitch.summary || "No executive summary provided."}
 								</p>
-								<div className="mt-6 grid grid-cols-1 sm:grid-cols-2 gap-4">
-									<div className="rounded-lg border bg-muted/30 p-3">
-										<p className="text-xs text-muted-foreground font-medium mb-1">
+								<div className="mt-6 grid grid-cols-1 sm:grid-cols-2 gap-3">
+									<div className="pitch-metric-pill">
+										<span className="text-[10px] uppercase tracking-wider font-semibold text-muted-foreground">
 											Sector
-										</p>
-										<p className="font-medium text-sm">{sectorLabel}</p>
+										</span>
+										<span className="font-semibold text-sm ml-auto">
+											{sectorLabel}
+										</span>
 									</div>
-									<div className="rounded-lg border bg-muted/30 p-3">
-										<p className="text-xs text-muted-foreground font-medium mb-1">
-											Company Stage
-										</p>
-										<p className="font-medium text-sm">{stageLabel}</p>
+									<div className="pitch-metric-pill">
+										<span className="text-[10px] uppercase tracking-wider font-semibold text-muted-foreground">
+											Stage
+										</span>
+										<span className="font-semibold text-sm ml-auto">
+											{stageLabel}
+										</span>
 									</div>
 								</div>
 							</CardContent>
 						</Card>
 
-						<Card className="bg-card shadow-sm border-border/60 hover:shadow-md transition-shadow overflow-hidden rounded-2xl">
-							<CardHeader className="bg-muted/30 border-b border-border/40 pb-4 pt-6">
-								<CardTitle className="flex items-center gap-2.5 text-lg admin-header-gradient">
-									<XCircle className="h-5 w-5 text-destructive" />
-									The Problem
+						<Card
+							className="pitch-card bg-card shadow-sm border-border/60"
+							style={{ "--pitch-accent": "#ef4444" } as React.CSSProperties}
+						>
+							<CardHeader className="pb-4 pt-6 px-6">
+								<CardTitle className="flex items-center gap-3 text-lg">
+									<div className="pitch-icon-badge bg-gradient-to-br from-red-500 to-rose-500 text-white">
+										<XCircle className="h-4 w-4" />
+									</div>
+									<span className="admin-header-gradient font-bold">
+										The Problem
+									</span>
 								</CardTitle>
 							</CardHeader>
-							<CardContent className="space-y-5 pt-6">
-								<div>
-									<h4 className="text-sm font-semibold mb-1">
+							<CardContent className="space-y-5 pt-2 px-6">
+								<div
+									className="pitch-content-block"
+									style={{ "--pitch-accent": "#ef4444" } as React.CSSProperties}
+								>
+									<h4 className="text-sm font-bold mb-1.5 text-foreground">
 										Problem Statement
 									</h4>
-									<p className="text-sm text-muted-foreground whitespace-pre-wrap">
+									<p className="text-sm text-muted-foreground whitespace-pre-wrap leading-relaxed">
 										{pitch.problem?.statement || "Not provided."}
 									</p>
 								</div>
-								<div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-									<div className="rounded-lg border p-3">
-										<p className="text-xs font-medium mb-1">Target Market</p>
-										<p className="text-sm text-muted-foreground">
+								<div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+									<div className="pitch-metric-pill flex-col !items-start !gap-1">
+										<p className="text-[10px] uppercase tracking-wider font-semibold text-muted-foreground">
+											Target Market
+										</p>
+										<p className="text-sm font-medium text-foreground">
 											{pitch.problem?.targetMarket || "Not provided."}
 										</p>
 									</div>
-									<div className="rounded-lg border p-3">
-										<p className="text-xs font-medium mb-1">Market Size</p>
-										<p className="text-sm text-muted-foreground">
+									<div className="pitch-metric-pill flex-col !items-start !gap-1">
+										<p className="text-[10px] uppercase tracking-wider font-semibold text-muted-foreground">
+											Market Size
+										</p>
+										<p className="text-sm font-medium text-foreground">
 											{pitch.problem?.marketSize || "Not provided."}
 										</p>
 									</div>
@@ -403,74 +508,102 @@ export default function AdminPitchViewPage() {
 							</CardContent>
 						</Card>
 
-						<Card className="bg-card shadow-sm border-border/60 hover:shadow-md transition-shadow overflow-hidden rounded-2xl">
-							<CardHeader className="bg-muted/30 border-b border-border/40 pb-4 pt-6">
-								<CardTitle className="flex items-center gap-2.5 text-lg admin-header-gradient">
-									<Lightbulb className="h-5 w-5 text-amber-500" />
-									The Solution
+						<Card
+							className="pitch-card bg-card shadow-sm border-border/60"
+							style={{ "--pitch-accent": "#f59e0b" } as React.CSSProperties}
+						>
+							<CardHeader className="pb-4 pt-6 px-6">
+								<CardTitle className="flex items-center gap-3 text-lg">
+									<div className="pitch-icon-badge bg-gradient-to-br from-amber-400 to-orange-500 text-white">
+										<Lightbulb className="h-4 w-4" />
+									</div>
+									<span className="admin-header-gradient font-bold">
+										The Solution
+									</span>
 								</CardTitle>
 							</CardHeader>
-							<CardContent className="space-y-5 pt-6">
-								<div>
-									<h4 className="text-sm font-semibold mb-1">
+							<CardContent className="space-y-5 pt-2 px-6">
+								<div
+									className="pitch-content-block"
+									style={{ "--pitch-accent": "#f59e0b" } as React.CSSProperties}
+								>
+									<h4 className="text-sm font-bold mb-1.5 text-foreground">
 										Solution Description
 									</h4>
-									<p className="text-sm text-muted-foreground whitespace-pre-wrap">
+									<p className="text-sm text-muted-foreground whitespace-pre-wrap leading-relaxed">
 										{pitch.solution?.description || "Not provided."}
 									</p>
 								</div>
-								<Separator />
-								<div>
-									<h4 className="text-sm font-semibold mb-1">
+								<div
+									className="pitch-content-block"
+									style={{ "--pitch-accent": "#f59e0b" } as React.CSSProperties}
+								>
+									<h4 className="text-sm font-bold mb-1.5 text-foreground">
 										Unique Value Proposition
 									</h4>
-									<p className="text-sm text-muted-foreground whitespace-pre-wrap">
+									<p className="text-sm text-muted-foreground whitespace-pre-wrap leading-relaxed">
 										{pitch.solution?.uniqueValue || "Not provided."}
 									</p>
 								</div>
-								<Separator />
-								<div>
-									<h4 className="text-sm font-semibold mb-1">
+								<div
+									className="pitch-content-block"
+									style={{ "--pitch-accent": "#f59e0b" } as React.CSSProperties}
+								>
+									<h4 className="text-sm font-bold mb-1.5 text-foreground">
 										Competitive Advantage
 									</h4>
-									<p className="text-sm text-muted-foreground whitespace-pre-wrap">
+									<p className="text-sm text-muted-foreground whitespace-pre-wrap leading-relaxed">
 										{pitch.solution?.competitiveAdvantage || "Not provided."}
 									</p>
 								</div>
 							</CardContent>
 						</Card>
 
-						<Card className="bg-card shadow-sm border-border/60 hover:shadow-md transition-shadow overflow-hidden rounded-2xl">
-							<CardHeader className="bg-muted/30 border-b border-border/40 pb-4 pt-6">
-								<CardTitle className="flex items-center gap-2.5 text-lg admin-header-gradient">
-									<BarChart3 className="h-5 w-5 text-blue-500" />
-									Business Model
+						<Card
+							className="pitch-card bg-card shadow-sm border-border/60"
+							style={{ "--pitch-accent": "#3b82f6" } as React.CSSProperties}
+						>
+							<CardHeader className="pb-4 pt-6 px-6">
+								<CardTitle className="flex items-center gap-3 text-lg">
+									<div className="pitch-icon-badge bg-gradient-to-br from-blue-500 to-cyan-500 text-white">
+										<BarChart3 className="h-4 w-4" />
+									</div>
+									<span className="admin-header-gradient font-bold">
+										Business Model
+									</span>
 								</CardTitle>
 							</CardHeader>
-							<CardContent className="space-y-5 pt-6">
-								<div>
-									<h4 className="text-sm font-semibold mb-1">
+							<CardContent className="space-y-5 pt-2 px-6">
+								<div
+									className="pitch-content-block"
+									style={{ "--pitch-accent": "#3b82f6" } as React.CSSProperties}
+								>
+									<h4 className="text-sm font-bold mb-1.5 text-foreground">
 										Revenue Streams
 									</h4>
-									<p className="text-sm text-muted-foreground whitespace-pre-wrap">
+									<p className="text-sm text-muted-foreground whitespace-pre-wrap leading-relaxed">
 										{pitch.businessModel?.revenueStreams || "Not provided."}
 									</p>
 								</div>
-								<Separator />
-								<div>
-									<h4 className="text-sm font-semibold mb-1">
+								<div
+									className="pitch-content-block"
+									style={{ "--pitch-accent": "#3b82f6" } as React.CSSProperties}
+								>
+									<h4 className="text-sm font-bold mb-1.5 text-foreground">
 										Pricing Strategy
 									</h4>
-									<p className="text-sm text-muted-foreground whitespace-pre-wrap">
+									<p className="text-sm text-muted-foreground whitespace-pre-wrap leading-relaxed">
 										{pitch.businessModel?.pricingStrategy || "Not provided."}
 									</p>
 								</div>
-								<Separator />
-								<div>
-									<h4 className="text-sm font-semibold mb-1">
+								<div
+									className="pitch-content-block"
+									style={{ "--pitch-accent": "#3b82f6" } as React.CSSProperties}
+								>
+									<h4 className="text-sm font-bold mb-1.5 text-foreground">
 										Customer Acquisition
 									</h4>
-									<p className="text-sm text-muted-foreground whitespace-pre-wrap">
+									<p className="text-sm text-muted-foreground whitespace-pre-wrap leading-relaxed">
 										{pitch.businessModel?.customerAcquisition ||
 											"Not provided."}
 									</p>
@@ -479,8 +612,13 @@ export default function AdminPitchViewPage() {
 						</Card>
 					</div>
 
-					<div className="space-y-6">
-						<Card className="border-primary/30 shadow-lg shadow-primary/5 bg-gradient-to-br from-primary/10 to-background rounded-2xl overflow-hidden">
+					<div className="space-y-6 pitch-section-grid">
+						<Card
+							className="pitch-card bg-card border-primary/30 shadow-sm"
+							style={
+								{ "--pitch-accent": "var(--primary)" } as React.CSSProperties
+							}
+						>
 							<CardHeader className="pb-4 pt-6">
 								<CardTitle className="flex items-center gap-2.5 text-lg admin-header-gradient">
 									<DollarSign className="h-5 w-5 text-primary" />
@@ -495,32 +633,36 @@ export default function AdminPitchViewPage() {
 									Capital required
 								</p>
 
-								<div className="mt-6 space-y-3">
-									<div className="flex justify-between items-center text-sm border-b border-primary/10 pb-2">
-										<span className="text-muted-foreground">
+								<div className="mt-6 space-y-1">
+									<div className="pitch-financial-row">
+										<span className="text-sm text-muted-foreground">
 											Current Revenue
 										</span>
-										<span className="font-semibold">
+										<span className="text-sm font-semibold">
 											{pitch.financials?.currentRevenue || "N/A"}
 										</span>
 									</div>
-									<div className="flex justify-between items-center text-sm border-b border-primary/10 pb-2">
-										<span className="text-muted-foreground">
+									<div className="pitch-financial-row">
+										<span className="text-sm text-muted-foreground">
 											Projected Rev.
 										</span>
-										<span className="font-semibold">
+										<span className="text-sm font-semibold">
 											{pitch.financials?.projectedRevenue || "N/A"}
 										</span>
 									</div>
-									<div className="flex justify-between items-center text-sm border-b border-primary/10 pb-2">
-										<span className="text-muted-foreground">Burn Rate</span>
-										<span className="font-semibold">
+									<div className="pitch-financial-row">
+										<span className="text-sm text-muted-foreground">
+											Burn Rate
+										</span>
+										<span className="text-sm font-semibold">
 											{pitch.financials?.burnRate || "N/A"}
 										</span>
 									</div>
-									<div className="flex justify-between items-center text-sm pb-2">
-										<span className="text-muted-foreground">Runway</span>
-										<span className="font-semibold">
+									<div className="pitch-financial-row">
+										<span className="text-sm text-muted-foreground">
+											Runway
+										</span>
+										<span className="text-sm font-semibold">
 											{pitch.financials?.runway || "N/A"}
 										</span>
 									</div>
@@ -574,11 +716,18 @@ export default function AdminPitchViewPage() {
 							</CardContent>
 						</Card>
 
-						<Card className="bg-card shadow-sm border-border/60 hover:shadow-md transition-shadow overflow-hidden rounded-2xl">
-							<CardHeader className="bg-muted/30 border-b border-border/40 pb-4 pt-6">
-								<CardTitle className="flex items-center gap-2.5 text-lg admin-header-gradient">
-									<FileUp className="h-5 w-5 text-muted-foreground" />
-									Appended Documents
+						<Card
+							className="pitch-card bg-card shadow-sm border-border/60"
+							style={{ "--pitch-accent": "#6b7280" } as React.CSSProperties}
+						>
+							<CardHeader className="pb-4 pt-6 px-6">
+								<CardTitle className="flex items-center gap-3 text-lg">
+									<div className="pitch-icon-badge bg-gradient-to-br from-slate-500 to-gray-600 text-white">
+										<FileUp className="h-4 w-4" />
+									</div>
+									<span className="admin-header-gradient font-bold">
+										Appended Documents
+									</span>
 								</CardTitle>
 							</CardHeader>
 							<CardContent>

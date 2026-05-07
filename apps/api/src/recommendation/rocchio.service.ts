@@ -35,25 +35,40 @@ export async function applyRocchioUpdate(payload: {
 }): Promise<void> {
 	const rocchioAction = ACTION_MAP[payload.action];
 
+	console.log(
+		`[ROCCHIO] action=${rocchioAction} investor=${payload.investorUserId} submission=${payload.submissionId}`,
+	);
+
 	const investorProfile = await InvestorProfile.findOne({
 		userId: payload.investorUserId,
 	}).lean();
 
-	if (!investorProfile) return;
+	if (!investorProfile) {
+		console.log(
+			`[ROCCHIO] ⚠️ No investor profile found for userId=${payload.investorUserId} — skipping`,
+		);
+		return;
+	}
 
 	const investorEmbedding = await EmbeddingEntry.findOne({
 		targetId: investorProfile._id,
 		targetType: "investorProfile",
 	}).lean();
 
-	if (!investorEmbedding?.vector?.length) return;
+	if (!investorEmbedding?.vector?.length) {
+		console.log(`[ROCCHIO] ⚠️ No investor embedding found — skipping`);
+		return;
+	}
 
 	const submissionEmbedding = await EmbeddingEntry.findOne({
 		targetId: payload.submissionId,
 		targetType: "submission",
 	}).lean();
 
-	if (!submissionEmbedding?.vector?.length) return;
+	if (!submissionEmbedding?.vector?.length) {
+		console.log(`[ROCCHIO] ⚠️ No submission embedding found — skipping`);
+		return;
+	}
 
 	const response = await aiClient.post<{ new_vector: number[] }>(
 		"/train_profile",
@@ -66,6 +81,14 @@ export async function applyRocchioUpdate(payload: {
 
 	const newVector = response.data.new_vector;
 	if (!newVector?.length) return;
+
+	// Compute how much the vector changed (L2 distance between old and new)
+	const drift = Math.sqrt(
+		investorEmbedding.vector.reduce(
+			(sum, v, i) => sum + (v - newVector[i]) ** 2,
+			0,
+		),
+	);
 
 	await EmbeddingEntry.findOneAndUpdate(
 		{
@@ -83,5 +106,9 @@ export async function applyRocchioUpdate(payload: {
 				lastAction: rocchioAction,
 			},
 		},
+	);
+
+	console.log(
+		`[ROCCHIO] ✅ Embedding updated for investor=${payload.investorUserId} action=${rocchioAction} vectorDrift=${drift.toFixed(6)}`,
 	);
 }

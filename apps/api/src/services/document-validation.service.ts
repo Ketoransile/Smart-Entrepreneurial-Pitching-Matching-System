@@ -1,5 +1,6 @@
 import type { IDocument } from "../models/Document";
 import { DocumentModel } from "../models/Document";
+import { Submission, type SubmissionStage } from "../models/Submission";
 
 /**
  * Pre-submission document validation pipeline.
@@ -39,33 +40,66 @@ export interface ChecklistItem {
  * Required document categories for a complete pitch submission.
  * These map to UC-05 step 4: "System displays the required checklist".
  */
-export const REQUIRED_DOC_CATEGORIES = [
+const DOC_CATEGORY_DEFS = [
 	{
 		category: "pitch_deck",
 		label: "Pitch Deck",
-		required: true,
 	},
 	{
 		category: "financial_model",
 		label: "Financial Model",
-		required: false,
 	},
 	{
 		category: "product_demo",
 		label: "Product Demo",
-		required: false,
 	},
 	{
 		category: "customer_testimonials",
 		label: "Customer Testimonials",
-		required: false,
+	},
+	{
+		category: "tin_certificate",
+		label: "TIN Certificate",
+	},
+	{
+		category: "business_license",
+		label: "Business License",
+	},
+	{
+		category: "moa_aoa",
+		label: "MoA / AoA",
 	},
 	{
 		category: "other",
 		label: "Other Supporting Documents",
-		required: false,
 	},
 ] as const;
+
+const REQUIRED_BY_STAGE: Record<SubmissionStage, string[]> = {
+	mvp: ["pitch_deck"],
+	"early-revenue": [
+		"pitch_deck",
+		"financial_model",
+		"tin_certificate",
+		"business_license",
+	],
+	scaling: [
+		"pitch_deck",
+		"financial_model",
+		"tin_certificate",
+		"business_license",
+		"moa_aoa",
+	],
+};
+
+const buildChecklist = (stage: SubmissionStage) => {
+	const required = new Set(REQUIRED_BY_STAGE[stage] ?? ["pitch_deck"]);
+	return DOC_CATEGORY_DEFS.map((doc) => ({
+		category: doc.category,
+		label: doc.label,
+		required: required.has(doc.category),
+	}));
+};
 
 // Maximum file sizes per document type (in bytes)
 const MAX_FILE_SIZES: Record<string, number> = {
@@ -73,6 +107,9 @@ const MAX_FILE_SIZES: Record<string, number> = {
 	financial_model: 15 * 1024 * 1024,
 	product_demo: 25 * 1024 * 1024,
 	customer_testimonials: 10 * 1024 * 1024,
+	tin_certificate: 10 * 1024 * 1024,
+	business_license: 10 * 1024 * 1024,
+	moa_aoa: 15 * 1024 * 1024,
 	other: 25 * 1024 * 1024,
 };
 
@@ -101,6 +138,20 @@ const ALLOWED_MIMES: Record<string, string[]> = {
 		"application/vnd.ms-powerpoint",
 	],
 	customer_testimonials: [
+		"application/pdf",
+		"application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+		"application/msword",
+		"image/jpeg",
+		"image/png",
+	],
+	tin_certificate: ["application/pdf", "image/jpeg", "image/png", "image/webp"],
+	business_license: [
+		"application/pdf",
+		"image/jpeg",
+		"image/png",
+		"image/webp",
+	],
+	moa_aoa: [
 		"application/pdf",
 		"application/vnd.openxmlformats-officedocument.wordprocessingml.document",
 		"application/msword",
@@ -220,6 +271,9 @@ export const DocumentValidationService = {
 		);
 
 		const docsByCategory = new Map<string, IDocument[]>();
+		const submission = await Submission.findById(submissionId).select("stage");
+		const stage = submission?.stage ?? "mvp";
+		const checklistDefinition = buildChecklist(stage);
 		for (const doc of docs) {
 			const existing = docsByCategory.get(doc.type) || [];
 			existing.push(doc);
@@ -231,7 +285,7 @@ export const DocumentValidationService = {
 		let requiredCount = 0;
 		let uploadedRequiredCount = 0;
 
-		for (const cat of REQUIRED_DOC_CATEGORIES) {
+		for (const cat of checklistDefinition) {
 			const catDocs = docsByCategory.get(cat.category) || [];
 			const uploaded = catDocs.length > 0;
 

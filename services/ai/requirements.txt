@@ -11,9 +11,10 @@ pydantic==2.5.0
 sentence-transformers==2.7.0
 numpy==1.26.4
  
-# Classification feature (trust scoring)
+# Classification feature (trust scoring — scikit-learn + Gemini hybrid)
 scikit-learn==1.4.2
 joblib==1.4.2
+google-generativeai==0.8.3
 
 # Shared utilities
 pandas==2.2.2

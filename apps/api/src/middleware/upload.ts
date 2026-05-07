@@ -17,7 +17,7 @@ const allowedMimeTypes = new Set([
 export const documentUpload = multer({
 	storage: multer.memoryStorage(),
 	limits: {
-		fileSize: 25 * 1024 * 1024,
+		fileSize: 70 * 1024 * 1024,
 		files: 10,
 	},
 	fileFilter: (_req, file, cb) => {
@@ -36,7 +36,7 @@ export const multipleDocumentUpload = documentUpload.array("files", 10);
 export const handleMulterError = (error: unknown): string => {
 	if (error instanceof multer.MulterError) {
 		if (error.code === "LIMIT_FILE_SIZE") {
-			return "File too large. Max allowed size is 25MB.";
+			return "File too large. Max allowed size is 70MB.";
 		}
 		return `Upload failed: ${error.message}`;
 	}

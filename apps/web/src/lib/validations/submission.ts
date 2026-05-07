@@ -120,18 +120,45 @@ export const STAGES = [
 	{ value: "scaling", label: "Scaling / Growth" },
 ] as const;
 
-export const DOC_CATEGORIES = [
-	{ value: "pitch_deck", label: "Pitch Deck", required: true },
-	{
-		value: "financial_model",
-		label: "Optional Financial Model",
-		required: false,
-	},
-	{ value: "product_demo", label: "Product Demo/Screenshots", required: false },
-	{
-		value: "customer_testimonials",
-		label: "Customer Testimonials",
-		required: false,
-	},
-	{ value: "other", label: "Other Supporting Details", required: false },
+const DOC_CATEGORY_DEFS = [
+	{ value: "pitch_deck", label: "Pitch Deck" },
+	{ value: "financial_model", label: "Financial Model" },
+	{ value: "product_demo", label: "Product Demo/Screenshots" },
+	{ value: "customer_testimonials", label: "Customer Testimonials" },
+	{ value: "tin_certificate", label: "TIN Certificate" },
+	{ value: "business_license", label: "Business License" },
+	{ value: "moa_aoa", label: "MoA / AoA" },
+	{ value: "other", label: "Other Supporting Details" },
 ] as const;
+
+const REQUIRED_DOCS_BY_STAGE: Record<
+	(typeof STAGES)[number]["value"],
+	string[]
+> = {
+	mvp: ["pitch_deck"],
+	"early-revenue": [
+		"pitch_deck",
+		"financial_model",
+		"tin_certificate",
+		"business_license",
+	],
+	scaling: [
+		"pitch_deck",
+		"financial_model",
+		"tin_certificate",
+		"business_license",
+		"moa_aoa",
+	],
+};
+
+export const getDocCategories = (stage: (typeof STAGES)[number]["value"]) => {
+	const requiredSet = new Set(REQUIRED_DOCS_BY_STAGE[stage] ?? ["pitch_deck"]);
+	return DOC_CATEGORY_DEFS.map((doc) => ({
+		...doc,
+		required: requiredSet.has(doc.value),
+	}));
+};
+
+export const getDocLabel = (value: string) => {
+	return DOC_CATEGORY_DEFS.find((doc) => doc.value === value)?.label ?? value;
+};

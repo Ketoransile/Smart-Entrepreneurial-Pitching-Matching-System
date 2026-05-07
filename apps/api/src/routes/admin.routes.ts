@@ -23,6 +23,18 @@ router.use(authenticate, authorize("admin"));
  *     summary: Get dashboard statistics for admin console
  *     security:
  *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Dashboard stats fetched
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               required: [status, stats]
+ *               properties:
+ *                 status: { type: string, enum: [success] }
+ *                 stats:
+ *                   type: object
  */
 router.get("/dashboard/stats", AdminAnalyticsController.getDashboardStats);
 
@@ -34,6 +46,21 @@ router.get("/dashboard/stats", AdminAnalyticsController.getDashboardStats);
  *     summary: List recent admin audit actions
  *     security:
  *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Audit actions fetched
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               required: [status, count, actions]
+ *               properties:
+ *                 status: { type: string, enum: [success] }
+ *                 count: { type: integer }
+ *                 actions:
+ *                   type: array
+ *                   items:
+ *                     type: object
  */
 router.get("/analytics/actions", AdminAnalyticsController.listAuditActions);
 
@@ -45,6 +72,23 @@ router.get("/analytics/actions", AdminAnalyticsController.listAuditActions);
  *     summary: List users with filters and pagination
  *     security:
  *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Users fetched
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               required: [status]
+ *               properties:
+ *                 status: { type: string, enum: [success] }
+ *                 users:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                 total: { type: integer }
+ *                 page: { type: integer }
+ *                 totalPages: { type: integer }
  */
 router.get("/users", AdminUserController.listUsers);
 
@@ -56,6 +100,20 @@ router.get("/users", AdminUserController.listUsers);
  *     summary: Get a user details with role-specific profile
  *     security:
  *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: User details fetched
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               required: [status]
+ *               properties:
+ *                 status: { type: string, enum: [success] }
+ *                 user:
+ *                   type: object
+ *                 profile:
+ *                   type: object
  */
 router.get("/users/:userId", AdminUserController.getUser);
 
@@ -76,6 +134,17 @@ router.get("/users/:userId", AdminUserController.getUser);
  *     responses:
  *       200:
  *         description: User profile fetched
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               required: [status]
+ *               properties:
+ *                 status: { type: string, enum: [success] }
+ *                 user:
+ *                   type: object
+ *                 profile:
+ *                   type: object
  *       404:
  *         description: User not found
  */
@@ -111,6 +180,15 @@ router.get("/users/:userId/profile", AdminUserController.getUser);
  *     responses:
  *       200:
  *         description: User status updated
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               required: [status, user]
+ *               properties:
+ *                 status: { type: string, enum: [success] }
+ *                 user:
+ *                   type: object
  *       400:
  *         description: Invalid request
  *       404:
@@ -138,13 +216,22 @@ router.patch("/users/:userId/status", AdminUserController.updateUserStatus);
  *         application/json:
  *           schema:
  *             type: object
- *             required: [active]
+ *             required: [isActive]
  *             properties:
- *               active:
+ *               isActive:
  *                 type: boolean
  *     responses:
  *       200:
  *         description: User active status updated
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               required: [status, user]
+ *               properties:
+ *                 status: { type: string, enum: [success] }
+ *                 user:
+ *                   type: object
  *       400:
  *         description: Invalid request
  *       404:
@@ -163,6 +250,20 @@ router.patch("/users/:userId/active", AdminUserController.setUserActive);
  *     responses:
  *       200:
  *         description: Submissions fetched
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               required: [status]
+ *               properties:
+ *                 status: { type: string, enum: [success] }
+ *                 submissions:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                 total: { type: integer }
+ *                 page: { type: integer }
+ *                 totalPages: { type: integer }
  */
 router.get("/submissions", AdminSubmissionController.listSubmissions);
 
@@ -190,6 +291,15 @@ router.get("/submissions", AdminSubmissionController.listSubmissions);
  *     responses:
  *       200:
  *         description: Submission reviewed
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               required: [status, submission]
+ *               properties:
+ *                 status: { type: string, enum: [success] }
+ *                 submission:
+ *                   type: object
  *       404:
  *         description: Submission not found
  */
@@ -215,6 +325,15 @@ router.patch(
  *     responses:
  *       200:
  *         description: Submission closed
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               required: [status, submission]
+ *               properties:
+ *                 status: { type: string, enum: [success] }
+ *                 submission:
+ *                   type: object
  *       404:
  *         description: Submission not found
  */
@@ -234,6 +353,20 @@ router.patch(
  *     responses:
  *       200:
  *         description: Documents fetched
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               required: [status]
+ *               properties:
+ *                 status: { type: string, enum: [success] }
+ *                 documents:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                 total: { type: integer }
+ *                 page: { type: integer }
+ *                 totalPages: { type: integer }
  */
 router.get("/documents", AdminSubmissionController.listDocuments);
 
@@ -261,6 +394,15 @@ router.get("/documents", AdminSubmissionController.listDocuments);
  *     responses:
  *       200:
  *         description: Document reviewed
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               required: [status, document]
+ *               properties:
+ *                 status: { type: string, enum: [success] }
+ *                 document:
+ *                   type: object
  *       404:
  *         description: Document not found
  */

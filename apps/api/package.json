@@ -11,6 +11,7 @@
 		"test": "jest --coverage"
 	},
 	"dependencies": {
+		"@google/genai": "^1.0.0",
 		"axios": "^1.6.0",
 		"chapa-nodejs": "^2.1.1",
 		"cloudinary": "^1.41.0",

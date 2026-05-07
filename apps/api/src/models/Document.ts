@@ -16,7 +16,14 @@ export type DocumentProcessingStatus =
 	| "processing"
 	| "processed"
 	| "failed"
-	| "flagged";
+	| "flagged"
+	| "conflict_detected";
+
+export type ConflictCheckStatus =
+	| "pending"
+	| "passed"
+	| "failed"
+	| "manual_review";
 
 export interface IDocument extends MongooseDocument {
 	ownerId: Types.ObjectId;
@@ -34,6 +41,9 @@ export interface IDocument extends MongooseDocument {
 	aiConfidence?: number;
 	processingError?: string;
 	processedAt?: Date;
+	// UC-13: Conflict Detection fields
+	conflictCheckStatus?: ConflictCheckStatus;
+	conflictsDetected?: string[];
 	createdAt: Date;
 	updatedAt: Date;
 }
@@ -92,6 +102,8 @@ const DocumentSchema = new Schema<IDocument>(
 				"processing",
 				"processed",
 				"failed",
+				"flagged",
+				"conflict_detected",
 			] satisfies DocumentProcessingStatus[],
 			default: "uploaded",
 			index: true,
@@ -121,6 +133,17 @@ const DocumentSchema = new Schema<IDocument>(
 		processedAt: {
 			type: Date,
 			default: null,
+		},
+		// UC-13: Conflict Detection fields
+		conflictCheckStatus: {
+			type: String,
+			enum: ["pending", "passed", "failed", "manual_review"],
+			default: "pending",
+			index: true,
+		},
+		conflictsDetected: {
+			type: [String],
+			default: [],
 		},
 	},
 	{ timestamps: true },

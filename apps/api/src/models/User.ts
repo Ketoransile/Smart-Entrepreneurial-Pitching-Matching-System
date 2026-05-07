@@ -7,6 +7,8 @@ export interface IUser extends Document {
 	email: string;
 	fullName: string;
 	photoURL?: string;
+	phoneNumber?: string | null;
+	phoneVerified: boolean;
 	role: UserRole;
 	adminLevel?: "super_admin" | "admin" | null;
 	status: "unverified" | "pending" | "verified" | "suspended";
@@ -41,6 +43,14 @@ const UserSchema = new Schema<IUser>(
 		photoURL: {
 			type: String,
 			default: null,
+		},
+		phoneNumber: {
+			type: String,
+			default: null,
+		},
+		phoneVerified: {
+			type: Boolean,
+			default: false,
 		},
 		role: {
 			type: String,

@@ -79,6 +79,8 @@ export const AdminSubmissionService = {
 		submissionId: string;
 		decision: "approve" | "reject";
 		notes?: string;
+		isAiOverride?: boolean;
+		overrideReason?: string;
 	}) {
 		const submission = await Submission.findById(payload.submissionId);
 		if (!submission) {
@@ -89,6 +91,12 @@ export const AdminSubmissionService = {
 		const previousStatus = submission.status;
 		submission.status = nextStatus;
 		submission.reviewNotes = payload.notes || undefined;
+		if (payload.isAiOverride !== undefined) {
+			submission.isAiOverride = payload.isAiOverride;
+		}
+		if (payload.overrideReason) {
+			submission.aiOverrideReason = payload.overrideReason;
+		}
 		if (nextStatus === "approved") {
 			submission.submittedAt = submission.submittedAt || new Date();
 		}
@@ -100,10 +108,12 @@ export const AdminSubmissionService = {
 				nextStatus === "approved" ? "approve_submission" : "reject_submission",
 			targetId: submission._id,
 			targetType: "submission",
-			reason: payload.notes || null,
+			reason: payload.overrideReason || payload.notes || null,
 			metadata: {
 				previousStatus,
 				nextStatus,
+				isAiOverride: payload.isAiOverride,
+				aiOverrideReason: payload.overrideReason,
 			},
 		});
 

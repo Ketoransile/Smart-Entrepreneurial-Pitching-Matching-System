@@ -40,6 +40,23 @@ const avatarUpload = multer({
  *     responses:
  *       200:
  *         description: Profile fetched
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               required: [status, user, profile]
+ *               properties:
+ *                 status: { type: string, enum: [success] }
+ *                 user:
+ *                   type: object
+ *                   properties:
+ *                     id: { type: string }
+ *                     email: { type: string, format: email }
+ *                     fullName: { type: string }
+ *                     role: { type: string }
+ *                     status: { type: string }
+ *                 profile:
+ *                   type: object
  *       404:
  *         description: User not found
  */
@@ -98,6 +115,20 @@ router.get(
  *     responses:
  *       200:
  *         description: Profile updated
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               required: [status, message, user, profile]
+ *               properties:
+ *                 status: { type: string, enum: [success] }
+ *                 message:
+ *                   type: string
+ *                   example: Profile updated successfully
+ *                 user:
+ *                   type: object
+ *                 profile:
+ *                   type: object
  *       400:
  *         description: Invalid role for profile
  */
@@ -204,6 +235,18 @@ router.put(
  *     responses:
  *       200:
  *         description: User profile updated
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               required: [status, message, user]
+ *               properties:
+ *                 status: { type: string, enum: [success] }
+ *                 message:
+ *                   type: string
+ *                   example: Profile updated successfully
+ *                 user:
+ *                   type: object
  *       400:
  *         description: Invalid payload
  *       404:
@@ -295,6 +338,19 @@ router.patch(
  *     responses:
  *       200:
  *         description: Avatar uploaded
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               required: [status, message, photoURL, user]
+ *               properties:
+ *                 status: { type: string, enum: [success] }
+ *                 message:
+ *                   type: string
+ *                   example: Profile picture updated successfully
+ *                 photoURL: { type: string }
+ *                 user:
+ *                   type: object
  *       400:
  *         description: Missing or invalid file
  *       413:
@@ -395,6 +451,17 @@ router.post(
  *     responses:
  *       200:
  *         description: Investor profile returned
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               required: [status, profile, user]
+ *               properties:
+ *                 status: { type: string, enum: [success] }
+ *                 profile:
+ *                   type: object
+ *                 user:
+ *                   type: object
  *       404:
  *         description: Profile not found
  */

@@ -22,6 +22,7 @@ import Image from "next/image";
 import { useParams, useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
+import AiPitchSummary from "@/components/AiPitchSummary";
 import DashboardLayout from "@/components/DashboardLayout";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import ScheduleMeetingModal, {
@@ -31,6 +32,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
+import { INVESTOR_NAV } from "@/constants/navigation";
 import { useAuth } from "@/context/AuthContext";
 import { SECTORS, STAGES } from "@/lib/validations/submission";
 
@@ -80,7 +82,7 @@ function MatchContextBanner({
 	const isPending = match.status === "pending";
 
 	return (
-		<Card className="mb-8 border-primary/30 bg-gradient-to-r from-primary/10 to-transparent overflow-hidden rounded-2xl shadow-lg shadow-primary/5 relative">
+		<Card className="mb-8 border-primary/30 bg-card overflow-hidden rounded-2xl shadow-sm relative">
 			<div className="absolute left-0 top-0 bottom-0 w-1.5 bg-primary opacity-80" />
 			<CardContent className="p-5 sm:p-6">
 				<div className="flex flex-col sm:flex-row sm:items-center justify-between gap-5">
@@ -217,6 +219,17 @@ interface Submission {
 	};
 	documents: SubmissionDoc[];
 	aiScore?: number;
+	aiSummary?: {
+		executiveSummary: string;
+		keyStrengths: string[];
+		keyRisks: string[];
+		investmentReadiness: string;
+		marketOpportunity: string;
+		generatedAt: string;
+		model: string;
+	} | null;
+	voiceSummaryUrl?: string | null;
+	summaryStatus?: "pending" | "generating" | "completed" | "failed" | null;
 	entrepreneurId?: {
 		_id: string;
 		fullName: string;
@@ -394,16 +407,7 @@ export default function InvestorPitchViewPage() {
 	if (loading) {
 		return (
 			<ProtectedRoute allowedRoles={["investor"]}>
-				<DashboardLayout
-					navItems={[
-						{
-							label: "Back to Feed",
-							href: "/investor/feed",
-							icon: <ArrowLeft className="h-4 w-4" />,
-						},
-					]}
-					title="SEPMS"
-				>
+				<DashboardLayout navItems={INVESTOR_NAV} title="SEPMS">
 					<div className="flex h-[60vh] items-center justify-center">
 						<Loader2 className="h-8 w-8 animate-spin text-primary" />
 					</div>
@@ -421,16 +425,7 @@ export default function InvestorPitchViewPage() {
 
 	return (
 		<ProtectedRoute allowedRoles={["investor"]}>
-			<DashboardLayout
-				navItems={[
-					{
-						label: "Back to Feed",
-						href: "/investor/feed",
-						icon: <ArrowLeft className="h-4 w-4" />,
-					},
-				]}
-				title="SEPMS"
-			>
+			<DashboardLayout navItems={INVESTOR_NAV} title="SEPMS">
 				{/* Premium Hero Header */}
 				<div className="admin-greeting-card bg-card mb-8 p-6 sm:p-8 shrink-0 rounded-2xl shadow-xl shadow-primary/5 border border-border/80 flex flex-col gap-6 relative overflow-hidden group">
 					<div className="absolute top-0 right-0 w-64 h-64 bg-primary/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 pointer-events-none" />
@@ -507,7 +502,7 @@ export default function InvestorPitchViewPage() {
 						responding={responding}
 					/>
 				) : (
-					<Card className="mb-8 border-primary/20 bg-muted/30">
+					<Card className="mb-8 border-primary/20 bg-card">
 						<CardContent className="p-6 flex flex-col sm:flex-row items-center justify-between gap-4">
 							<div>
 								<h3 className="text-lg font-bold">Invest in this Project?</h3>
@@ -535,62 +530,97 @@ export default function InvestorPitchViewPage() {
 					</Card>
 				)}
 
-				<div className="grid gap-6 md:grid-cols-3">
-					<div className="md:col-span-2 space-y-6">
-						<Card className="bg-card shadow-sm border-border/60 hover:shadow-md transition-shadow overflow-hidden rounded-2xl">
-							<CardHeader className="bg-muted/30 border-b border-border/40 pb-4 pt-6">
-								<CardTitle className="flex items-center gap-2.5 text-lg admin-header-gradient">
-									<Search className="h-5 w-5 text-primary" />
-									Executive Summary
+				{/* Gemini AI Pitch Summary */}
+				<div className="mb-8">
+					<AiPitchSummary
+						submissionId={pitchId}
+						aiSummary={pitch.aiSummary}
+						voiceSummaryUrl={pitch.voiceSummaryUrl}
+						summaryStatus={pitch.summaryStatus}
+					/>
+				</div>
+
+				<div className="grid gap-6 md:grid-cols-3 pitch-section-grid">
+					<div className="md:col-span-2 space-y-6 pitch-section-grid">
+						<Card
+							className="pitch-card bg-card shadow-sm border-border/60"
+							style={{ "--pitch-accent": "#3b82f6" } as React.CSSProperties}
+						>
+							<CardHeader className="pb-4 pt-6 px-6">
+								<CardTitle className="flex items-center gap-3 text-lg">
+									<div className="pitch-icon-badge bg-gradient-to-br from-blue-500 to-indigo-500 text-white">
+										<Search className="h-4 w-4" />
+									</div>
+									<span className="admin-header-gradient font-bold">
+										Executive Summary
+									</span>
 								</CardTitle>
 							</CardHeader>
-							<CardContent className="pt-6">
+							<CardContent className="pt-2 px-6">
 								<p className="text-sm whitespace-pre-wrap leading-relaxed text-muted-foreground">
 									{pitch.summary || "No executive summary provided."}
 								</p>
-								<div className="mt-6 grid grid-cols-1 sm:grid-cols-2 gap-4">
-									<div className="rounded-lg border bg-muted/30 p-3">
-										<p className="text-xs text-muted-foreground font-medium mb-1">
+								<div className="mt-6 grid grid-cols-1 sm:grid-cols-2 gap-3">
+									<div className="pitch-metric-pill">
+										<span className="text-[10px] uppercase tracking-wider font-semibold text-muted-foreground">
 											Sector
-										</p>
-										<p className="font-medium text-sm">{sectorLabel}</p>
+										</span>
+										<span className="font-semibold text-sm ml-auto">
+											{sectorLabel}
+										</span>
 									</div>
-									<div className="rounded-lg border bg-muted/30 p-3">
-										<p className="text-xs text-muted-foreground font-medium mb-1">
-											Company Stage
-										</p>
-										<p className="font-medium text-sm">{stageLabel}</p>
+									<div className="pitch-metric-pill">
+										<span className="text-[10px] uppercase tracking-wider font-semibold text-muted-foreground">
+											Stage
+										</span>
+										<span className="font-semibold text-sm ml-auto">
+											{stageLabel}
+										</span>
 									</div>
 								</div>
 							</CardContent>
 						</Card>
 
-						<Card className="bg-card shadow-sm border-border/60 hover:shadow-md transition-shadow overflow-hidden rounded-2xl">
-							<CardHeader className="bg-muted/30 border-b border-border/40 pb-4 pt-6">
-								<CardTitle className="flex items-center gap-2.5 text-lg admin-header-gradient">
-									<XCircle className="h-5 w-5 text-destructive" />
-									The Problem
+						<Card
+							className="pitch-card bg-card shadow-sm border-border/60"
+							style={{ "--pitch-accent": "#ef4444" } as React.CSSProperties}
+						>
+							<CardHeader className="pb-4 pt-6 px-6">
+								<CardTitle className="flex items-center gap-3 text-lg">
+									<div className="pitch-icon-badge bg-gradient-to-br from-red-500 to-rose-500 text-white">
+										<XCircle className="h-4 w-4" />
+									</div>
+									<span className="admin-header-gradient font-bold">
+										The Problem
+									</span>
 								</CardTitle>
 							</CardHeader>
-							<CardContent className="space-y-5 pt-6">
-								<div>
-									<h4 className="text-sm font-semibold mb-1">
+							<CardContent className="space-y-5 pt-2 px-6">
+								<div
+									className="pitch-content-block"
+									style={{ "--pitch-accent": "#ef4444" } as React.CSSProperties}
+								>
+									<h4 className="text-sm font-bold mb-1.5 text-foreground">
 										Problem Statement
 									</h4>
-									<p className="text-sm text-muted-foreground whitespace-pre-wrap">
+									<p className="text-sm text-muted-foreground whitespace-pre-wrap leading-relaxed">
 										{pitch.problem?.statement || "Not provided."}
 									</p>
 								</div>
-								<div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-									<div className="rounded-lg border p-3">
-										<p className="text-xs font-medium mb-1">Target Market</p>
-										<p className="text-sm text-muted-foreground">
+								<div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+									<div className="pitch-metric-pill flex-col !items-start !gap-1">
+										<p className="text-[10px] uppercase tracking-wider font-semibold text-muted-foreground">
+											Target Market
+										</p>
+										<p className="text-sm font-medium text-foreground">
 											{pitch.problem?.targetMarket || "Not provided."}
 										</p>
 									</div>
-									<div className="rounded-lg border p-3">
-										<p className="text-xs font-medium mb-1">Market Size</p>
-										<p className="text-sm text-muted-foreground">
+									<div className="pitch-metric-pill flex-col !items-start !gap-1">
+										<p className="text-[10px] uppercase tracking-wider font-semibold text-muted-foreground">
+											Market Size
+										</p>
+										<p className="text-sm font-medium text-foreground">
 											{pitch.problem?.marketSize || "Not provided."}
 										</p>
 									</div>
@@ -598,74 +628,102 @@ export default function InvestorPitchViewPage() {
 							</CardContent>
 						</Card>
 
-						<Card className="bg-card shadow-sm border-border/60 hover:shadow-md transition-shadow overflow-hidden rounded-2xl">
-							<CardHeader className="bg-muted/30 border-b border-border/40 pb-4 pt-6">
-								<CardTitle className="flex items-center gap-2.5 text-lg admin-header-gradient">
-									<Lightbulb className="h-5 w-5 text-amber-500" />
-									The Solution
+						<Card
+							className="pitch-card bg-card shadow-sm border-border/60"
+							style={{ "--pitch-accent": "#f59e0b" } as React.CSSProperties}
+						>
+							<CardHeader className="pb-4 pt-6 px-6">
+								<CardTitle className="flex items-center gap-3 text-lg">
+									<div className="pitch-icon-badge bg-gradient-to-br from-amber-400 to-orange-500 text-white">
+										<Lightbulb className="h-4 w-4" />
+									</div>
+									<span className="admin-header-gradient font-bold">
+										The Solution
+									</span>
 								</CardTitle>
 							</CardHeader>
-							<CardContent className="space-y-5 pt-6">
-								<div>
-									<h4 className="text-sm font-semibold mb-1">
+							<CardContent className="space-y-5 pt-2 px-6">
+								<div
+									className="pitch-content-block"
+									style={{ "--pitch-accent": "#f59e0b" } as React.CSSProperties}
+								>
+									<h4 className="text-sm font-bold mb-1.5 text-foreground">
 										Solution Description
 									</h4>
-									<p className="text-sm text-muted-foreground whitespace-pre-wrap">
+									<p className="text-sm text-muted-foreground whitespace-pre-wrap leading-relaxed">
 										{pitch.solution?.description || "Not provided."}
 									</p>
 								</div>
-								<Separator />
-								<div>
-									<h4 className="text-sm font-semibold mb-1">
+								<div
+									className="pitch-content-block"
+									style={{ "--pitch-accent": "#f59e0b" } as React.CSSProperties}
+								>
+									<h4 className="text-sm font-bold mb-1.5 text-foreground">
 										Unique Value Proposition
 									</h4>
-									<p className="text-sm text-muted-foreground whitespace-pre-wrap">
+									<p className="text-sm text-muted-foreground whitespace-pre-wrap leading-relaxed">
 										{pitch.solution?.uniqueValue || "Not provided."}
 									</p>
 								</div>
-								<Separator />
-								<div>
-									<h4 className="text-sm font-semibold mb-1">
+								<div
+									className="pitch-content-block"
+									style={{ "--pitch-accent": "#f59e0b" } as React.CSSProperties}
+								>
+									<h4 className="text-sm font-bold mb-1.5 text-foreground">
 										Competitive Advantage
 									</h4>
-									<p className="text-sm text-muted-foreground whitespace-pre-wrap">
+									<p className="text-sm text-muted-foreground whitespace-pre-wrap leading-relaxed">
 										{pitch.solution?.competitiveAdvantage || "Not provided."}
 									</p>
 								</div>
 							</CardContent>
 						</Card>
 
-						<Card className="bg-card shadow-sm border-border/60 hover:shadow-md transition-shadow overflow-hidden rounded-2xl">
-							<CardHeader className="bg-muted/30 border-b border-border/40 pb-4 pt-6">
-								<CardTitle className="flex items-center gap-2.5 text-lg admin-header-gradient">
-									<BarChart3 className="h-5 w-5 text-blue-500" />
-									Business Model
+						<Card
+							className="pitch-card bg-card shadow-sm border-border/60"
+							style={{ "--pitch-accent": "#3b82f6" } as React.CSSProperties}
+						>
+							<CardHeader className="pb-4 pt-6 px-6">
+								<CardTitle className="flex items-center gap-3 text-lg">
+									<div className="pitch-icon-badge bg-gradient-to-br from-blue-500 to-cyan-500 text-white">
+										<BarChart3 className="h-4 w-4" />
+									</div>
+									<span className="admin-header-gradient font-bold">
+										Business Model
+									</span>
 								</CardTitle>
 							</CardHeader>
-							<CardContent className="space-y-5 pt-6">
-								<div>
-									<h4 className="text-sm font-semibold mb-1">
+							<CardContent className="space-y-5 pt-2 px-6">
+								<div
+									className="pitch-content-block"
+									style={{ "--pitch-accent": "#3b82f6" } as React.CSSProperties}
+								>
+									<h4 className="text-sm font-bold mb-1.5 text-foreground">
 										Revenue Streams
 									</h4>
-									<p className="text-sm text-muted-foreground whitespace-pre-wrap">
+									<p className="text-sm text-muted-foreground whitespace-pre-wrap leading-relaxed">
 										{pitch.businessModel?.revenueStreams || "Not provided."}
 									</p>
 								</div>
-								<Separator />
-								<div>
-									<h4 className="text-sm font-semibold mb-1">
+								<div
+									className="pitch-content-block"
+									style={{ "--pitch-accent": "#3b82f6" } as React.CSSProperties}
+								>
+									<h4 className="text-sm font-bold mb-1.5 text-foreground">
 										Pricing Strategy
 									</h4>
-									<p className="text-sm text-muted-foreground whitespace-pre-wrap">
+									<p className="text-sm text-muted-foreground whitespace-pre-wrap leading-relaxed">
 										{pitch.businessModel?.pricingStrategy || "Not provided."}
 									</p>
 								</div>
-								<Separator />
-								<div>
-									<h4 className="text-sm font-semibold mb-1">
+								<div
+									className="pitch-content-block"
+									style={{ "--pitch-accent": "#3b82f6" } as React.CSSProperties}
+								>
+									<h4 className="text-sm font-bold mb-1.5 text-foreground">
 										Customer Acquisition
 									</h4>
-									<p className="text-sm text-muted-foreground whitespace-pre-wrap">
+									<p className="text-sm text-muted-foreground whitespace-pre-wrap leading-relaxed">
 										{pitch.businessModel?.customerAcquisition ||
 											"Not provided."}
 									</p>
@@ -674,8 +732,13 @@ export default function InvestorPitchViewPage() {
 						</Card>
 					</div>
 
-					<div className="space-y-6">
-						<Card className="border-primary/30 shadow-lg shadow-primary/5 bg-gradient-to-br from-primary/10 to-background rounded-2xl overflow-hidden">
+					<div className="space-y-6 pitch-section-grid">
+						<Card
+							className="pitch-card bg-card border-primary/30 shadow-sm"
+							style={
+								{ "--pitch-accent": "var(--primary)" } as React.CSSProperties
+							}
+						>
 							<CardHeader className="pb-4 pt-6">
 								<CardTitle className="flex items-center gap-2.5 text-lg admin-header-gradient">
 									<DollarSign className="h-5 w-5 text-primary" />
@@ -690,32 +753,36 @@ export default function InvestorPitchViewPage() {
 									Capital required
 								</p>
 
-								<div className="mt-6 space-y-3">
-									<div className="flex justify-between items-center text-sm border-b border-primary/10 pb-2">
-										<span className="text-muted-foreground">
+								<div className="mt-6 space-y-1">
+									<div className="pitch-financial-row">
+										<span className="text-sm text-muted-foreground">
 											Current Revenue
 										</span>
-										<span className="font-semibold">
+										<span className="text-sm font-semibold">
 											{pitch.financials?.currentRevenue || "N/A"}
 										</span>
 									</div>
-									<div className="flex justify-between items-center text-sm border-b border-primary/10 pb-2">
-										<span className="text-muted-foreground">
+									<div className="pitch-financial-row">
+										<span className="text-sm text-muted-foreground">
 											Projected Rev.
 										</span>
-										<span className="font-semibold">
+										<span className="text-sm font-semibold">
 											{pitch.financials?.projectedRevenue || "N/A"}
 										</span>
 									</div>
-									<div className="flex justify-between items-center text-sm border-b border-primary/10 pb-2">
-										<span className="text-muted-foreground">Burn Rate</span>
-										<span className="font-semibold">
+									<div className="pitch-financial-row">
+										<span className="text-sm text-muted-foreground">
+											Burn Rate
+										</span>
+										<span className="text-sm font-semibold">
 											{pitch.financials?.burnRate || "N/A"}
 										</span>
 									</div>
-									<div className="flex justify-between items-center text-sm pb-2">
-										<span className="text-muted-foreground">Runway</span>
-										<span className="font-semibold">
+									<div className="pitch-financial-row">
+										<span className="text-sm text-muted-foreground">
+											Runway
+										</span>
+										<span className="text-sm font-semibold">
 											{pitch.financials?.runway || "N/A"}
 										</span>
 									</div>
@@ -723,11 +790,18 @@ export default function InvestorPitchViewPage() {
 							</CardContent>
 						</Card>
 
-						<Card className="bg-card shadow-sm border-border/60 hover:shadow-md transition-shadow overflow-hidden rounded-2xl">
-							<CardHeader className="bg-muted/30 border-b border-border/40 pb-4 pt-6">
-								<CardTitle className="flex items-center gap-2.5 text-lg admin-header-gradient">
-									<FileUp className="h-5 w-5 text-muted-foreground" />
-									Pitch Documents
+						<Card
+							className="pitch-card bg-card shadow-sm border-border/60"
+							style={{ "--pitch-accent": "#6b7280" } as React.CSSProperties}
+						>
+							<CardHeader className="pb-4 pt-6 px-6">
+								<CardTitle className="flex items-center gap-3 text-lg">
+									<div className="pitch-icon-badge bg-gradient-to-br from-slate-500 to-gray-600 text-white">
+										<FileUp className="h-4 w-4" />
+									</div>
+									<span className="admin-header-gradient font-bold">
+										Pitch Documents
+									</span>
 								</CardTitle>
 							</CardHeader>
 							<CardContent>

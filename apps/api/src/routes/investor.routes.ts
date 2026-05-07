@@ -61,6 +61,18 @@ router.use(authorize("investor"));
  *     responses:
  *       201:
  *         description: Profile created
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               required: [success, message, data]
+ *               properties:
+ *                 success: { type: boolean, enum: [true] }
+ *                 message:
+ *                   type: string
+ *                   example: Investor profile created successfully
+ *                 data:
+ *                   type: object
  *       400:
  *         description: Validation or duplicate profile error
  *       401:
@@ -85,6 +97,15 @@ router.post(
  *     responses:
  *       200:
  *         description: Profile fetched
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               required: [success, data]
+ *               properties:
+ *                 success: { type: boolean, enum: [true] }
+ *                 data:
+ *                   type: object
  *       401:
  *         description: Unauthorized
  *       404:
@@ -127,6 +148,18 @@ router.get("/profile", InvestorController.getProfile);
  *     responses:
  *       200:
  *         description: Profile updated
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               required: [success, message, data]
+ *               properties:
+ *                 success: { type: boolean, enum: [true] }
+ *                 message:
+ *                   type: string
+ *                   example: Profile updated successfully
+ *                 data:
+ *                   type: object
  *       400:
  *         description: Validation error
  *       401:
@@ -151,6 +184,17 @@ router.put(
  *     responses:
  *       200:
  *         description: Saved pitches fetched successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               required: [success, data]
+ *               properties:
+ *                 success: { type: boolean, enum: [true] }
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     type: object
  */
 router.get("/saved-pitches", InvestorController.getSavedPitches);
 
@@ -172,6 +216,19 @@ router.get("/saved-pitches", InvestorController.getSavedPitches);
  *     responses:
  *       200:
  *         description: Pitch saved/unsaved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               required: [success, message, isSaved, savedPitches]
+ *               properties:
+ *                 success: { type: boolean, enum: [true] }
+ *                 message: { type: string }
+ *                 isSaved: { type: boolean }
+ *                 savedPitches:
+ *                   type: array
+ *                   items:
+ *                     type: string
  */
 router.post("/saved-pitches/:id", InvestorController.toggleSavedPitch);
 

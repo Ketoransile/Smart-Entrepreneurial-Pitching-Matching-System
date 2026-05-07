@@ -50,6 +50,18 @@ const router = Router();
  *             category: "communication"
  *             comment: "Fast responses and very constructive follow-ups."
  *             invitationId: "65f2c7f0b295a9b0ff654321"
+ *     responses:
+ *       201:
+ *         description: Feedback submitted
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               required: [status, feedback]
+ *               properties:
+ *                 status: { type: string, enum: [success] }
+ *                 feedback:
+ *                   type: object
  */
 router.post("/", authenticate, FeedbackController.create);
 
@@ -61,6 +73,21 @@ router.post("/", authenticate, FeedbackController.create);
  *     summary: List feedback I have received
  *     security:
  *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Received feedback fetched
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               required: [status, count, feedback]
+ *               properties:
+ *                 status: { type: string, enum: [success] }
+ *                 count: { type: integer }
+ *                 feedback:
+ *                   type: array
+ *                   items:
+ *                     type: object
  */
 router.get("/me/received", authenticate, FeedbackController.listReceived);
 
@@ -72,6 +99,21 @@ router.get("/me/received", authenticate, FeedbackController.listReceived);
  *     summary: List feedback I have submitted
  *     security:
  *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Submitted feedback fetched
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               required: [status, count, feedback]
+ *               properties:
+ *                 status: { type: string, enum: [success] }
+ *                 count: { type: integer }
+ *                 feedback:
+ *                   type: array
+ *                   items:
+ *                     type: object
  */
 router.get("/me/given", authenticate, FeedbackController.listGiven);
 
@@ -86,6 +128,15 @@ router.get("/me/given", authenticate, FeedbackController.listGiven);
  *     responses:
  *       200:
  *         description: Feedback summary returned
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               required: [status, summary]
+ *               properties:
+ *                 status: { type: string, enum: [success] }
+ *                 summary:
+ *                   type: object
  */
 router.get("/me/summary", authenticate, FeedbackController.mySummary);
 
@@ -104,6 +155,15 @@ router.get("/me/summary", authenticate, FeedbackController.mySummary);
  *     responses:
  *       200:
  *         description: Feedback summary returned
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               required: [status, summary]
+ *               properties:
+ *                 status: { type: string, enum: [success] }
+ *                 summary:
+ *                   type: object
  */
 router.get("/users/:userId/summary", FeedbackController.userSummary);
 

@@ -45,7 +45,7 @@ export const authenticate = async (
 		// If no user found by UID, try by email (handles provider linking:
 		// e.g., admin created via email/password now signing in with Google)
 		if (!user && decodedToken.email) {
-			user = await User.findOne({ email: decodedToken.email });
+			user = await User.findOne({ email: decodedToken.email.toLowerCase() });
 			if (user) {
 				// Link the new Firebase UID to the existing account
 				user.firebaseUid = decodedToken.uid;
@@ -56,9 +56,36 @@ export const authenticate = async (
 			}
 		}
 
-		if (user && decodedToken.email_verified && !user.emailVerified) {
-			user.emailVerified = true;
-			await user.save();
+		if (user) {
+			let shouldSave = false;
+			// Only auto-sync email_verified for OAuth providers (Google, etc.)
+			// where the provider has genuinely verified the email.
+			// For email/password users, our OTP verification is the source of truth.
+			const signInProvider = decodedToken.firebase?.sign_in_provider;
+			const isOAuthProvider = signInProvider && signInProvider !== "password";
+			if (
+				isOAuthProvider &&
+				decodedToken.email_verified &&
+				!user.emailVerified
+			) {
+				console.log(
+					"🔑 auth middleware — auto-verifying email for OAuth provider:",
+					signInProvider,
+				);
+				user.emailVerified = true;
+				shouldSave = true;
+			}
+			if (decodedToken.phone_number) {
+				const phone = decodedToken.phone_number;
+				if (user.phoneNumber !== phone || !user.phoneVerified) {
+					user.phoneNumber = phone;
+					user.phoneVerified = true;
+					shouldSave = true;
+				}
+			}
+			if (shouldSave) {
+				await user.save();
+			}
 		}
 
 		req.user = user;

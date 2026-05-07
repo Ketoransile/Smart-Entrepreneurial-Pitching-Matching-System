@@ -1,7 +1,6 @@
 @import "tailwindcss";
 /* System Trial: Global CSS variable adjustments */
 @import "tw-animate-css";
-@import "shadcn/tailwind.css";
 
 @custom-variant dark (&:is(.dark *));
 
@@ -58,11 +57,11 @@
 	--popover-foreground: #09090b;
 	--primary: #09090b;
 	--primary-foreground: #fafafa;
-	--secondary: #f4f4f5;
+	--secondary: #f9f9fa;
 	--secondary-foreground: #09090b;
-	--muted: #f4f4f5;
+	--muted: #f9f9fa;
 	--muted-foreground: #71717a;
-	--accent: #f4f4f5;
+	--accent: #f9f9fa;
 	--accent-foreground: #09090b;
 	--destructive: #ef4444;
 	--border: #e4e4e7;
@@ -73,11 +72,11 @@
 	--chart-3: #274754;
 	--chart-4: #e8c468;
 	--chart-5: #f4a462;
-	--sidebar: #fafafa;
+	--sidebar: #ffffff;
 	--sidebar-foreground: #09090b;
 	--sidebar-primary: #09090b;
 	--sidebar-primary-foreground: #fafafa;
-	--sidebar-accent: #f4f4f5;
+	--sidebar-accent: #f8f8f8;
 	--sidebar-accent-foreground: #09090b;
 	--sidebar-border: #e4e4e7;
 	--sidebar-ring: #a1a1aa;
@@ -157,6 +156,7 @@
 		opacity: 0;
 		transform: translateY(16px);
 	}
+
 	to {
 		opacity: 1;
 		transform: translateY(0);
@@ -167,16 +167,19 @@
 	0% {
 		background-position: -200% 0;
 	}
+
 	100% {
 		background-position: 200% 0;
 	}
 }
 
 @keyframes admin-float {
+
 	0%,
 	100% {
 		transform: translateY(0px);
 	}
+
 	50% {
 		transform: translateY(-4px);
 	}
@@ -187,6 +190,7 @@
 		transform: scale(1);
 		opacity: 0.5;
 	}
+
 	100% {
 		transform: scale(1.7);
 		opacity: 0;
@@ -194,35 +198,43 @@
 }
 
 @keyframes admin-gradient-shift {
+
 	0%,
 	100% {
 		background-position: 0% 50%;
 	}
+
 	50% {
 		background-position: 100% 50%;
 	}
 }
 
 /* Staggered fade-in for stat card grid items */
-.admin-stat-grid > * {
+.admin-stat-grid>* {
 	animation: admin-fade-up 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
-.admin-stat-grid > *:nth-child(1) {
+
+.admin-stat-grid>*:nth-child(1) {
 	animation-delay: 0ms;
 }
-.admin-stat-grid > *:nth-child(2) {
+
+.admin-stat-grid>*:nth-child(2) {
 	animation-delay: 60ms;
 }
-.admin-stat-grid > *:nth-child(3) {
+
+.admin-stat-grid>*:nth-child(3) {
 	animation-delay: 120ms;
 }
-.admin-stat-grid > *:nth-child(4) {
+
+.admin-stat-grid>*:nth-child(4) {
 	animation-delay: 180ms;
 }
-.admin-stat-grid > *:nth-child(5) {
+
+.admin-stat-grid>*:nth-child(5) {
 	animation-delay: 240ms;
 }
-.admin-stat-grid > *:nth-child(6) {
+
+.admin-stat-grid>*:nth-child(6) {
 	animation-delay: 300ms;
 }
 
@@ -260,12 +272,10 @@
 	left: 0;
 	right: 0;
 	height: 2px;
-	background: linear-gradient(
-		90deg,
-		transparent,
-		var(--card-accent, currentColor),
-		transparent
-	);
+	background: linear-gradient(90deg,
+			transparent,
+			var(--card-accent, currentColor),
+			transparent);
 	opacity: 0;
 	transition: opacity 0.35s ease;
 }
@@ -340,11 +350,9 @@
 
 /* Page header gradient text */
 .admin-header-gradient {
-	background: linear-gradient(
-		135deg,
-		var(--foreground) 0%,
-		var(--muted-foreground) 100%
-	);
+	background: linear-gradient(135deg,
+			var(--foreground) 0%,
+			var(--muted-foreground) 100%);
 	-webkit-background-clip: text;
 	-webkit-text-fill-color: transparent;
 	background-clip: text;
@@ -363,12 +371,10 @@
 	inset: 0;
 	padding: 1px;
 	border-radius: 1.25rem;
-	background: linear-gradient(
-		135deg,
-		rgba(59, 130, 246, 0.3),
-		rgba(168, 85, 247, 0.3),
-		rgba(236, 72, 153, 0.3)
-	);
+	background: linear-gradient(135deg,
+			rgba(59, 130, 246, 0.3),
+			rgba(168, 85, 247, 0.3),
+			rgba(236, 72, 153, 0.3));
 	mask:
 		linear-gradient(#fff 0 0) content-box,
 		linear-gradient(#fff 0 0);
@@ -388,21 +394,17 @@
 }
 
 .admin-table-row:hover {
-	background: linear-gradient(
-		90deg,
-		transparent,
-		rgba(59, 130, 246, 0.03),
-		transparent
-	);
+	background: linear-gradient(90deg,
+			transparent,
+			rgba(59, 130, 246, 0.03),
+			transparent);
 }
 
 .dark .admin-table-row:hover {
-	background: linear-gradient(
-		90deg,
-		transparent,
-		rgba(59, 130, 246, 0.06),
-		transparent
-	);
+	background: linear-gradient(90deg,
+			transparent,
+			rgba(59, 130, 246, 0.06),
+			transparent);
 }
 
 /* Badge glow effect */
@@ -413,4 +415,139 @@
 /* Content fade-in */
 .admin-content-fade {
 	animation: admin-fade-up 0.4s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/* ─── Pitch Detail Page Enhancements ─── */
+
+/* Staggered section cards */
+.pitch-section-grid>* {
+	animation: admin-fade-up 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.pitch-section-grid>*:nth-child(1) {
+	animation-delay: 0ms;
+}
+
+.pitch-section-grid>*:nth-child(2) {
+	animation-delay: 80ms;
+}
+
+.pitch-section-grid>*:nth-child(3) {
+	animation-delay: 160ms;
+}
+
+.pitch-section-grid>*:nth-child(4) {
+	animation-delay: 240ms;
+}
+
+.pitch-section-grid>*:nth-child(5) {
+	animation-delay: 320ms;
+}
+
+/* Section card with colored top accent */
+.pitch-card {
+	position: relative;
+	overflow: hidden;
+	border-radius: 1rem;
+	transition: all 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.pitch-card:hover {
+	transform: translateY(-2px);
+	box-shadow:
+		0 8px 30px -8px rgba(0, 0, 0, 0.08),
+		0 0 0 1px rgba(0, 0, 0, 0.04);
+}
+
+.dark .pitch-card:hover {
+	box-shadow:
+		0 8px 30px -8px rgba(0, 0, 0, 0.4),
+		0 0 0 1px rgba(255, 255, 255, 0.06);
+}
+
+.pitch-card::after {
+	content: "";
+	position: absolute;
+	top: 0;
+	left: 0;
+	right: 0;
+	height: 3px;
+	background: var(--pitch-accent, var(--primary));
+	opacity: 0.7;
+	transition: opacity 0.3s ease;
+}
+
+.pitch-card:hover::after {
+	opacity: 1;
+}
+
+/* Content block with left accent border */
+.pitch-content-block {
+	border-left: 3px solid var(--pitch-accent, var(--border));
+	padding-left: 1rem;
+	transition: border-color 0.3s ease;
+}
+
+.pitch-content-block:hover {
+	border-left-color: var(--pitch-accent, var(--primary));
+}
+
+/* Metric pill (for sector/stage/amount badges) */
+.pitch-metric-pill {
+	display: flex;
+	align-items: center;
+	gap: 0.5rem;
+	padding: 0.625rem 0.875rem;
+	border-radius: 0.75rem;
+	border: 1px solid var(--border);
+	background: var(--card);
+	transition: all 0.25s ease;
+}
+
+.pitch-metric-pill:hover {
+	border-color: var(--primary);
+	box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.03);
+}
+
+.dark .pitch-metric-pill:hover {
+	box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.04);
+}
+
+/* Financial row with subtle hover */
+.pitch-financial-row {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	padding: 0.625rem 0;
+	border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+	transition: all 0.2s ease;
+}
+
+.dark .pitch-financial-row {
+	border-bottom-color: rgba(255, 255, 255, 0.06);
+}
+
+.pitch-financial-row:last-child {
+	border-bottom: none;
+}
+
+.pitch-financial-row:hover {
+	padding-left: 0.5rem;
+	background: linear-gradient(90deg, rgba(0, 0, 0, 0.015), transparent);
+}
+
+.dark .pitch-financial-row:hover {
+	background: linear-gradient(90deg, rgba(255, 255, 255, 0.02), transparent);
+}
+
+/* Section icon badge */
+.pitch-icon-badge {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 2.25rem;
+	height: 2.25rem;
+	border-radius: 0.625rem;
+	flex-shrink: 0;
+	box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
 }

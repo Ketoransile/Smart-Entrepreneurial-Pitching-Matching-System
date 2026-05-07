@@ -90,6 +90,21 @@ router.get(
  *     responses:
  *       200:
  *         description: Transaction logs for milestone returned
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               required: [status, count, transactions]
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   enum: [success]
+ *                 count:
+ *                   type: integer
+ *                 transactions:
+ *                   type: array
+ *                   items:
+ *                     type: object
  *       401:
  *         description: Unauthorized
  */

@@ -85,16 +85,19 @@ export const shouldAutoSendInvitation = (
 	nextStatus: Extract<MatchStatus, "accepted" | "declined">,
 ) => previousStatus !== "accepted" && nextStatus === "accepted";
 
-export const MatchingService = {
-	createError(message: string, statusCode: number): MatchingServiceError {
+export class MatchingService {
+	static createError(
+		message: string,
+		statusCode: number,
+	): MatchingServiceError {
 		return new MatchingServiceError(message, statusCode);
-	},
+	}
 
-	isServiceError(error: unknown): error is MatchingServiceError {
+	static isServiceError(error: unknown): error is MatchingServiceError {
 		return error instanceof MatchingServiceError;
-	},
+	}
 
-	async analyzeSubmission(submissionId: string) {
+	static async analyzeSubmission(submissionId: string) {
 		const submission = await Submission.findById(submissionId);
 		if (!submission) {
 			throw MatchingService.createError("Submission not found", 404);
@@ -170,32 +173,85 @@ export const MatchingService = {
 		await submission.save();
 
 		return { submission, embedding: embeddingEntry };
-	},
+	}
 
-	async runMatchingForSubmission(
+	static async runMatchingForSubmission(
 		submissionId: string,
 		options?: { limit?: number; minScore?: number },
 	) {
 		const { submission, embedding } =
 			await MatchingService.analyzeSubmission(submissionId);
 		const limit = Math.min(Math.max(options?.limit ?? 10, 1), 50);
-		const minScore = Math.max(0, Math.min(1, options?.minScore ?? 0.45));
-
-		const investors = await InvestorProfile.find({
-			preferredSectors: { $exists: true, $ne: [] },
-			preferredStages: { $exists: true, $ne: [] },
-		})
-			.sort({ updatedAt: -1 })
-			.limit(250);
+		const minScore = Math.max(0, Math.min(1, options?.minScore ?? 0.3));
 
 		console.log(
-			`[MATCHING] Starting for submission "${submission.title}" (${submissionId})`,
+			`[MATCHING] Starting $vectorSearch for submission "${submission.title}" (${submissionId})`,
 		);
 		console.log(
 			`[MATCHING] sector=${submission.sector} stage=${submission.stage} minScore=${minScore}`,
 		);
-		console.log(`[MATCHING] Found ${investors.length} eligible investors`);
 
+		// ── Step 1: Use Atlas $vectorSearch to find the top semantically similar
+		//            investor profile embeddings in ONE query instead of a loop.
+		//            numCandidates=100 tells Atlas how many candidates to consider
+		//            internally before returning the top `limit*2` results.
+		//            The filter restricts the search to investorProfile embeddings only.
+		const vectorCandidates = await EmbeddingEntry.aggregate([
+			{
+				$vectorSearch: {
+					index: "vector_index",
+					path: "vector",
+					queryVector: embedding.vector,
+					numCandidates: 100,
+					limit: limit * 2, // fetch 2× limit so weighted scoring can filter further
+					filter: { targetType: "investorProfile" },
+				},
+			},
+			{
+				$project: {
+					targetId: 1,
+					vector: 1,
+					_id: 0,
+					vectorScore: { $meta: "vectorSearchScore" },
+				},
+			},
+		]);
+
+		console.log(
+			`[MATCHING] $vectorSearch returned ${vectorCandidates.length} investor embedding candidates`,
+		);
+
+		if (vectorCandidates.length === 0) {
+			console.log(
+				"[MATCHING] No investor embeddings found — no matches created",
+			);
+			return { submissionId: submission._id.toString(), count: 0, matches: [] };
+		}
+
+		// ── Step 2: Fetch the InvestorProfile documents for those candidates
+		//            in a single query using their _id values (targetId in EmbeddingEntry
+		//            points to InvestorProfile._id, NOT User._id).
+		const investorProfileIds = vectorCandidates.map((c) => c.targetId);
+		const investorProfiles = await InvestorProfile.find({
+			_id: { $in: investorProfileIds },
+		}).lean();
+
+		// Build a lookup map: InvestorProfile._id → { profile, vectorScore, vector }
+		const profileMap = new Map(
+			investorProfiles.map((p) => [p._id.toString(), p]),
+		);
+		const embeddingMap = new Map(
+			vectorCandidates.map((c) => [c.targetId.toString(), c]),
+		);
+
+		console.log(
+			`[MATCHING] Fetched ${investorProfiles.length} investor profiles for scoring`,
+		);
+
+		// ── Step 3: Compute weighted score for each candidate
+		//            sector 35% | stage 20% | budget 25% | embedding 20%
+		//            The embedding component comes from Atlas vectorSearchScore
+		//            (already cosine similarity, mapped to [0,1]).
 		const scored: Array<{
 			investorId: string;
 			score: number;
@@ -208,62 +264,41 @@ export const MatchingService = {
 			};
 		}> = [];
 
-		for (const investor of investors) {
-			const investorText = buildInvestorText(investor);
-			const investorEmbeddingResult = await AIService.generateEmbedding({
-				text: investorText,
-				targetType: "investorProfile",
-				targetId: investor._id.toString(),
-			});
+		for (const candidate of vectorCandidates) {
+			const profile = profileMap.get(candidate.targetId.toString());
+			if (!profile) continue;
 
-			await EmbeddingEntry.findOneAndUpdate(
-				{
-					targetId: investor._id,
-					targetType: "investorProfile",
-					modelVersion: investorEmbeddingResult.modelVersion,
-				},
-				{
-					targetId: investor._id,
-					targetType: "investorProfile",
-					modelVersion: investorEmbeddingResult.modelVersion,
-					vector: investorEmbeddingResult.vector,
-					dimensions: investorEmbeddingResult.vector.length,
-					sourceHash: createHash("sha1").update(investorText).digest("hex"),
-					metadata: {
-						fullName: investor.fullName,
-						updatedAt: investor.updatedAt,
-					},
-					generatedAt: new Date(),
-				},
-				{ upsert: true, new: true },
-			);
+			// Atlas vectorSearchScore is already cosine similarity in [0,1]
+			// Map it to our [0,1] embedding score range
+			const embeddingScore = Math.max(0, Math.min(1, candidate.vectorScore));
 
 			const scoredResult = await AIService.computeMatchScore({
 				submissionId: submission._id.toString(),
-				investorId: investor.userId.toString(),
+				investorId: profile.userId.toString(),
 				submissionEmbedding: embedding.vector,
-				investorEmbedding: investorEmbeddingResult.vector,
+				investorEmbedding:
+					embeddingMap.get(candidate.targetId.toString())?.vector ?? [],
 				submissionSector: submission.sector,
 				submissionStage: submission.stage,
 				targetAmount: submission.targetAmount,
-				preferredSectors: investor.preferredSectors,
-				preferredStages: investor.preferredStages,
-				investmentRangeMin: investor.investmentRange?.min,
-				investmentRangeMax: investor.investmentRange?.max,
+				preferredSectors: profile.preferredSectors,
+				preferredStages: profile.preferredStages,
+				investmentRangeMin: profile.investmentRange?.min,
+				investmentRangeMax: profile.investmentRange?.max,
 			});
 
 			if (scoredResult.score < minScore) {
 				console.log(
-					`[MATCHING] ❌ investor ${investor.userId} score=${scoredResult.score.toFixed(4)} below minScore=${minScore} — skipped`,
+					`[MATCHING] ❌ investor ${profile.userId} score=${scoredResult.score.toFixed(4)} below minScore=${minScore} — skipped`,
 				);
 				continue;
 			}
 
 			console.log(
-				`[MATCHING] ✅ investor ${investor.userId} score=${scoredResult.score.toFixed(4)} breakdown=${JSON.stringify(scoredResult.breakdown)}`,
+				`[MATCHING] ✅ investor ${profile.userId} score=${scoredResult.score.toFixed(4)} vectorScore=${embeddingScore.toFixed(4)} breakdown=${JSON.stringify(scoredResult.breakdown)}`,
 			);
 			scored.push({
-				investorId: investor.userId.toString(),
+				investorId: profile.userId.toString(),
 				score: scoredResult.score,
 				rationale: scoredResult.rationale,
 				breakdown: scoredResult.breakdown,
@@ -273,6 +308,7 @@ export const MatchingService = {
 		scored.sort((a, b) => b.score - a.score);
 		const topMatches = scored.slice(0, limit);
 
+		// ── Step 4: Persist MatchResult records (unchanged logic)
 		const persistedMatches = [];
 		for (let i = 0; i < topMatches.length; i += 1) {
 			const match = topMatches[i];
@@ -298,10 +334,7 @@ export const MatchingService = {
 						type: "match_found",
 						title: "Match reopened",
 						body: "A previously expired match is now active again.",
-						metadata: {
-							matchId: existing._id,
-							submissionId: submission._id,
-						},
+						metadata: { matchId: existing._id, submissionId: submission._id },
 					});
 				}
 
@@ -327,10 +360,7 @@ export const MatchingService = {
 				type: "match_found",
 				title: "New match found",
 				body: `A new startup match is available for submission "${submission.title}".`,
-				metadata: {
-					matchId: created._id,
-					submissionId: submission._id,
-				},
+				metadata: { matchId: created._id, submissionId: submission._id },
 			});
 
 			persistedMatches.push(created);
@@ -339,16 +369,15 @@ export const MatchingService = {
 		console.log(
 			`[MATCHING] Done: ${persistedMatches.length} matches persisted for "${submission.title}"`,
 		);
-		// Note: submission status stays "under_review" — admin must explicitly approve via /submissions/:id/status
 
 		return {
 			submissionId: submission._id.toString(),
 			count: persistedMatches.length,
 			matches: persistedMatches,
 		};
-	},
+	}
 
-	async getSubmissionMatches(
+	static async getSubmissionMatches(
 		submissionId: string,
 		requester: IUser,
 	): Promise<Awaited<ReturnType<typeof MatchResult.find>>> {
@@ -374,9 +403,9 @@ export const MatchingService = {
 			.sort({ rank: 1, score: -1 })
 			.populate("investorId", "fullName email")
 			.populate("submissionId", "title sector stage targetAmount status");
-	},
+	}
 
-	async getInvestorMatches(payload: {
+	static async getInvestorMatches(payload: {
 		investorId: string;
 		status?: MatchStatus;
 	}) {
@@ -392,9 +421,154 @@ export const MatchingService = {
 				"title summary sector stage targetAmount status",
 			)
 			.populate("entrepreneurId", "fullName email");
-	},
+	}
 
-	async updateMatchStatus(payload: {
+	static async runMatchingForNewInvestor(
+		investorUserId: string,
+		options?: { limit?: number; minScore?: number },
+	) {
+		const minScore = options?.minScore ?? 0.3;
+		const limit = options?.limit ?? 10;
+
+		const investor = await InvestorProfile.findOne({
+			userId: investorUserId,
+		}).lean();
+		if (!investor) return;
+
+		console.log(
+			`[MATCHING:NEW_INVESTOR] investor=${investorUserId} generating embedding`,
+		);
+
+		const investorText = buildInvestorText(investor);
+		const investorEmbeddingResult = await AIService.generateEmbedding({
+			text: investorText,
+			targetType: "investorProfile",
+			targetId: investor._id.toString(),
+		});
+
+		await EmbeddingEntry.findOneAndUpdate(
+			{
+				targetId: investor._id,
+				targetType: "investorProfile",
+				modelVersion: investorEmbeddingResult.modelVersion,
+			},
+			{
+				targetId: investor._id,
+				targetType: "investorProfile",
+				modelVersion: investorEmbeddingResult.modelVersion,
+				vector: investorEmbeddingResult.vector,
+				dimensions: investorEmbeddingResult.vector.length,
+				sourceHash: createHash("sha1").update(investorText).digest("hex"),
+				metadata: {
+					fullName: investor.fullName,
+					updatedAt: investor.updatedAt,
+				},
+				generatedAt: new Date(),
+			},
+			{ upsert: true, new: true },
+		);
+
+		// Use $vectorSearch to find the most semantically similar submission embeddings
+		const vectorCandidates = await EmbeddingEntry.aggregate([
+			{
+				$vectorSearch: {
+					index: "vector_index",
+					path: "vector",
+					queryVector: investorEmbeddingResult.vector,
+					numCandidates: 100,
+					limit: limit * 2,
+					filter: { targetType: "submission" },
+				},
+			},
+			{
+				$project: {
+					targetId: 1,
+					vector: 1,
+					_id: 0,
+					vectorScore: { $meta: "vectorSearchScore" },
+				},
+			},
+		]);
+
+		console.log(
+			`[MATCHING:NEW_INVESTOR] $vectorSearch returned ${vectorCandidates.length} submission candidates`,
+		);
+
+		if (vectorCandidates.length === 0) return;
+
+		const submissionIds = vectorCandidates.map((c) => c.targetId);
+		const submissions = await Submission.find({
+			_id: { $in: submissionIds },
+			status: { $in: ["approved", "under_review"] },
+		}).lean();
+
+		const submissionMap = new Map(
+			submissions.map((s) => [s._id.toString(), s]),
+		);
+		const embeddingMap = new Map(
+			vectorCandidates.map((c) => [c.targetId.toString(), c]),
+		);
+
+		let matched = 0;
+		for (const candidate of vectorCandidates) {
+			if (matched >= limit) break;
+
+			const submission = submissionMap.get(candidate.targetId.toString());
+			if (!submission) continue;
+
+			const existing = await MatchResult.findOne({
+				submissionId: submission._id,
+				investorId: investorUserId,
+			});
+			if (existing) continue;
+
+			const scoredResult = await AIService.computeMatchScore({
+				submissionId: submission._id.toString(),
+				investorId: investorUserId,
+				submissionEmbedding:
+					embeddingMap.get(candidate.targetId.toString())?.vector ?? [],
+				investorEmbedding: investorEmbeddingResult.vector,
+				submissionSector: submission.sector,
+				submissionStage: submission.stage,
+				targetAmount: submission.targetAmount,
+				preferredSectors: investor.preferredSectors,
+				preferredStages: investor.preferredStages,
+				investmentRangeMin: investor.investmentRange?.min,
+				investmentRangeMax: investor.investmentRange?.max,
+			});
+
+			if (scoredResult.score < minScore) continue;
+
+			await MatchResult.create({
+				submissionId: submission._id,
+				entrepreneurId: submission.entrepreneurId,
+				investorId: investorUserId,
+				score: scoredResult.score,
+				rank: matched + 1,
+				aiRationale: scoredResult.rationale,
+				scoreBreakdown: scoredResult.breakdown,
+				status: "pending",
+				matchedAt: new Date(),
+				expiresAt: new Date(Date.now() + 1000 * 60 * 60 * 24 * 14),
+			});
+
+			await NotificationService.createNotification({
+				userId: investorUserId,
+				type: "match_found",
+				title: "New match found",
+				body: `A pitch matching your investment profile is available: "${submission.title}".`,
+				metadata: { submissionId: submission._id },
+			});
+
+			matched++;
+		}
+
+		console.log(
+			`[MATCHING:NEW_INVESTOR] Done: ${matched} matches created for investor ${investorUserId}`,
+		);
+	}
+
+	static async updateMatchStatus(payload: {
 		matchId: string;
 		investorId: string;
 		status: Extract<MatchStatus, "accepted" | "declined">;
@@ -451,9 +625,9 @@ export const MatchingService = {
 		}
 
 		return match;
-	},
+	}
 
-	async approveInvestmentRequest(payload: {
+	static async approveInvestmentRequest(payload: {
 		matchId: string;
 		entrepreneurId: string;
 		approved: boolean;
@@ -510,9 +684,9 @@ export const MatchingService = {
 		}
 
 		return match;
-	},
+	}
 
-	async respondToSubmission(payload: {
+	static async respondToSubmission(payload: {
 		submissionId: string;
 		investorId: string;
 		status: Extract<MatchStatus, "accepted" | "declined">;
@@ -573,5 +747,5 @@ export const MatchingService = {
 		}
 
 		return match;
-	},
-};
+	}
+}

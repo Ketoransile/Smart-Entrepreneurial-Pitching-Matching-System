@@ -1,9 +1,12 @@
 import axios from "axios";
+import { checkDocumentExpiration } from "../utils/document-expiration";
 
 export interface AnalyzeDocumentRequest {
 	documentId: string;
 	documentUrl: string;
 	mimeType: string;
+	extractedText?: string;
+	documentType?: string;
 }
 
 export interface AnalyzeDocumentResponse {
@@ -76,6 +79,12 @@ export interface ComputeMatchResponse {
 export interface ClassifyPitchResponse {
 	trust_score_percentage: number;
 	ai_flag: string;
+	authenticity?: {
+		is_gibberish: boolean;
+		language_quality: "professional" | "acceptable" | "poor" | "gibberish";
+		confidence: number;
+		gemini_note: string;
+	} | null;
 }
 
 const client = axios.create({
@@ -131,11 +140,13 @@ export const AIService = {
 			);
 			return response.data;
 		} catch {
-			// Mock logic to support UC-07 through UC-10 testing on frontend based on Filenames
+			// Fallback to local analysis when AI service is unavailable
 
 			const lowerUrl = payload.documentUrl.toLowerCase();
+			const documentText = payload.extractedText || "";
+			const documentType = payload.documentType || "other";
 
-			// UC-07: Content Mismatch Mock
+			// UC-07: Content Mismatch Mock (kept for testing)
 			if (lowerUrl.includes("mismatch")) {
 				return {
 					confidence: 0.9,
@@ -148,7 +159,29 @@ export const AIService = {
 				};
 			}
 
-			// UC-08: Expired Document Mock
+			// UC-08: Real Document Expiration Check
+			// Use actual date extraction and rule-based checking
+			if (documentText && documentType) {
+				const expirationCheck = checkDocumentExpiration(
+					documentType,
+					documentText,
+				);
+
+				if (expirationCheck.isExpired) {
+					return {
+						confidence: 0.95,
+						validation: {
+							passed: false,
+							reason:
+								expirationCheck.reason ||
+								"Document is expired. Please upload the renewed version.",
+							issueType: "expired",
+						},
+					};
+				}
+			}
+
+			// Fallback to filename-based mock for testing (if no text available)
 			if (lowerUrl.includes("expired")) {
 				return {
 					confidence: 0.95,
@@ -182,6 +215,24 @@ export const AIService = {
 						reason: "Document flagged for unusual formatting or data mismatch.",
 						issueType: "suspect_fraud",
 					},
+				};
+			}
+
+			// UC-13: Cross-Document Name Conflict Mock
+			// Triggers when filename contains "conflict" or different business name patterns
+			if (
+				lowerUrl.includes("conflict") ||
+				lowerUrl.includes("name_mismatch") ||
+				lowerUrl.includes("wrong_company")
+			) {
+				return {
+					confidence: 0.9,
+					extractedText:
+						"Business Name: ACME Solutions Inc.\nTIN: 12-3456789\nLicense: BL-987654",
+					summary:
+						"Document contains business information that may conflict with other documents.",
+					tags: ["conflict_flag", "cross_document_check_needed"],
+					validation: { passed: true }, // Passed initial validation, but flagged for conflict check
 				};
 			}
 
